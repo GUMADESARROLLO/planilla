@@ -1,0 +1,82 @@
+---
+import AppLayout from "@components/layout/AppLayout.astro";
+import Card from "@components/ui/Card.astro";
+import { catalogService } from "@modules/catalogs/services/catalog.service";
+import { requireAuth } from "@middleware/auth";
+import {
+  FileText,
+  Briefcase,
+  Users,
+  Globe,
+  FileSpreadsheet,
+  Shirt,
+  FileCheck,
+  Shield,
+  ArrowRight,
+  LayoutGrid,
+} from "@lucide/astro";
+
+await requireAuth(Astro);
+
+const catalogs = await catalogService.getCatalogsList();
+const path = Astro.url.pathname;
+
+const iconMap: Record<string, any> = {
+  FileText,
+  Briefcase,
+  Users,
+  Globe,
+  FileSpreadsheet,
+  Shirt,
+  FileCheck,
+  Shield,
+};
+---
+
+<AppLayout title="Catálogos" currentPath={path}>
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center justify-center size-10 rounded-xl bg-primary-100 dark:bg-primary-900/50">
+          <LayoutGrid class="size-5 text-primary-600 dark:text-primary-400" />
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Catálogos</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            Gestión de tablas de referencia del sistema
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {catalogs.map((cat) => {
+        const IconComponent = iconMap[cat.icon];
+        return (
+          <a href={`/catalogs/${cat.type}`} class="block group focus:outline-none">
+            <Card hover padding class="h-full">
+              <div slot="body" class="flex items-start gap-4">
+                <div class="flex items-center justify-center size-12 rounded-xl bg-gray-100 dark:bg-gray-800 shrink-0 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors">
+                  {IconComponent && (
+                    <IconComponent class="size-6 text-gray-500 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
+                  )}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-base font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                    {cat.displayName}
+                  </h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {cat.entryCount} {cat.entryCount === 1 ? "registro" : "registros"}
+                  </p>
+                </div>
+                <div class="flex items-center justify-center size-8 rounded-lg text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 transition-all shrink-0">
+                  <ArrowRight class="size-4" />
+                </div>
+              </div>
+            </Card>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</AppLayout>

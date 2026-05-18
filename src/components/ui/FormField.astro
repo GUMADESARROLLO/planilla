@@ -1,0 +1,31 @@
+---
+import { AlertCircle } from "@lucide/astro";
+
+export interface Props {
+  label: string;
+  name: string;
+  error?: string;
+  required?: boolean;
+  helperText?: string;
+  class?: string;
+}
+
+const { label, name, error, required = false, helperText, class: className = "" } = Astro.props;
+---
+
+<div class={className}>
+  <label for={name} class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+    {label}
+    {required && <span class="text-danger-500 ml-0.5">*</span>}
+  </label>
+  <slot />
+  {helperText && !error && (
+    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{helperText}</p>
+  )}
+  {error && (
+    <p class="mt-1 text-xs text-danger-600 dark:text-danger-400 flex items-center gap-1" role="alert">
+      <AlertCircle class="size-3.5 shrink-0" />
+      {error}
+    </p>
+  )}
+</div>

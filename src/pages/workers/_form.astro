@@ -1,0 +1,313 @@
+---
+import FormField from "@components/ui/FormField.astro";
+
+export interface CatalogItem {
+  id: string;
+  nombre: string;
+}
+
+export interface Props {
+  tiposContrato: CatalogItem[];
+  cargos: CatalogItem[];
+  generos: CatalogItem[];
+  nacionalidades: CatalogItem[];
+  tallasCamisa: CatalogItem[];
+  tallasPantalon: CatalogItem[];
+  worker?: Record<string, any>;
+  mode: "create" | "edit";
+  errors?: Record<string, string>;
+}
+
+const {
+  tiposContrato,
+  cargos,
+  generos,
+  nacionalidades,
+  tallasCamisa,
+  tallasPantalon,
+  worker,
+  mode,
+  errors = {},
+} = Astro.props;
+
+const w = worker ?? {};
+const isEdit = mode === "edit";
+---
+
+<div id="worker-form">
+  <input type="hidden" name="mode" value={mode} />
+  {isEdit && <input type="hidden" name="id" value={w.id} />}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <FormField label="Nombre" name="nombre" error={errors.nombre} required>
+      <input
+        type="text"
+        id="field-nombre"
+        name="nombre"
+        value={w.nombre ?? ""}
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        placeholder="Nombre del trabajador"
+      />
+    </FormField>
+
+    <FormField label="Apellidos" name="apellidos" error={errors.apellidos} required>
+      <input
+        type="text"
+        id="field-apellidos"
+        name="apellidos"
+        value={w.apellidos ?? ""}
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        placeholder="Apellidos del trabajador"
+      />
+    </FormField>
+
+    <FormField label="Correo Electrónico" name="email" error={errors.email} required>
+      <input
+        type="email"
+        id="field-email"
+        name="email"
+        value={w.email ?? ""}
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        placeholder="correo@ejemplo.com"
+      />
+    </FormField>
+
+    <FormField label="Teléfono" name="telefono" error={errors.telefono} required>
+      <input
+        type="text"
+        id="field-telefono"
+        name="telefono"
+        value={w.telefono ?? ""}
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        placeholder="+505 8888 8888"
+      />
+    </FormField>
+
+    <FormField label="Cédula de Identidad" name="cedulaIdentidad" error={errors.cedulaIdentidad} required>
+      <input
+        type="text"
+        id="field-cedulaIdentidad"
+        name="cedulaIdentidad"
+        value={w.cedulaIdentidad ?? ""}
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        placeholder="001-123456-7890A"
+      />
+    </FormField>
+
+    <FormField label="Número INSS" name="numeroInss" error={errors.numeroInss} required>
+      <input
+        type="text"
+        id="field-numeroInss"
+        name="numeroInss"
+        value={w.numeroInss ?? ""}
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        placeholder="Número INSS"
+      />
+    </FormField>
+
+    <FormField label="Fecha de Entrada" name="fechaEntrada" error={errors.fechaEntrada} required>
+      <input
+        type="date"
+        id="field-fechaEntrada"
+        name="fechaEntrada"
+        value={w.fechaEntrada ?? ""}
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      />
+    </FormField>
+
+    <FormField label="Fecha de Salida" name="fechaSalida" error={errors.fechaSalida}>
+      <input
+        type="date"
+        id="field-fechaSalida"
+        name="fechaSalida"
+        value={w.fechaSalida ?? ""}
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      />
+    </FormField>
+
+    <FormField label="Nacionalidad" name="nacionalidadId" error={errors.nacionalidadId} required>
+      <select
+        id="field-nacionalidadId"
+        name="nacionalidadId"
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      >
+        <option value="">Seleccione nacionalidad</option>
+        {nacionalidades.map((item) => (
+          <option value={item.id} selected={w.nacionalidadId === item.id}>
+            {item.nombre}
+          </option>
+        ))}
+      </select>
+    </FormField>
+
+    <FormField label="Género" name="generoId" error={errors.generoId} required>
+      <select
+        id="field-generoId"
+        name="generoId"
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      >
+        <option value="">Seleccione género</option>
+        {generos.map((item) => (
+          <option value={item.id} selected={w.generoId === item.id}>
+            {item.nombre}
+          </option>
+        ))}
+      </select>
+    </FormField>
+
+    <FormField label="Tipo de Contrato" name="tipoContratoId" error={errors.tipoContratoId} required>
+      <select
+        id="field-tipoContratoId"
+        name="tipoContratoId"
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      >
+        <option value="">Seleccione tipo de contrato</option>
+        {tiposContrato.map((item) => (
+          <option value={item.id} selected={w.tipoContratoId === item.id}>
+            {item.nombre}
+          </option>
+        ))}
+      </select>
+    </FormField>
+
+    <FormField label="Cargo" name="cargoId" error={errors.cargoId} required>
+      <select
+        id="field-cargoId"
+        name="cargoId"
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      >
+        <option value="">Seleccione cargo</option>
+        {cargos.map((item) => (
+          <option value={item.id} selected={w.cargoId === item.id}>
+            {item.nombre}
+          </option>
+        ))}
+      </select>
+    </FormField>
+
+    <FormField label="Talla de Camisa" name="tallaCamisaId" error={errors.tallaCamisaId} required>
+      <select
+        id="field-tallaCamisaId"
+        name="tallaCamisaId"
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      >
+        <option value="">Seleccione talla de camisa</option>
+        {tallasCamisa.map((item) => (
+          <option value={item.id} selected={w.tallaCamisaId === item.id}>
+            {item.nombre}
+          </option>
+        ))}
+      </select>
+    </FormField>
+
+    <FormField label="Talla de Pantalón" name="tallaPantalonId" error={errors.tallaPantalonId} required>
+      <select
+        id="field-tallaPantalonId"
+        name="tallaPantalonId"
+        required
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      >
+        <option value="">Seleccione talla de pantalón</option>
+        {tallasPantalon.map((item) => (
+          <option value={item.id} selected={w.tallaPantalonId === item.id}>
+            {item.nombre}
+          </option>
+        ))}
+      </select>
+    </FormField>
+
+    <FormField label="Saldo de Vacaciones" name="saldoVacaciones" error={errors.saldoVacaciones}>
+      <input
+        type="number"
+        id="field-saldoVacaciones"
+        name="saldoVacaciones"
+        value={w.saldoVacaciones ?? "0.00"}
+        step="0.01"
+        min="0"
+        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      />
+    </FormField>
+
+    <FormField label="Activo" name="activo" error={errors.activo}>
+      <div class="flex items-center gap-2 mt-1">
+        <input
+          type="checkbox"
+          id="field-activo"
+          name="activo"
+          checked={w.activo !== false}
+          class="size-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+        />
+        <label for="field-activo" class="text-sm text-gray-600 dark:text-gray-400">
+          Trabajador activo
+        </label>
+      </div>
+    </FormField>
+  </div>
+
+  <FormField label="Dirección" name="direccion" error={errors.direccion}>
+    <textarea
+      id="field-direccion"
+      name="direccion"
+      rows="3"
+      class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      placeholder="Dirección del trabajador"
+    >{w.direccion ?? ""}</textarea>
+  </FormField>
+
+  <FormField label="Foto" name="foto" error={errors.foto}>
+    <div class="flex items-start gap-4">
+      <div class="flex-1">
+        <input
+          type="file"
+          id="field-foto"
+          name="foto"
+          accept="image/*"
+          class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-950 dark:file:text-primary-300"
+        />
+      </div>
+      <div id="photo-preview" class="shrink-0">
+        {w.foto ? (
+          <img src={w.foto} alt="Foto actual" class="size-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700" />
+        ) : (
+          <div class="size-16 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 text-xs border border-gray-200 dark:border-gray-700">
+            Sin foto
+          </div>
+        )}
+      </div>
+    </div>
+    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Formatos: JPG, PNG, WEBP. Max 2MB.</p>
+  </FormField>
+</div>
+
+<script>
+  const fotoInput = document.getElementById("field-foto") as HTMLInputElement;
+  const photoPreview = document.getElementById("photo-preview")!;
+
+  fotoInput?.addEventListener("change", () => {
+    const file = fotoInput.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("La imagen no debe exceder 2MB");
+        fotoInput.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        photoPreview.innerHTML = `<img src="${e.target?.result}" alt="Preview" class="size-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700" />`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+</script>

@@ -1,0 +1,166 @@
+---
+import { LayoutDashboard, Users, FileSpreadsheet, FileText, FolderOpen, Shield, ChevronLeft, ChevronRight, LogOut, Menu, X } from "@lucide/astro";
+
+export interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+}
+
+const navItems: NavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
+  { label: "Trabajadores", href: "/workers", icon: "Users" },
+  { label: "Planillas", href: "/payrolls", icon: "FileSpreadsheet" },
+  { label: "Permisos", href: "/permits", icon: "FileText" },
+  { label: "Catálogos", href: "/catalogs", icon: "FolderOpen" },
+  { label: "Usuarios", href: "/users", icon: "Shield" },
+];
+
+function isActive(itemHref: string): boolean {
+  if (itemHref === "/dashboard") {
+    return currentPath === "/dashboard" || currentPath === "/";
+  }
+  return currentPath.startsWith(itemHref);
+}
+---
+
+<div
+  id="sidebar-overlay"
+  class="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 lg:opacity-0 lg:pointer-events-none"
+  aria-hidden="true"
+></div>
+
+<aside
+  id="sidebar"
+  class="fixed top-0 left-0 z-50 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 ease-in-out
+    -translate-x-full lg:translate-x-0
+    w-[--sidebar-width] lg:w-[--sidebar-width]"
+  aria-label="Sidebar de navegación"
+>
+  <!-- Brand -->
+  <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+    <a href="/dashboard" class="flex items-center gap-3 text-primary-600 dark:text-primary-400">
+      <div class="flex items-center justify-center size-8 bg-primary-600 rounded-lg shrink-0">
+        <span class="text-sm font-bold text-white">P</span>
+      </div>
+      <span class="font-semibold text-lg text-gray-900 dark:text-white whitespace-nowrap">Plan-IA</span>
+    </a>
+    <button
+      id="sidebar-close-mobile"
+      class="lg:hidden p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800"
+      aria-label="Cerrar sidebar"
+      type="button"
+    >
+      <X class="size-5" />
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+    {navItems.map((item) => {
+      const active = isActive(item.href);
+      const IconComponent = { LayoutDashboard, Users, FileSpreadsheet, FileText, FolderOpen, Shield }[item.icon];
+      return (
+        <a
+          href={item.href}
+          class:list={[
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200",
+            active
+              ? "bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300"
+              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200",
+          ]}
+          aria-current={active ? "page" : undefined}
+        >
+          {IconComponent && <IconComponent class="size-5 shrink-0" />}
+          <span>{item.label}</span>
+        </a>
+      );
+    })}
+  </nav>
+
+  <!-- User info & logout -->
+  <div class="border-t border-gray-200 dark:border-gray-800 p-4 shrink-0">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="size-9 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 font-semibold text-sm shrink-0">
+        AD
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">Admin</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">admin@planilla.pe</p>
+      </div>
+    </div>
+    <a
+      href="/logout"
+      class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
+    >
+      <LogOut class="size-5 shrink-0" />
+      <span>Cerrar sesión</span>
+    </a>
+  </div>
+
+  <!-- Desktop collapse toggle -->
+  <button
+    id="sidebar-collapse-desktop"
+    class="hidden lg:flex absolute -right-3 top-20 size-6 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shadow-sm cursor-pointer"
+    aria-label="Colapsar sidebar"
+    type="button"
+  >
+    <ChevronLeft id="sidebar-chevron" class="size-3.5 transition-transform duration-300" />
+  </button>
+</aside>
+
+<script>
+  const sidebar = document.getElementById("sidebar")!;
+  const overlay = document.getElementById("sidebar-overlay")!;
+  const closeMobileBtn = document.getElementById("sidebar-close-mobile")!;
+  const collapseBtn = document.getElementById("sidebar-collapse-desktop")!;
+  const chevron = document.getElementById("sidebar-chevron")!;
+
+  let isCollapsed = false;
+  const COLLAPSED_WIDTH = "4rem";
+  const EXPANDED_WIDTH = "16rem";
+
+  function toggleMobileSidebar() {
+    const isOpen = !sidebar.classList.contains("-translate-x-full");
+    sidebar.classList.toggle("-translate-x-full", !isOpen);
+    overlay.classList.toggle("opacity-0", !isOpen);
+    overlay.classList.toggle("pointer-events-none", !isOpen);
+    document.body.classList.toggle("overflow-hidden", isOpen);
+  }
+
+  function toggleCollapse() {
+    isCollapsed = !isCollapsed;
+    if (isCollapsed) {
+      sidebar.style.width = COLLAPSED_WIDTH;
+      chevron.classList.replace("rotate-0", "rotate-180");
+    } else {
+      sidebar.style.width = EXPANDED_WIDTH;
+      chevron.classList.replace("rotate-180", "rotate-0");
+    }
+  }
+
+  // Mobile: open sidebar when hamburger is clicked (listen for custom event)
+  document.addEventListener("toggle-sidebar", () => {
+    toggleMobileSidebar();
+  });
+
+  closeMobileBtn.addEventListener("click", toggleMobileSidebar);
+  overlay.addEventListener("click", toggleMobileSidebar);
+
+  if (collapseBtn) {
+    collapseBtn.addEventListener("click", toggleCollapse);
+  }
+
+  // Close on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !sidebar.classList.contains("-translate-x-full")) {
+      toggleMobileSidebar();
+    }
+  });
+</script>

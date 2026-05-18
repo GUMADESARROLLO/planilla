@@ -1,0 +1,154 @@
+---
+import { AlertTriangle, X } from "@lucide/astro";
+
+export interface Props {
+  open?: boolean;
+  title?: string;
+  message?: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: "danger" | "warning" | "info";
+}
+
+const {
+  open = false,
+  title = "Confirmar acción",
+  message = "¿Estás seguro de que deseas realizar esta acción?",
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
+  variant = "danger",
+} = Astro.props;
+
+const variantStyles: Record<string, { icon: string; buttonClass: string; iconBgClass: string }> = {
+  danger: {
+    icon: "text-danger-600",
+    buttonClass: "bg-danger-600 hover:bg-danger-700 focus:ring-danger-500 text-white",
+    iconBgClass: "bg-danger-100 dark:bg-danger-900/50",
+  },
+  warning: {
+    icon: "text-warning-600",
+    buttonClass: "bg-warning-600 hover:bg-warning-700 focus:ring-warning-500 text-white",
+    iconBgClass: "bg-warning-100 dark:bg-warning-900/50",
+  },
+  info: {
+    icon: "text-info-600",
+    buttonClass: "bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 text-white",
+    iconBgClass: "bg-primary-100 dark:bg-primary-900/50",
+  },
+};
+
+const styles = variantStyles[variant] ?? variantStyles.danger;
+---
+
+<div
+  id="confirm-overlay"
+  class:list={[
+    "fixed inset-0 z-[70] flex items-center justify-center p-4",
+    open ? "" : "hidden",
+  ]}
+  role="alertdialog"
+  aria-modal="true"
+  aria-labelledby="confirm-title"
+  aria-describedby="confirm-message"
+>
+  <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
+  <div
+    id="confirm-dialog"
+    class={[
+      "relative w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800 p-6",
+      "transform transition-all duration-200 scale-95 opacity-0",
+      open ? "scale-100 opacity-100" : "",
+    ].filter(Boolean).join(" ")}
+  >
+    <button
+      id="confirm-close"
+      type="button"
+      class="absolute top-3 right-3 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+      aria-label="Cerrar"
+    >
+      <X class="size-4" />
+    </button>
+
+    <div class="flex items-start gap-4">
+      <div class={["flex items-center justify-center size-10 rounded-full shrink-0", styles.iconBgClass].join(" ")}>
+        <AlertTriangle class={["size-5", styles.icon].join(" ")} />
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 id="confirm-title" class="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
+        <p id="confirm-message" class="mt-1 text-sm text-gray-500 dark:text-gray-400">{message}</p>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 mt-6">
+      <button
+        id="confirm-cancel"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
+      >
+        {cancelText}
+      </button>
+      <button
+        id="confirm-ok"
+        type="button"
+        class={[
+          "px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors",
+          styles.buttonClass,
+        ].join(" ")}
+      >
+        {confirmText}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const overlay = document.getElementById("confirm-overlay")!;
+  const dialog = document.getElementById("confirm-dialog")!;
+  const closeBtn = document.getElementById("confirm-close")!;
+  const cancelBtn = document.getElementById("confirm-cancel")!;
+  const okBtn = document.getElementById("confirm-ok")!;
+
+  function close() {
+    dialog.classList.remove("scale-100", "opacity-100");
+    dialog.classList.add("scale-95", "opacity-0");
+    setTimeout(() => overlay.classList.add("hidden"), 150);
+  }
+
+  function confirm() {
+    document.dispatchEvent(new CustomEvent("confirm-ok"));
+    close();
+  }
+
+  function cancel() {
+    document.dispatchEvent(new CustomEvent("confirm-cancel"));
+    close();
+  }
+
+  closeBtn.addEventListener("click", cancel);
+  cancelBtn.addEventListener("click", cancel);
+  okBtn.addEventListener("click", confirm);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) cancel();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.classList.contains("hidden")) {
+      cancel();
+    }
+    if (e.key === "Enter" && !overlay.classList.contains("hidden")) {
+      confirm();
+    }
+  });
+
+  // Open/close functions
+  (window as any).__openConfirm = () => {
+    overlay.classList.remove("hidden");
+    void dialog.offsetWidth;
+    dialog.classList.remove("scale-95", "opacity-0");
+    dialog.classList.add("scale-100", "opacity-100");
+    okBtn.focus();
+  };
+  (window as any).__closeConfirm = close;
+</script>

@@ -1,0 +1,62 @@
+---
+import { Search, X } from "@lucide/astro";
+
+export interface Props {
+  value?: string;
+  placeholder?: string;
+  name?: string;
+  class?: string;
+}
+
+const { value = "", placeholder = "Buscar...", name = "search", class: className = "" } = Astro.props;
+---
+
+<div class={["relative", className].filter(Boolean).join(" ")}>
+  <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
+  <input
+    id="search-input"
+    type="text"
+    name={name}
+    value={value}
+    placeholder={placeholder}
+    class="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+    aria-label={placeholder}
+    autocomplete="off"
+  />
+  {value && (
+    <button
+      id="search-clear"
+      type="button"
+      class="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+      aria-label="Limpiar búsqueda"
+    >
+      <X class="size-4" />
+    </button>
+  )}
+</div>
+
+<script>
+  const input = document.getElementById("search-input") as HTMLInputElement;
+  const clearBtn = document.getElementById("search-clear");
+  let timeout: ReturnType<typeof setTimeout>;
+
+  function emitSearch(value: string) {
+    const event = new CustomEvent("search", { detail: { value } });
+    document.dispatchEvent(event);
+  }
+
+  if (input) {
+    input.addEventListener("input", () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => emitSearch(input.value), 300);
+    });
+  }
+
+  clearBtn?.addEventListener("click", () => {
+    if (input) {
+      input.value = "";
+      emitSearch("");
+      input.focus();
+    }
+  });
+</script>

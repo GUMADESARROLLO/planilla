@@ -1,0 +1,42 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import Sidebar from "@components/layout/Sidebar.astro";
+import Navbar from "@components/layout/Navbar.astro";
+
+export interface Props {
+  title: string;
+  currentPath: string;
+}
+
+const { title, currentPath } = Astro.props;
+---
+
+<BaseLayout {title}>
+  <div class="min-h-screen flex">
+    <Sidebar {currentPath} />
+    <div id="main-content" class="flex-1 flex flex-col min-h-screen lg:ml-[--sidebar-width] transition-all duration-300">
+      <Navbar pageTitle={title} />
+      <main class="flex-1 p-4 lg:p-6 overflow-auto">
+        <slot />
+      </main>
+      <footer class="border-t border-gray-200 dark:border-gray-800 px-6 py-3">
+        <p class="text-xs text-gray-400 dark:text-gray-500 text-center">
+          &copy; {new Date().getFullYear()} Plan-IA. Todos los derechos reservados.
+        </p>
+      </footer>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const sidebar = document.getElementById("sidebar");
+  const mainContent = document.getElementById("main-content");
+
+  if (sidebar && mainContent) {
+    const observer = new ResizeObserver(() => {
+      const width = sidebar.style.width || "16rem";
+      mainContent.style.marginLeft = width;
+    });
+    observer.observe(sidebar);
+  }
+</script>

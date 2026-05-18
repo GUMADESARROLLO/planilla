@@ -1,0 +1,365 @@
+---
+import AppLayout from "@components/layout/AppLayout.astro";
+import Card from "@components/ui/Card.astro";
+import Badge from "@components/ui/Badge.astro";
+import Button from "@components/ui/Button.astro";
+import Alert from "@components/ui/Alert.astro";
+import * as permitsService from "@modules/permits/services/permits.service";
+import type { EsquelaResponse } from "@modules/permits/types";
+import { NotFoundError } from "@utils/errors";
+import { getSession } from "@middleware/auth";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/permits");
+}
+
+let esquela: EsquelaResponse;
+try {
+  esquela = await permitsService.findById(id);
+} catch (e) {
+  if (e instanceof NotFoundError) {
+    return Astro.redirect("/permits");
+  }
+  throw e;
+}
+
+const session = await getSession(Astro.request);
+const canApprove = session && (session.user.role === "SUPERVISOR" || session.user.role === "ADMIN");
+const isPending = esquela.estado === "pendiente";
+
+function formatDate(d: string): string {
+  try {
+    return new Date(d).toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return d;
+  }
+}
+
+function formatDateTime(d: string): string {
+  try {
+    return new Date(d).toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return d;
+  }
+}
+
+function estadoVariant(estado: string): string {
+  switch (estado) {
+    case "pendiente": return "warning";
+    case "aprobada": return "success";
+    case "rechazada": return "danger";
+    default: return "default";
+  }
+}
+
+function estadoLabel(estado: string): string {
+  switch (estado) {
+    case "pendiente": return "Pendiente";
+    case "aprobada": return "Aprobada";
+    case "rechazada": return "Rechazada";
+    default: return estado;
+  }
+}
+---
+
+<AppLayout title={`Esquela - ${esquela.trabajador?.nombre ?? ""} ${esquela.trabajador?.apellidos ?? ""}`} currentPath="/permits">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <a
+          href="/permits"
+          class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+          aria-label="Volver a la lista"
+        >
+          <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </a>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Esquela de Permiso</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400">ID: {esquela.id.slice(0, 8).toUpperCase()}</p>
+        </div>
+      </div>
+      <Badge variant={estadoVariant(esquela.estado)} size="md">
+        {estadoLabel(esquela.estado)}
+      </Badge>
+    </div>
+
+    <!-- Alerts for pending/approved/rejected -->
+    {esquela.estado === "aprobada" && (
+      <Alert variant="success" title="Permiso Aprobado" class="mb-6">
+        Este permiso ha sido aprobado{esquela.nombreAprobador ? ` por ${esquela.nombreAprobador}` : ""}.
+      </Alert>
+    )}
+    {esquela.estado === "rechazada" && (
+      <Alert variant="error" title="Permiso Rechazado" class="mb-6">
+        Este permiso ha sido rechazado{esquela.nombreAprobador ? ` por ${esquela.nombreAprobador}` : ""}.
+      </Alert>
+    )}
+
+    <!-- Worker Info -->
+    <Card title="Información del Trabajador" class="mb-6">
+      <div slot="body">
+        {esquela.trabajador ? (
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Nombre Completo</p>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">{esquela.trabajador.nombre} {esquela.trabajador.apellidos}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Cédula de Identidad</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{esquela.trabajador.cedulaIdentidad}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Email</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{esquela.trabajador.email}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Teléfono</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{esquela.trabajador.telefono}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Cargo</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{esquela.cargo ?? esquela.trabajador.cargo ?? "N/A"}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Ubicación</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{esquela.ubicacion}</p>
+            </div>
+          </div>
+        ) : (
+          <p class="text-sm text-gray-500 dark:text-gray-400">Información del trabajador no disponible</p>
+        )}
+      </div>
+    </Card>
+
+    <!-- Permit Details -->
+    <Card title="Detalles del Permiso" class="mb-6">
+      <div slot="body">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Tipo de Permiso</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{esquela.tipoPermiso?.nombre ?? "N/A"}</p>
+            {esquela.tipoPermiso?.descripcion && (
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{esquela.tipoPermiso.descripcion}</p>
+            )}
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Cantidad de Días</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{esquela.cantidadDias} día(s)</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Periodo Correspondiente</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{esquela.periodoCorrespondiente}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Fecha de Incorporación</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{formatDate(esquela.fechaIncorporacion)}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Fecha de Elaboración</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{formatDateTime(esquela.fechaElaborada)}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Estado</p>
+            <div class="mt-1">
+              <Badge variant={estadoVariant(esquela.estado)}>
+                {estadoLabel(esquela.estado)}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        {esquela.observaciones && (
+          <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Observaciones</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{esquela.observaciones}</p>
+          </div>
+        )}
+      </div>
+    </Card>
+
+    <!-- Approval Info -->
+    {(esquela.estado === "aprobada" || esquela.estado === "rechazada") && (
+      <Card title="Información de Aprobación" class="mb-6">
+        <div slot="body">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Aprobado/Rechazado por</p>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">{esquela.nombreAprobador ?? "N/A"}</p>
+            </div>
+            {esquela.firmaDigital && (
+              <div class="md:col-span-2">
+                <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Firma Digital</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300 font-mono break-all bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                  {esquela.firmaDigital}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    )}
+
+    <!-- Approve / Reject Actions -->
+    {isPending && canApprove && (
+      <Card title="Acciones" class="mb-6">
+        <div slot="body">
+          <div class="space-y-4">
+            <div>
+              <label for="firma-digital" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Firma Digital (opcional)
+              </label>
+              <input
+                id="firma-digital"
+                type="text"
+                placeholder="Ingrese la firma digital del autorizante..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+            </div>
+
+            <div id="action-error" class="hidden">
+              <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-950 border border-danger-200 dark:border-danger-900 text-sm text-danger-700 dark:text-danger-400"></div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button
+                id="btn-aprobar"
+                type="button"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-success-600 rounded-lg hover:bg-success-700 focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+              >
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                Aprobar Permiso
+              </button>
+              <button
+                id="btn-rechazar"
+                type="button"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-danger-600 rounded-lg hover:bg-danger-700 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+              >
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                Rechazar Permiso
+              </button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    )}
+
+    {isPending && !canApprove && (
+      <Card class="mb-6">
+        <div slot="body">
+          <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+            Este permiso está pendiente de aprobación por un supervisor o administrador.
+          </p>
+        </div>
+      </Card>
+    )}
+
+    <!-- Bottom navigation -->
+    <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-800">
+      <a
+        href="/permits"
+        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      >
+        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Volver a la lista
+      </a>
+    </div>
+  </div>
+</AppLayout>
+
+<script define:vars={{ esquelaId: id }}>
+  void esquelaId;
+  const btnAprobar = document.getElementById("btn-aprobar");
+  const btnRechazar = document.getElementById("btn-rechazar");
+  const firmaInput = document.getElementById("firma-digital") as HTMLInputElement;
+  const errorDiv = document.getElementById("action-error");
+  const errorMsg = errorDiv?.querySelector("div");
+
+  function showError(message: string) {
+    if (errorDiv && errorMsg) {
+      errorMsg.textContent = message;
+      errorDiv.classList.remove("hidden");
+    }
+  }
+
+  function hideError() {
+    if (errorDiv) errorDiv.classList.add("hidden");
+  }
+
+  function setLoading(button: HTMLElement | null, loading: boolean) {
+    if (!button) return;
+    if (loading) {
+      button.setAttribute("disabled", "true");
+      button.innerHTML = '<svg class="animate-spin size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Procesando...';
+    } else {
+      button.removeAttribute("disabled");
+    }
+  }
+
+  btnAprobar?.addEventListener("click", async () => {
+    hideError();
+    setLoading(btnAprobar, true);
+
+    try {
+      const body: Record<string, string> = {};
+      if (firmaInput?.value) {
+        body.firmaDigital = firmaInput.value;
+      }
+
+      const res = await fetch(`/api/permits/${esquelaId}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        showError(json?.error?.message || "Error al aprobar el permiso");
+      }
+    } catch {
+      showError("Error de conexión. Intente nuevamente.");
+    } finally {
+      setLoading(btnAprobar, false);
+    }
+  });
+
+  btnRechazar?.addEventListener("click", async () => {
+    hideError();
+    setLoading(btnRechazar, true);
+
+    try {
+      const res = await fetch(`/api/permits/${esquelaId}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        showError(json?.error?.message || "Error al rechazar el permiso");
+      }
+    } catch {
+      showError("Error de conexión. Intente nuevamente.");
+    } finally {
+      setLoading(btnRechazar, false);
+    }
+  });
+</script>

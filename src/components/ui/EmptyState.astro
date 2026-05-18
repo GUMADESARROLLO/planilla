@@ -1,0 +1,37 @@
+---
+import { Inbox } from "@lucide/astro";
+
+export interface Props {
+  icon?: string;
+  title?: string;
+  description?: string;
+  actionLabel?: string;
+  actionHref?: string;
+}
+
+const { icon, title = "Sin datos", description = "No hay información disponible para mostrar.", actionLabel, actionHref } = Astro.props;
+
+const iconSize = "size-12";
+const iconClass = "text-gray-300 dark:text-gray-600";
+---
+
+<div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+  {icon ? (
+    <div class={[iconSize, iconClass].join(" ")}>
+      <slot name="icon" />
+    </div>
+  ) : (
+    <Inbox class={[iconSize, iconClass].join(" ")} />
+  )}
+  <h3 class="mt-4 text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
+  {description && <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 max-w-sm">{description}</p>}
+  {actionLabel && actionHref && (
+    <a
+      href={actionHref}
+      class="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+    >
+      {actionLabel}
+    </a>
+  )}
+  <slot />
+</div>

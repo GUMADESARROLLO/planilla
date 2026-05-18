@@ -1,0 +1,401 @@
+---
+import AppLayout from "@components/layout/AppLayout.astro";
+import Button from "@components/ui/Button.astro";
+import Badge from "@components/ui/Badge.astro";
+import Modal from "@components/ui/Modal.astro";
+import FormField from "@components/ui/FormField.astro";
+import EmptyState from "@components/ui/EmptyState.astro";
+import Pagination from "@components/shared/Pagination.astro";
+import * as permitsService from "@modules/permits/services/permits.service";
+import type { EsquelaResponse } from "@modules/permits/types";
+import { db } from "@/db";
+import { trabajadores } from "@/db/schemas/workers";
+import { tiposPermisos } from "@/db/schemas/catalogs";
+import { eq, isNull } from "drizzle-orm";
+
+const currentUrl = Astro.url;
+
+const page = parseInt(currentUrl.searchParams.get("page") ?? "1", 10);
+const limit = 10;
+const search = currentUrl.searchParams.get("search") ?? undefined;
+const estado = currentUrl.searchParams.get("estado") ?? undefined;
+
+const validEstados = ["pendiente", "aprobada", "rechazada"];
+const estadoFilter = estado && validEstados.includes(estado)
+  ? (estado as "pendiente" | "aprobada" | "rechazada")
+  : undefined;
+
+const result = await permitsService.findAll({
+  page,
+  limit,
+  search,
+  estado: estadoFilter,
+});
+
+const [workers, tipos] = await Promise.all([
+  db
+    .select({ id: trabajadores.id, nombre: trabajadores.nombre, apellidos: trabajadores.apellidos, cedulaIdentidad: trabajadores.cedulaIdentidad })
+    .from(trabajadores)
+    .where(isNull(trabajadores.deleted_at)),
+  db
+    .select({ id: tiposPermisos.id, nombre: tiposPermisos.nombre })
+    .from(tiposPermisos),
+]);
+
+function formatDate(d: string): string {
+  try {
+    return new Date(d).toLocaleDateString("es-ES");
+  } catch {
+    return d;
+  }
+}
+
+function estadoVariant(estado: string): string {
+  switch (estado) {
+    case "pendiente": return "warning";
+    case "aprobada": return "success";
+    case "rechazada": return "danger";
+    default: return "default";
+  }
+}
+
+function estadoLabel(estado: string): string {
+  switch (estado) {
+    case "pendiente": return "Pendiente";
+    case "aprobada": return "Aprobada";
+    case "rechazada": return "Rechazada";
+    default: return estado;
+  }
+}
+
+const tabs = [
+  { label: "Todas", href: "/permits", active: !estado },
+  { label: "Pendientes", href: "/permits?estado=pendiente", active: estado === "pendiente" },
+  { label: "Aprobadas", href: "/permits?estado=aprobada", active: estado === "aprobada" },
+  { label: "Rechazadas", href: "/permits?estado=rechazada", active: estado === "rechazada" },
+];
+---
+
+<AppLayout title="Esquelas de Permisos" currentPath="/permits">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Esquelas de Permisos</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Gestión de esquelas de permisos del personal
+      </p>
+    </div>
+    <Button id="btn-nueva-esquela" variant="primary">
+      <span slot="icon">
+        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      </span>
+      Nueva Esquela
+    </Button>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="flex gap-1 mb-6 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg w-fit">
+    {tabs.map((tab) => (
+      <a
+        href={tab.href}
+        class:list={[
+          "px-4 py-2 text-sm font-medium rounded-md transition-colors",
+          tab.active
+            ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-700/50",
+        ]}
+      >
+        {tab.label}
+      </a>
+    ))}
+  </div>
+
+  <!-- Search -->
+  <div class="mb-4">
+    <form method="GET" action="/permits" class="flex gap-2">
+      <input
+        type="hidden" name="estado" value={estado ?? ""}
+      />
+      <div class="relative flex-1 max-w-xs">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input
+          type="text" name="search" value={search ?? ""} placeholder="Buscar por nombre del trabajador..."
+          class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+        />
+      </div>
+      <button type="submit" class="px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">Buscar</button>
+      {search && (
+        <a href={estado ? `/permits?estado=${estado}` : "/permits"} class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Limpiar</a>
+      )}
+    </form>
+  </div>
+
+  <!-- Table -->
+  {result.data.length === 0 ? (
+    <EmptyState title="Sin esquelas de permisos" description={search || estado ? "No se encontraron resultados con los filtros aplicados." : "No hay esquelas de permisos registradas."} />
+  ) : (
+    <>
+      <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+          <thead class="bg-gray-50 dark:bg-gray-900">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Trabajador</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo Permiso</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Días</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
+            {result.data.map((esquela) => (
+              <tr
+                class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                data-id={esquela.id}
+                onclick={`window.location.href='/permits/${esquela.id}'`}
+              >
+                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  {esquela.trabajador
+                    ? `${esquela.trabajador.nombre} ${esquela.trabajador.apellidos}`
+                    : "N/A"}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  {esquela.tipoPermiso?.nombre ?? "N/A"}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  {formatDate(esquela.fechaElaborada)}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  {esquela.cantidadDias}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <Badge variant={estadoVariant(esquela.estado)}>
+                    {estadoLabel(esquela.estado)}
+                  </Badge>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <a
+                    href={`/permits/${esquela.id}`}
+                    class="text-primary-600 hover:text-primary-700 dark:text-primary-400 text-sm font-medium"
+                  >
+                    Ver detalle
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-4">
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          limit={result.limit}
+          baseUrl={currentUrl.pathname + (estado ? `?estado=${estado}` : "") + ((estado && search) ? `&search=${search}` : search ? `?search=${search}` : "")}
+        />
+      </div>
+    </>
+  )}
+</AppLayout>
+
+<!-- Create Modal -->
+<Modal id="create-modal" title="Nueva Esquela de Permiso" size="lg">
+  <div slot="body">
+    <form id="create-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="md:col-span-2">
+        <FormField label="Trabajador" name="trabajadorId" required>
+          <select
+            id="field-trabajadorId"
+            name="trabajadorId"
+            required
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">Seleccione un trabajador...</option>
+            {workers.map((w) => (
+              <option value={w.id}>{w.nombre} {w.apellidos} - {w.cedulaIdentidad}</option>
+            ))}
+          </select>
+        </FormField>
+      </div>
+
+      <FormField label="Tipo de Permiso" name="tipoPermisoId" required>
+        <select
+          id="field-tipoPermisoId"
+          name="tipoPermisoId"
+          required
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        >
+          <option value="">Seleccione un tipo...</option>
+          {tipos.map((tp) => (
+            <option value={tp.id}>{tp.nombre}</option>
+          ))}
+        </select>
+      </FormField>
+
+      <FormField label="Cargo" name="cargo">
+        <input
+          id="field-cargo"
+          name="cargo"
+          type="text"
+          placeholder="Cargo del trabajador"
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        />
+      </FormField>
+
+      <FormField label="Ubicación" name="ubicacion" required>
+        <input
+          id="field-ubicacion"
+          name="ubicacion"
+          type="text"
+          placeholder="Ubicación"
+          required
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        />
+      </FormField>
+
+      <FormField label="Cantidad de Días" name="cantidadDias" required>
+        <input
+          id="field-cantidadDias"
+          name="cantidadDias"
+          type="number"
+          min="1"
+          required
+          placeholder="Ej: 5"
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        />
+      </FormField>
+
+      <FormField label="Periodo Correspondiente" name="periodoCorrespondiente" required>
+        <input
+          id="field-periodoCorrespondiente"
+          name="periodoCorrespondiente"
+          type="text"
+          placeholder="Ej: Del 01/01/2026 al 05/01/2026"
+          required
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        />
+      </FormField>
+
+      <FormField label="Fecha de Incorporación" name="fechaIncorporacion" required>
+        <input
+          id="field-fechaIncorporacion"
+          name="fechaIncorporacion"
+          type="date"
+          required
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        />
+      </FormField>
+
+      <div class="md:col-span-2">
+        <FormField label="Observaciones" name="observaciones">
+          <textarea
+            id="field-observaciones"
+            name="observaciones"
+            rows="3"
+            placeholder="Observaciones adicionales (opcional)"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+          ></textarea>
+        </FormField>
+      </div>
+
+      <div id="create-form-error" class="md:col-span-2 hidden">
+        <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-950 border border-danger-200 dark:border-danger-900 text-sm text-danger-700 dark:text-danger-400"></div>
+      </div>
+    </form>
+  </div>
+  <div slot="footer">
+    <button
+      type="button"
+      id="create-cancel"
+      class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      id="create-submit"
+      class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
+    >
+      Guardar Esquela
+    </button>
+  </div>
+</Modal>
+
+<script>
+  const btnNueva = document.getElementById("btn-nueva-esquela");
+  const modalOverlay = document.querySelector("#\\#create-modal");
+  const cancelBtn = document.getElementById("create-cancel");
+  const submitBtn = document.getElementById("create-submit");
+  const form = document.getElementById("create-form") as HTMLFormElement;
+  const errorDiv = document.getElementById("create-form-error");
+  const errorMsg = errorDiv?.querySelector("div");
+
+  function openModal() {
+    (window as any).__openModal?.();
+  }
+
+  function closeModal() {
+    form.reset();
+    if (errorDiv) errorDiv.classList.add("hidden");
+    (window as any).__closeModal?.();
+  }
+
+  btnNueva?.addEventListener("click", openModal);
+  cancelBtn?.addEventListener("click", closeModal);
+
+  submitBtn?.addEventListener("click", async () => {
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const payload = {
+      trabajadorId: formData.get("trabajadorId"),
+      cargo: formData.get("cargo") || undefined,
+      ubicacion: formData.get("ubicacion"),
+      tipoPermisoId: formData.get("tipoPermisoId"),
+      cantidadDias: parseInt(formData.get("cantidadDias") as string, 10),
+      periodoCorrespondiente: formData.get("periodoCorrespondiente"),
+      fechaIncorporacion: formData.get("fechaIncorporacion"),
+      observaciones: formData.get("observaciones") || undefined,
+    };
+
+    if (!payload.trabajadorId || !payload.tipoPermisoId || !payload.ubicacion || !payload.cantidadDias || !payload.periodoCorrespondiente || !payload.fechaIncorporacion) {
+      if (errorDiv && errorMsg) {
+        errorMsg.textContent = "Todos los campos marcados con * son requeridos.";
+        errorDiv.classList.remove("hidden");
+      }
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Guardando...";
+
+    try {
+      const res = await fetch("/api/permits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        closeModal();
+        window.location.reload();
+      } else {
+        if (errorDiv && errorMsg) {
+          errorMsg.textContent = json?.error?.message || "Error al crear la esquela";
+          errorDiv.classList.remove("hidden");
+        }
+      }
+    } catch {
+      if (errorDiv && errorMsg) {
+        errorMsg.textContent = "Error de conexión. Intente nuevamente.";
+        errorDiv.classList.remove("hidden");
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Guardar Esquela";
+    }
+  });
+</script>

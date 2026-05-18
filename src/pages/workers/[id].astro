@@ -1,0 +1,197 @@
+---
+import AppLayout from "@components/layout/AppLayout.astro";
+import Card from "@components/ui/Card.astro";
+import Button from "@components/ui/Button.astro";
+import Badge from "@components/ui/Badge.astro";
+import { db } from "@db/index";
+import { trabajadores, trabajadoresPlanillas, planillas } from "@db/schemas";
+import { eq, and, isNull } from "drizzle-orm";
+import { ArrowLeft, Pencil, Mail, Phone, MapPin, Calendar, CreditCard, User, Shirt } from "@lucide/astro";
+import { NotFoundError } from "@utils/errors";
+
+export async function getStaticPaths() {
+  return [];
+}
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/workers");
+}
+
+const worker = await db.query.trabajadores.findFirst({
+  where: and(eq(trabajadores.id, id), isNull(trabajadores.deletedAt)),
+  with: {
+    nacionalidad: true,
+    tallaCamisa: true,
+    tallaPantalon: true,
+    tipoContrato: true,
+    cargo: true,
+    genero: true,
+    planillas: {
+      with: {
+        planilla: true,
+      },
+    },
+  },
+});
+
+if (!worker) {
+  return Astro.redirect("/workers");
+}
+
+const currentPath = `/workers/${id}`;
+
+function formatDate(date: string | Date | null): string {
+  if (!date) return "-";
+  const d = new Date(date);
+  return d.toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+}
+
+const infoItems = [
+  { label: "Cédula de Identidad", value: worker.cedulaIdentidad, icon: "CreditCard" },
+  { label: "Número INSS", value: worker.numeroInss, icon: "CreditCard" },
+  { label: "Correo Electrónico", value: worker.email, icon: "Mail" },
+  { label: "Teléfono", value: worker.telefono, icon: "Phone" },
+  { label: "Dirección", value: worker.direccion ?? "-", icon: "MapPin" },
+  { label: "Nacionalidad", value: worker.nacionalidad?.nombre ?? "-", icon: "User" },
+  { label: "Género", value: worker.genero?.nombre ?? "-", icon: "User" },
+  { label: "Fecha de Entrada", value: formatDate(worker.fechaEntrada), icon: "Calendar" },
+  { label: "Fecha de Salida", value: formatDate(worker.fechaSalida), icon: "Calendar" },
+  { label: "Saldo de Vacaciones", value: `C$ ${worker.saldoVacaciones}`, icon: "Calendar" },
+  { label: "Talla de Camisa", value: worker.tallaCamisa?.nombre ?? "-", icon: "Shirt" },
+  { label: "Talla de Pantalón", value: worker.tallaPantalon?.nombre ?? "-", icon: "Shirt" },
+];
+
+const employmentInfo = [
+  { label: "Cargo", value: worker.cargo?.nombre ?? "-" },
+  { label: "Tipo de Contrato", value: worker.tipoContrato?.nombre ?? "-" },
+  { label: "Estado", value: worker.activo ? "Activo" : "Inactivo", badge: worker.activo ? "success" : "danger" },
+];
+---
+
+<AppLayout title={`${worker.nombre} ${worker.apellidos}`} {currentPath}>
+  <div class="space-y-6">
+    <!-- Back link -->
+    <a
+      href="/workers"
+      class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+    >
+      <ArrowLeft class="size-4" />
+      Volver a trabajadores
+    </a>
+
+    <!-- Profile Header -->
+    <div class="flex flex-col sm:flex-row items-start gap-6">
+      <div class="shrink-0">
+        {worker.foto ? (
+          <img
+            src={worker.foto}
+            alt={`${worker.nombre} ${worker.apellidos}`}
+            class="size-24 rounded-xl object-cover border-2 border-gray-200 dark:border-gray-700 shadow-sm"
+          />
+        ) : (
+          <div class="size-24 rounded-xl bg-primary-100 dark:bg-primary-900 flex items-center justify-center border-2 border-gray-200 dark:border-gray-700">
+            <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+              {worker.nombre.charAt(0)}{worker.apellidos.charAt(0)}
+            </span>
+          </div>
+        )}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white truncate">
+            {worker.nombre} {worker.apellidos}
+          </h1>
+          {worker.activo
+            ? <Badge variant="success" size="md">Activo</Badge>
+            : <Badge variant="danger" size="md">Inactivo</Badge>
+          }
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          {worker.cargo?.nombre ?? "Sin cargo"} &middot; {worker.tipoContrato?.nombre ?? "Sin contrato"}
+        </p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          Registrado {formatDate(worker.createdAt)}
+        </p>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <a href={`/workers/${worker.id}?edit=true`}>
+          <Button variant="outline" size="sm">
+            <Pencil slot="icon" class="size-3.5" />
+            Editar
+          </Button>
+        </a>
+      </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Personal Information -->
+      <Card title="Información Personal" class="lg:col-span-2">
+        <div slot="body">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {infoItems.map((item) => (
+              <div class="flex items-start gap-3">
+                <div class="shrink-0 mt-0.5">
+                  <div class="size-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
+                    {item.icon === "Mail" && <Mail class="size-4" />}
+                    {item.icon === "Phone" && <Phone class="size-4" />}
+                    {item.icon === "MapPin" && <MapPin class="size-4" />}
+                    {item.icon === "CreditCard" && <CreditCard class="size-4" />}
+                    {item.icon === "User" && <User class="size-4" />}
+                    {item.icon === "Calendar" && <Calendar class="size-4" />}
+                    {item.icon === "Shirt" && <Shirt class="size-4" />}
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{item.label}</p>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5 break-words">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      <!-- Employment Info -->
+      <div class="space-y-6">
+        <Card title="Información Laboral">
+          <div slot="body" class="space-y-4">
+            {employmentInfo.map((item) => (
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{item.label}</p>
+                {"badge" in item ? (
+                  <div class="mt-1">
+                    <Badge variant={item.badge as any} size="md">{item.value}</Badge>
+                  </div>
+                ) : (
+                  <p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{item.value}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <!-- Planillas -->
+        <Card title="Planillas">
+          <div slot="body">
+            {worker.planillas.length === 0 ? (
+              <p class="text-sm text-gray-400 dark:text-gray-500">No asignado a ninguna planilla</p>
+            ) : (
+              <ul class="space-y-2">
+                {worker.planillas.map((tp: any) => (
+                  <li class="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{tp.planilla.nombre}</span>
+                    <Badge variant="info" size="sm">{tp.planilla.tipo}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+

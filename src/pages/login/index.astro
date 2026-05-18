@@ -1,0 +1,115 @@
+---
+import AuthLayout from "@layouts/AuthLayout.astro";
+---
+
+<AuthLayout title="Iniciar Sesión">
+  <form id="login-form" class="space-y-5" novalidate>
+    <div id="error-container" class="hidden"></div>
+
+    <div>
+      <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+        Correo electrónico
+      </label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        required
+        placeholder="nombre@empresa.com"
+        class="block w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm outline-none"
+      />
+    </div>
+
+    <div>
+      <div class="flex items-center justify-between mb-1.5">
+        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Contraseña
+        </label>
+        <a href="/forgot-password" class="text-xs text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        required
+        placeholder="••••••••"
+        class="block w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm outline-none"
+      />
+    </div>
+
+    <button
+      id="submit-btn"
+      type="submit"
+      class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none select-none"
+    >
+      <span id="btn-text">Iniciar sesión</span>
+      <svg id="btn-spinner" class="hidden size-4 animate-spin" viewBox="0 0 24 24" fill="none">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+    </button>
+  </form>
+
+  <p class="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
+    &copy; {new Date().getFullYear()} Plan-IA. Todos los derechos reservados.
+  </p>
+</AuthLayout>
+
+<script>
+  const form = document.getElementById("login-form")!;
+  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  const btnText = document.getElementById("btn-text")!;
+  const btnSpinner = document.getElementById("btn-spinner")!;
+  const errorContainer = document.getElementById("error-container")!;
+
+  form.addEventListener("submit", async (e: Event) => {
+    e.preventDefault();
+
+    errorContainer.classList.add("hidden");
+    errorContainer.innerHTML = "";
+
+    submitBtn.disabled = true;
+    btnText.textContent = "Iniciando sesión...";
+    btnSpinner.classList.remove("hidden");
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.get("email"),
+          password: formData.get("password"),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || "Error al iniciar sesión");
+      }
+
+      window.location.href = "/dashboard";
+    } catch (err) {
+      errorContainer.classList.remove("hidden");
+      errorContainer.innerHTML = `
+        <div class="flex items-center gap-3 p-4 rounded-lg border border-danger-200 bg-danger-50 dark:border-danger-900 dark:bg-danger-950" role="alert">
+          <svg class="size-5 shrink-0 text-danger-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M15 9l-6 6M9 9l6 6" />
+          </svg>
+          <p class="text-sm text-danger-700 dark:text-danger-400">${err instanceof Error ? err.message : "Error desconocido"}</p>
+        </div>
+      `;
+    } finally {
+      submitBtn.disabled = false;
+      btnText.textContent = "Iniciar sesión";
+      btnSpinner.classList.add("hidden");
+    }
+  });
+</script>

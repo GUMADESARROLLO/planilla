@@ -1,0 +1,514 @@
+---
+import AppLayout from "@components/layout/AppLayout.astro";
+import Button from "@components/ui/Button.astro";
+import DataTable from "@components/ui/DataTable.astro";
+import Modal from "@components/ui/Modal.astro";
+import FormField from "@components/ui/FormField.astro";
+import Badge from "@components/ui/Badge.astro";
+import Alert from "@components/ui/Alert.astro";
+import EmptyState from "@components/ui/EmptyState.astro";
+import ConfirmDialog from "@components/shared/ConfirmDialog.astro";
+
+const title = "Planillas";
+const currentPath = "/payrolls";
+---
+
+<AppLayout {title} {currentPath}>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Planillas</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestión de planillas de nómina</p>
+    </div>
+    <Button id="btn-new-payroll" variant="primary">
+      <span slot="icon">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </span>
+      Nueva Planilla
+    </Button>
+  </div>
+
+  <div id="alert-area"></div>
+
+  <div id="table-container">
+    <DataTable
+      columns={[
+        { key: "nombre", label: "Nombre", sortable: false },
+        { key: "tipo", label: "Tipo" },
+        { key: "descripcion", label: "Descripción" },
+        { key: "activo", label: "Activo" },
+        { key: "acciones", label: "Acciones" },
+      ]}
+      data={[]}
+      loading={true}
+    />
+  </div>
+
+  <Modal open={false} title="Nueva Planilla" size="md">
+    <form id="payroll-form" slot="body" class="space-y-4" novalidate>
+      <FormField label="Nombre" name="nombre" required>
+        <input
+          id="input-nombre"
+          name="nombre"
+          type="text"
+          required
+          maxlength={255}
+          placeholder="Ej: Planilla General Quincenal"
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+        />
+      </FormField>
+      <FormField label="Tipo" name="tipo" required>
+        <select
+          id="input-tipo"
+          name="tipo"
+          required
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+        >
+          <option value="">Seleccionar...</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="mensual">Mensual</option>
+          <option value="vehicular">Vehicular</option>
+          <option value="administrativa">Administrativa</option>
+          <option value="temporal">Temporal</option>
+        </select>
+      </FormField>
+      <FormField label="Descripción" name="descripcion">
+        <textarea
+          id="input-descripcion"
+          name="descripcion"
+          rows={3}
+          maxlength={1000}
+          placeholder="Descripción opcional"
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors resize-none"
+        ></textarea>
+      </FormField>
+    </form>
+    <div slot="footer">
+      <button
+        id="btn-form-cancel"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      >
+        Cancelar
+      </button>
+      <button
+        id="btn-form-submit"
+        type="submit"
+        form="payroll-form"
+        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+      >
+        Guardar
+      </button>
+    </div>
+  </Modal>
+
+  <Modal open={false} title="Editar Planilla" size="md">
+    <form id="payroll-edit-form" slot="body" class="space-y-4" novalidate>
+      <input id="edit-id" name="id" type="hidden" />
+      <FormField label="Nombre" name="nombre" required>
+        <input
+          id="edit-nombre"
+          name="nombre"
+          type="text"
+          required
+          maxlength={255}
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+        />
+      </FormField>
+      <FormField label="Tipo" name="tipo" required>
+        <select
+          id="edit-tipo"
+          name="tipo"
+          required
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+        >
+          <option value="">Seleccionar...</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="mensual">Mensual</option>
+          <option value="vehicular">Vehicular</option>
+          <option value="administrativa">Administrativa</option>
+          <option value="temporal">Temporal</option>
+        </select>
+      </FormField>
+      <FormField label="Descripción" name="descripcion">
+        <textarea
+          id="edit-descripcion"
+          name="descripcion"
+          rows={3}
+          maxlength={1000}
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors resize-none"
+        ></textarea>
+      </FormField>
+      <FormField label="Estado" name="activo">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input
+            id="edit-activo"
+            name="activo"
+            type="checkbox"
+            checked
+            class="size-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+          />
+          <span class="text-sm text-gray-700 dark:text-gray-300">Activo</span>
+        </label>
+      </FormField>
+    </form>
+    <div slot="footer">
+      <button
+        id="btn-edit-cancel"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      >
+        Cancelar
+      </button>
+      <button
+        id="btn-edit-submit"
+        type="submit"
+        form="payroll-edit-form"
+        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+      >
+        Actualizar
+      </button>
+    </div>
+  </Modal>
+
+  <ConfirmDialog
+    open={false}
+    title="Eliminar Planilla"
+    message="¿Estás seguro de que deseas eliminar esta planilla? Esta acción es reversible."
+    confirmText="Eliminar"
+    cancelText="Cancelar"
+    variant="danger"
+  />
+</AppLayout>
+
+<script>
+  let currentPage = 1;
+  let currentSearch = "";
+  let editingId: string | null = null;
+  let deleteId: string | null = null;
+
+  const tableContainer = document.getElementById("table-container")!;
+  const alertArea = document.getElementById("alert-area")!;
+
+  function showAlert(message: string, variant: "success" | "error" = "success") {
+    alertArea.innerHTML = `
+      <div class="mb-4 flex gap-3 p-4 rounded-lg border ${
+        variant === "success"
+          ? "bg-success-50 border-success-200 dark:bg-success-950 dark:border-success-900"
+          : "bg-danger-50 border-danger-200 dark:bg-danger-950 dark:border-danger-900"
+      }" role="alert">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-gray-700 dark:text-gray-300">${message}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="p-1 rounded-md text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    `;
+    setTimeout(() => { alertArea.innerHTML = ""; }, 5000);
+  }
+
+  function getTipoLabel(tipo: string): string {
+    const map: Record<string, string> = {
+      quincenal: "Quincenal",
+      mensual: "Mensual",
+      vehicular: "Vehicular",
+      administrativa: "Administrativa",
+      temporal: "Temporal",
+    };
+    return map[tipo] ?? tipo;
+  }
+
+  async function loadPayrolls(page: number, search: string) {
+    const params = new URLSearchParams({ page: String(page), limit: "10" });
+    if (search) params.set("search", search);
+
+    tableContainer.innerHTML = `
+      <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+          <thead class="bg-gray-50 dark:bg-gray-900">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Descripción</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Activo</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
+            ${Array.from({ length: 5 }).map(() => `
+              <tr>
+                ${Array.from({ length: 5 }).map(() => `
+                  <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div></td>
+                `).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    try {
+      const res = await fetch(`/api/payrolls?${params}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || "Error al cargar");
+
+      const { data, meta } = json;
+      renderTable(data, meta);
+    } catch (err) {
+      tableContainer.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <svg class="size-12 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <h3 class="mt-4 text-base font-semibold text-gray-900 dark:text-white">Error al cargar</h3>
+          <p class="mt-1 text-sm text-gray-500">${err instanceof Error ? err.message : "Error desconocido"}</p>
+        </div>
+      `;
+    }
+  }
+
+  function renderTable(data: any[], meta: any) {
+    if (data.length === 0) {
+      tableContainer.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <svg class="size-12 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+          </svg>
+          <h3 class="mt-4 text-base font-semibold text-gray-900 dark:text-white">Sin planillas</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">No hay planillas registradas. Crea la primera.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const rows = data.map((row: any) => `
+      <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer" data-id="${row.id}">
+        <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(row.nombre)}</td>
+        <td class="px-4 py-3 text-sm"><span class="inline-flex items-center font-medium rounded-md px-1.5 py-0.5 text-xs ring-1 ring-inset bg-info-50 text-info-700 ring-info-600/20 dark:bg-info-950 dark:text-info-400 dark:ring-info-500/30">${getTipoLabel(row.tipo)}</span></td>
+        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 max-w-[200px] truncate">${escapeHtml(row.descripcion ?? "-")}</td>
+        <td class="px-4 py-3 text-sm">${
+          row.activo
+            ? '<span class="inline-flex items-center font-medium rounded-md px-1.5 py-0.5 text-xs ring-1 ring-inset bg-success-50 text-success-700 ring-success-600/20 dark:bg-success-950 dark:text-success-400 dark:ring-success-500/30">Sí</span>'
+            : '<span class="inline-flex items-center font-medium rounded-md px-1.5 py-0.5 text-xs ring-1 ring-inset bg-gray-100 text-gray-700 ring-gray-600/20 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-500/30">No</span>'
+        }</td>
+        <td class="px-4 py-3 text-sm">
+          <div class="flex items-center gap-2">
+            <button data-edit="${row.id}" class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors" title="Editar">
+              <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button data-delete="${row.id}" class="p-1.5 rounded-lg text-gray-400 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950 transition-colors" title="Eliminar">
+              <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    const from = data.length > 0 ? (meta.page - 1) * meta.limit + 1 : 0;
+    const to = Math.min(meta.page * meta.limit, meta.total);
+
+    tableContainer.innerHTML = `
+      <div class="flex items-center gap-3 mb-4">
+        <div class="relative flex-1 max-w-xs">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input id="payroll-search" type="text" value="${escapeHtml(currentSearch)}" placeholder="Buscar..." class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" aria-label="Buscar planillas" />
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 ml-auto">Mostrando ${from} - ${to} de ${meta.total}</p>
+      </div>
+      <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+          <thead class="bg-gray-50 dark:bg-gray-900">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Descripción</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Activo</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">${rows}</tbody>
+        </table>
+      </div>
+      ${meta.totalPages > 1 ? `
+        <div class="flex items-center justify-between mt-4">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Página ${meta.page} de ${meta.totalPages}</p>
+          <div class="flex items-center gap-1">${
+            Array.from({ length: meta.totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === meta.totalPages || Math.abs(p - meta.page) <= 1)
+              .map((p, idx, arr) => {
+                let html = "";
+                if (idx > 0 && arr[idx - 1] !== p - 1) html += '<span class="px-2 text-gray-400 text-sm">...</span>';
+                html += `<button data-page="${p}" class="min-w-[2rem] h-8 rounded-lg text-sm font-medium transition-colors ${p === meta.page ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'}" type="button">${p}</button>`;
+                return html;
+              }).join("")
+          }</div>
+        </div>
+      ` : ""}
+    `;
+
+    bindTableEvents();
+  }
+
+  function bindTableEvents() {
+    document.querySelectorAll("[data-page]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        currentPage = parseInt(btn.getAttribute("data-page")!, 10);
+        loadPayrolls(currentPage, currentSearch);
+      })
+    );
+
+    document.querySelectorAll("[data-edit]").forEach((btn) =>
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute("data-edit")!;
+        openEditModal(id);
+      })
+    );
+
+    document.querySelectorAll("[data-delete]").forEach((btn) =>
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteId = btn.getAttribute("data-delete")!;
+        (window as any).__openConfirm();
+      })
+    );
+
+    document.querySelectorAll("tr[data-id]").forEach((row) =>
+      row.addEventListener("click", () => {
+        const id = row.getAttribute("data-id")!;
+        window.location.href = `/payrolls/${id}`;
+      })
+    );
+
+    const searchInput = document.getElementById("payroll-search") as HTMLInputElement;
+    if (searchInput) {
+      let timeout: ReturnType<typeof setTimeout>;
+      searchInput.addEventListener("input", () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          currentSearch = searchInput.value;
+          currentPage = 1;
+          loadPayrolls(currentPage, currentSearch);
+        }, 300);
+      });
+    }
+  }
+
+  function escapeHtml(str: string): string {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function openEditModal(id: string) {
+    try {
+      const res = await fetch(`/api/payrolls/${id}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message);
+
+      const planilla = json.data;
+      editingId = planilla.id;
+      (document.getElementById("edit-id") as HTMLInputElement).value = planilla.id;
+      (document.getElementById("edit-nombre") as HTMLInputElement).value = planilla.nombre;
+      (document.getElementById("edit-tipo") as HTMLSelectElement).value = planilla.tipo;
+      (document.getElementById("edit-descripcion") as HTMLTextAreaElement).value = planilla.descripcion ?? "";
+      (document.getElementById("edit-activo") as HTMLInputElement).checked = planilla.activo;
+      (window as any).__openModal();
+    } catch (err) {
+      showAlert(err instanceof Error ? err.message : "Error al cargar planilla", "error");
+    }
+  }
+
+  // New payroll form
+  document.getElementById("btn-new-payroll")?.addEventListener("click", () => {
+    editingId = null;
+    (document.getElementById("input-nombre") as HTMLInputElement).value = "";
+    (document.getElementById("input-tipo") as HTMLSelectElement).value = "";
+    (document.getElementById("input-descripcion") as HTMLTextAreaElement).value = "";
+    (window as any).__openModal();
+  });
+
+  document.getElementById("btn-form-cancel")?.addEventListener("click", () => {
+    (window as any).__closeModal();
+  });
+
+  document.getElementById("btn-form-submit")?.addEventListener("click", async () => {
+    const nombre = (document.getElementById("input-nombre") as HTMLInputElement).value.trim();
+    const tipo = (document.getElementById("input-tipo") as HTMLSelectElement).value;
+    const descripcion = (document.getElementById("input-descripcion") as HTMLTextAreaElement).value.trim();
+
+    if (!nombre || !tipo) {
+      showAlert("Nombre y tipo son requeridos", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/payrolls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, tipo, descripcion: descripcion || undefined }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || "Error al crear");
+      (window as any).__closeModal();
+      showAlert("Planilla creada correctamente", "success");
+      loadPayrolls(currentPage, currentSearch);
+    } catch (err) {
+      showAlert(err instanceof Error ? err.message : "Error al crear", "error");
+    }
+  });
+
+  // Edit form
+  document.getElementById("btn-edit-cancel")?.addEventListener("click", () => {
+    (window as any).__closeModal();
+  });
+
+  document.getElementById("btn-edit-submit")?.addEventListener("click", async () => {
+    if (!editingId) return;
+    const nombre = (document.getElementById("edit-nombre") as HTMLInputElement).value.trim();
+    const tipo = (document.getElementById("edit-tipo") as HTMLSelectElement).value;
+    const descripcion = (document.getElementById("edit-descripcion") as HTMLTextAreaElement).value.trim();
+    const activo = (document.getElementById("edit-activo") as HTMLInputElement).checked;
+
+    if (!nombre || !tipo) {
+      showAlert("Nombre y tipo son requeridos", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/payrolls/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, tipo, descripcion: descripcion || undefined, activo }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || "Error al actualizar");
+      (window as any).__closeModal();
+      showAlert("Planilla actualizada correctamente", "success");
+      loadPayrolls(currentPage, currentSearch);
+    } catch (err) {
+      showAlert(err instanceof Error ? err.message : "Error al actualizar", "error");
+    }
+  });
+
+  // Delete confirm
+  document.addEventListener("confirm-ok", async () => {
+    if (!deleteId) return;
+    const id = deleteId;
+    deleteId = null;
+    try {
+      const res = await fetch(`/api/payrolls/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || "Error al eliminar");
+      showAlert("Planilla eliminada correctamente", "success");
+      loadPayrolls(currentPage, currentSearch);
+    } catch (err) {
+      showAlert(err instanceof Error ? err.message : "Error al eliminar", "error");
+    }
+  });
+
+  // Initial load
+  loadPayrolls(1, "");
+</script>

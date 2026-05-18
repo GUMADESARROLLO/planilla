@@ -1,0 +1,75 @@
+---
+import { CheckCircle, AlertTriangle, XCircle, Info, X } from "@lucide/astro";
+
+export interface Props {
+  variant?: "success" | "error" | "warning" | "info";
+  title?: string;
+  dismissible?: boolean;
+  class?: string;
+}
+
+const { variant = "info", title, dismissible = false, class: className = "" } = Astro.props;
+
+const config: Record<string, { icon: string; iconClass: string; containerClass: string }> = {
+  success: {
+    icon: "CheckCircle",
+    iconClass: "text-success-500",
+    containerClass: "bg-success-50 border-success-200 dark:bg-success-950 dark:border-success-900",
+  },
+  error: {
+    icon: "XCircle",
+    iconClass: "text-danger-500",
+    containerClass: "bg-danger-50 border-danger-200 dark:bg-danger-950 dark:border-danger-900",
+  },
+  warning: {
+    icon: "AlertTriangle",
+    iconClass: "text-warning-500",
+    containerClass: "bg-warning-50 border-warning-200 dark:bg-warning-950 dark:border-warning-900",
+  },
+  info: {
+    icon: "Info",
+    iconClass: "text-info-500",
+    containerClass: "bg-info-50 border-info-200 dark:bg-info-950 dark:border-info-900",
+  },
+};
+
+const { icon: IconName, iconClass, containerClass } = config[variant] ?? config.info;
+const IconComponent = { CheckCircle, AlertTriangle, XCircle, Info }[IconName];
+---
+
+<div
+  id="alert-container"
+  class={["flex gap-3 p-4 rounded-lg border", containerClass, className].filter(Boolean).join(" ")}
+  role="alert"
+>
+  {IconComponent && <IconComponent class={["size-5 mt-0.5 shrink-0", iconClass].join(" ")} />}
+  <div class="flex-1 min-w-0">
+    {title && <p class="text-sm font-semibold text-gray-900 dark:text-white">{title}</p>}
+    <div class="text-sm text-gray-700 dark:text-gray-300">
+      <slot />
+    </div>
+  </div>
+  {dismissible && (
+    <button
+      id="alert-dismiss"
+      type="button"
+      class="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-white/50 dark:hover:text-gray-300 dark:hover:bg-gray-800/50 transition-colors"
+      aria-label="Cerrar alerta"
+    >
+      <X class="size-4" />
+    </button>
+  )}
+</div>
+
+<script>
+  const dismissBtn = document.getElementById("alert-dismiss");
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", () => {
+      const container = document.getElementById("alert-container")!;
+      container.style.transition = "opacity 200ms, transform 200ms";
+      container.style.opacity = "0";
+      container.style.transform = "translateX(1rem)";
+      setTimeout(() => container.remove(), 200);
+    });
+  }
+</script>
