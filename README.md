@@ -1,4 +1,4 @@
-# Planilla-HR
+# PlayRoll UMK
 
 Sistema web empresarial para la gestión de planilla y recursos humanos.
 
@@ -7,7 +7,7 @@ Moderno, escalable, modular, responsive y desarrollado con buenas prácticas de 
 ## Estructura del proyecto (72 archivos)
 
 ```
-Plan-IA/
+PlayRoll UMK/
 ├── .env.example
 ├── .gitignore
 ├── astro.config.ts              # Configuración Astro + Node adapter + aliases

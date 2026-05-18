@@ -1,0 +1,18 @@
+---
+const url = new URL("/api/auth/sign-out", Astro.request.url);
+const response = await fetch(url, {
+  method: "POST",
+  headers: {
+    cookie: Astro.request.headers.get("cookie") ?? "",
+  },
+  redirect: "manual",
+});
+
+response.headers.forEach((value, key) => {
+  if (key.toLowerCase() === "set-cookie") {
+    Astro.response.headers.append("set-cookie", value);
+  }
+});
+
+return Astro.redirect("/login");
+---

@@ -14,7 +14,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.session = null;
   }
 
-  const publicPaths = ["/login", "/api/auth"];
+  const publicPaths = ["/login", "/logout", "/api/auth"];
   const isPublic = publicPaths.some((p) => context.url.pathname.startsWith(p));
   const isApi = context.url.pathname.startsWith("/api");
 

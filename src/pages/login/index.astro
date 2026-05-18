@@ -1,5 +1,8 @@
 ---
 import AuthLayout from "@layouts/AuthLayout.astro";
+import { Mail, Lock } from "@lucide/astro";
+
+const iconClass = "size-4 text-gray-400 dark:text-gray-500 shrink-0";
 ---
 
 <AuthLayout title="Iniciar Sesión">
@@ -10,15 +13,20 @@ import AuthLayout from "@layouts/AuthLayout.astro";
       <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
         Correo electrónico
       </label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        autocomplete="email"
-        required
-        placeholder="nombre@empresa.com"
-        class="block w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm outline-none"
-      />
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Mail class={iconClass} />
+        </div>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          placeholder="nombre@empresa.com"
+          class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm outline-none"
+        />
+      </div>
     </div>
 
     <div>
@@ -30,15 +38,20 @@ import AuthLayout from "@layouts/AuthLayout.astro";
           ¿Olvidaste tu contraseña?
         </a>
       </div>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        autocomplete="current-password"
-        required
-        placeholder="••••••••"
-        class="block w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm outline-none"
-      />
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Lock class={iconClass} />
+        </div>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+          placeholder="••••••••"
+          class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm outline-none"
+        />
+      </div>
     </div>
 
     <button
@@ -55,7 +68,7 @@ import AuthLayout from "@layouts/AuthLayout.astro";
   </form>
 
   <p class="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
-    &copy; {new Date().getFullYear()} Plan-IA. Todos los derechos reservados.
+    &copy; {new Date().getFullYear()} PlayRoll UMK. Todos los derechos reservados.
   </p>
 </AuthLayout>
 
