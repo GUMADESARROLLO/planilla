@@ -12,7 +12,7 @@ export const trabajadoresPlanillas = mysqlTable(
     planillaId: char("planilla_id", { length: 36 })
       .notNull()
       .references(() => planillas.id),
-    createdAt: timestamp("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.trabajadorId, table.planillaId] }),
@@ -34,5 +34,4 @@ export const trabajadoresPlanillasRelations = relations(
     }),
   })
 );
-
 

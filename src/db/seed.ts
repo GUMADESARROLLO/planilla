@@ -13,7 +13,6 @@ import {
   tiposPermisos,
   roles,
 } from "./schemas";
-import { usuarios } from "./schemas/users";
 import { trabajadores } from "./schemas/workers";
 import { esquelasPermisos } from "./schemas/permits";
 import { trabajadoresPlanillas } from "./schemas/workers_planillas";
@@ -214,25 +213,13 @@ async function seed() {
     await db.insert(roles).values(row);
   }
 
-  // ───── 10. Create admin user ─────
+  // ───── 10. Create admin user in Better Auth tables ─────
   const passwordHash = hashBetterAuth("Admin123!");
   const now = new Date();
-  await db.insert(usuarios).values({
-    id: ids.usuarioAdmin,
-    email: "admin@planilla.com",
-    passwordHash,
-    nombre: "Admin",
-    apellidos: "Sistema",
-    rolId: ids.rolAdmin,
-    activo: true,
-  });
-
-  // Create user in better-auth's `user` table for authentication
   await db.execute(
-    sql`INSERT INTO \`user\` (id, email, name, emailVerified, role, createdAt, updatedAt)
-        VALUES (${ids.usuarioAdmin}, 'admin@planilla.com', 'Admin Sistema', false, 'ADMIN', ${now}, ${now})`
+    sql`INSERT INTO \`user\` (id, email, name, emailVerified, role, activo, nombre, apellidos, createdAt, updatedAt)
+        VALUES (${ids.usuarioAdmin}, 'admin@planilla.com', 'Admin Sistema', false, 'ADMIN', true, 'Admin', 'Sistema', ${now}, ${now})`
   );
-  // Create credential account in better-auth's `account` table
   await db.execute(
     sql`INSERT INTO \`account\` (id, accountId, providerId, userId, password, createdAt, updatedAt)
         VALUES (${crypto.randomUUID()}, ${crypto.randomUUID()}, 'credential', ${ids.usuarioAdmin}, ${passwordHash}, ${now}, ${now})`

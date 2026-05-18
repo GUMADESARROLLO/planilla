@@ -24,6 +24,22 @@ export const auth = betterAuth({
         defaultValue: "USER",
         input: true,
       },
+      activo: {
+        type: "boolean",
+        required: true,
+        defaultValue: true,
+        input: false,
+      },
+      nombre: {
+        type: "string",
+        required: false,
+        input: true,
+      },
+      apellidos: {
+        type: "string",
+        required: false,
+        input: true,
+      },
     },
   },
 });

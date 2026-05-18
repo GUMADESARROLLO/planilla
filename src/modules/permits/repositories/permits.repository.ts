@@ -91,7 +91,7 @@ const baseQuery = db
     observaciones: esquelasPermisos.observaciones,
     estado: esquelasPermisos.estado,
     aprobadoPor: esquelasPermisos.aprobadoPor,
-    nombreAprobador: sql<string>`(SELECT CONCAT(u.nombre, ' ', u.apellidos) FROM usuarios u WHERE u.id = ${esquelasPermisos.aprobadoPor})`,
+    nombreAprobador: sql<string>`(SELECT CONCAT(u.nombre, ' ', u.apellidos) FROM \`user\` u WHERE u.id = ${esquelasPermisos.aprobadoPor})`,
     firmaDigital: esquelasPermisos.firmaDigital,
     createdAt: esquelasPermisos.created_at,
     updatedAt: esquelasPermisos.updated_at,

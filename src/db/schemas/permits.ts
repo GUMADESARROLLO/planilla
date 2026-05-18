@@ -12,17 +12,17 @@ import {
 import { relations , sql} from "drizzle-orm";
 import { trabajadores } from "./workers";
 import { tiposPermisos } from "./catalogs";
-import { usuarios } from "./users";
+import { authUser } from "./auth-schemas";
 
 const auditColumns = {
-  created_at: timestamp("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
-  updated_at: timestamp("updated_at").notNull().default(sql`(CURRENT_TIMESTAMP)`).onUpdateNow(),
+  created_at: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   deleted_at: timestamp("deleted_at"),
 };
 
 export const esquelasPermisos = mysqlTable("esquelas_permisos", {
   id: char("id", { length: 36 }).notNull().primaryKey(),
-  fechaElaborada: timestamp("fecha_elaborada").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  fechaElaborada: timestamp("fecha_elaborada").notNull().default(sql`CURRENT_TIMESTAMP`),
   trabajadorId: char("trabajador_id", { length: 36 })
     .notNull()
     .references(() => trabajadores.id),
@@ -40,8 +40,8 @@ export const esquelasPermisos = mysqlTable("esquelas_permisos", {
   estado: mysqlEnum("estado", ["pendiente", "aprobada", "rechazada"])
     .notNull()
     .default("pendiente"),
-  aprobadoPor: char("aprobado_por", { length: 36 }).references(
-    () => usuarios.id
+  aprobadoPor: varchar("aprobado_por", { length: 255 }).references(
+    () => authUser.id
   ),
   firmaDigital: text("firma_digital"),
   ...auditColumns,
@@ -60,11 +60,10 @@ export const esquelasPermisosRelations = relations(
       fields: [esquelasPermisos.tipoPermisoId],
       references: [tiposPermisos.id],
     }),
-    aprobadoPor: one(usuarios, {
+    aprobadoPor: one(authUser, {
       fields: [esquelasPermisos.aprobadoPor],
-      references: [usuarios.id],
+      references: [authUser.id],
     }),
   })
 );
-
 

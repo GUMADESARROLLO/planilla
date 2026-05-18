@@ -6,6 +6,7 @@ import {
   boolean,
   index,
 } from "drizzle-orm/mysql-core";
+import { sql } from "drizzle-orm";
 
 export const authUser = mysqlTable(
   "user",
@@ -15,9 +16,12 @@ export const authUser = mysqlTable(
     email: varchar("email", { length: 255 }).notNull().unique(),
     emailVerified: boolean("emailVerified").notNull().default(false),
     image: text("image"),
-    createdAt: timestamp("createdAt").notNull().defaultNow(),
-    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
+    createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
     role: varchar("role", { length: 255 }).default("USER"),
+    activo: boolean("activo").notNull().default(true),
+    nombre: varchar("nombre", { length: 255 }),
+    apellidos: varchar("apellidos", { length: 255 }),
   },
 );
 
@@ -27,8 +31,8 @@ export const authSession = mysqlTable(
     id: varchar("id", { length: 255 }).notNull().primaryKey(),
     expiresAt: timestamp("expiresAt").notNull(),
     token: varchar("token", { length: 255 }).notNull().unique(),
-    createdAt: timestamp("createdAt").notNull().defaultNow(),
-    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
+    createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
     ipAddress: varchar("ipAddress", { length: 255 }),
     userAgent: text("userAgent"),
     userId: varchar("userId", { length: 255 })
@@ -54,8 +58,8 @@ export const authAccount = mysqlTable(
     refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt"),
     scope: text("scope"),
     password: text("password"),
-    createdAt: timestamp("createdAt").notNull().defaultNow(),
-    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
+    createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
 );
@@ -67,8 +71,8 @@ export const authVerification = mysqlTable(
     identifier: varchar("identifier", { length: 255 }).notNull(),
     value: text("value").notNull(),
     expiresAt: timestamp("expiresAt").notNull(),
-    createdAt: timestamp("createdAt").notNull().defaultNow(),
-    updatedAt: timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
+    createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
