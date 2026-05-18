@@ -6,13 +6,13 @@ import {
   timestamp,
   text,
 } from "drizzle-orm/mysql-core";
-import { relations } from "drizzle-orm";
+import { relations , sql} from "drizzle-orm";
 import { roles } from "./catalogs";
 import { esquelasPermisos } from "./permits";
 
 const auditColumns = {
-  created_at: timestamp("created_at").notNull().defaultNow(),
-  updated_at: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+  created_at: timestamp("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  updated_at: timestamp("updated_at").notNull().default(sql`(CURRENT_TIMESTAMP)`).onUpdateNow(),
   deleted_at: timestamp("deleted_at"),
 };
 
@@ -39,3 +39,5 @@ export const usuariosRelations = relations(usuarios, ({ one, many }) => ({
   }),
   esquelasAprobadas: many(esquelasPermisos),
 }));
+
+

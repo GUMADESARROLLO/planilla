@@ -4,10 +4,19 @@ import Card from "@components/ui/Card.astro";
 import Button from "@components/ui/Button.astro";
 import Badge from "@components/ui/Badge.astro";
 import { db } from "@db/index";
-import { trabajadores, trabajadoresPlanillas, planillas } from "@db/schemas";
+import {
+  trabajadores,
+  trabajadoresPlanillas,
+  planillas,
+  nacionalidades,
+  tallasCamisa,
+  tallasPantalon,
+  tiposContrato,
+  cargos,
+  generos,
+} from "@db/schemas";
 import { eq, and, isNull } from "drizzle-orm";
 import { ArrowLeft, Pencil, Mail, Phone, MapPin, Calendar, CreditCard, User, Shirt } from "@lucide/astro";
-import { NotFoundError } from "@utils/errors";
 
 export async function getStaticPaths() {
   return [];
@@ -19,26 +28,53 @@ if (!id) {
   return Astro.redirect("/workers");
 }
 
-const worker = await db.query.trabajadores.findFirst({
-  where: and(eq(trabajadores.id, id), isNull(trabajadores.deletedAt)),
-  with: {
-    nacionalidad: true,
-    tallaCamisa: true,
-    tallaPantalon: true,
-    tipoContrato: true,
-    cargo: true,
-    genero: true,
-    planillas: {
-      with: {
-        planilla: true,
-      },
-    },
-  },
-});
+const [workerRow] = await db.select({
+  id: trabajadores.id,
+  nombre: trabajadores.nombre,
+  apellidos: trabajadores.apellidos,
+  fechaEntrada: trabajadores.fechaEntrada,
+  fechaSalida: trabajadores.fechaSalida,
+  email: trabajadores.email,
+  numeroInss: trabajadores.numeroInss,
+  cedulaIdentidad: trabajadores.cedulaIdentidad,
+  telefono: trabajadores.telefono,
+  saldoVacaciones: trabajadores.saldoVacaciones,
+  direccion: trabajadores.direccion,
+  activo: trabajadores.activo,
+  foto: trabajadores.foto,
+  createdAt: trabajadores.created_at,
+  nacionalidad: { nombre: nacionalidades.nombre },
+  tallaCamisa: { nombre: tallasCamisa.nombre },
+  tallaPantalon: { nombre: tallasPantalon.nombre },
+  tipoContrato: { nombre: tiposContrato.nombre },
+  cargo: { nombre: cargos.nombre },
+  genero: { nombre: generos.nombre },
+})
+  .from(trabajadores)
+  .leftJoin(nacionalidades, eq(trabajadores.nacionalidadId, nacionalidades.id))
+  .leftJoin(tallasCamisa, eq(trabajadores.tallaCamisaId, tallasCamisa.id))
+  .leftJoin(tallasPantalon, eq(trabajadores.tallaPantalonId, tallasPantalon.id))
+  .leftJoin(tiposContrato, eq(trabajadores.tipoContratoId, tiposContrato.id))
+  .leftJoin(cargos, eq(trabajadores.cargoId, cargos.id))
+  .leftJoin(generos, eq(trabajadores.generoId, generos.id))
+  .where(and(eq(trabajadores.id, id), isNull(trabajadores.deleted_at)))
+  .limit(1);
 
-if (!worker) {
+if (!workerRow) {
   return Astro.redirect("/workers");
 }
+
+const workerPlanillas = await db.select({
+  planilla: {
+    nombre: planillas.nombre,
+    tipo: planillas.tipo,
+  },
+})
+  .from(trabajadoresPlanillas)
+  .leftJoin(planillas, eq(trabajadoresPlanillas.planillaId, planillas.id))
+  .where(eq(trabajadoresPlanillas.trabajadorId, id));
+
+const worker = { ...workerRow, planillas: workerPlanillas };
 
 const currentPath = `/workers/${id}`;
 

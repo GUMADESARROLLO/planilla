@@ -6,6 +6,7 @@ export interface Props {
 }
 
 const { pageTitle } = Astro.props;
+const user = Astro.locals.user;
 ---
 
 <header class="sticky top-0 z-30 h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 lg:px-6">
@@ -56,11 +57,11 @@ const { pageTitle } = Astro.props;
         type="button"
       >
         <div class="size-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 font-semibold text-sm">
-          AD
+          {user?.name ? user.name.charAt(0).toUpperCase() + (user.name.split(" ")[1]?.charAt(0) ?? "") : "U"}
         </div>
         <div class="hidden md:block text-left">
-          <p class="text-sm font-medium text-gray-900 dark:text-white leading-tight">Admin</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">admin@planilla.pe</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white leading-tight">{user?.name ?? "Usuario"}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{user?.email ?? ""}</p>
         </div>
         <ChevronDown class="hidden md:block size-4 text-gray-400" />
       </button>

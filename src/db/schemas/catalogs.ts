@@ -7,7 +7,7 @@ import {
   text,
   mysqlEnum,
 } from "drizzle-orm/mysql-core";
-import { relations } from "drizzle-orm";
+import { relations , sql} from "drizzle-orm";
 import { trabajadores } from "./workers";
 import { trabajadoresPlanillas } from "./workers_planillas";
 import { esquelasPermisos } from "./permits";
@@ -15,8 +15,8 @@ import { usuarios } from "./users";
 
 const auditColumns = {
   activo: boolean("activo").notNull().default(true),
-  created_at: timestamp("created_at").notNull().defaultNow(),
-  updated_at: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+  created_at: timestamp("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  updated_at: timestamp("updated_at").notNull().default(sql`(CURRENT_TIMESTAMP)`).onUpdateNow(),
   deleted_at: timestamp("deleted_at"),
 };
 
@@ -127,3 +127,5 @@ export const tiposPermisosRelations = relations(tiposPermisos, ({ many }) => ({
 export const rolesRelations = relations(roles, ({ many }) => ({
   usuarios: many(usuarios),
 }));
+
+

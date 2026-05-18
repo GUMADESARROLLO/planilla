@@ -9,20 +9,20 @@ import {
   int,
   mysqlEnum,
 } from "drizzle-orm/mysql-core";
-import { relations } from "drizzle-orm";
+import { relations , sql} from "drizzle-orm";
 import { trabajadores } from "./workers";
 import { tiposPermisos } from "./catalogs";
 import { usuarios } from "./users";
 
 const auditColumns = {
-  created_at: timestamp("created_at").notNull().defaultNow(),
-  updated_at: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+  created_at: timestamp("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  updated_at: timestamp("updated_at").notNull().default(sql`(CURRENT_TIMESTAMP)`).onUpdateNow(),
   deleted_at: timestamp("deleted_at"),
 };
 
 export const esquelasPermisos = mysqlTable("esquelas_permisos", {
   id: char("id", { length: 36 }).notNull().primaryKey(),
-  fechaElaborada: timestamp("fecha_elaborada").notNull().defaultNow(),
+  fechaElaborada: timestamp("fecha_elaborada").notNull().default(sql`(CURRENT_TIMESTAMP)`),
   trabajadorId: char("trabajador_id", { length: 36 })
     .notNull()
     .references(() => trabajadores.id),
@@ -66,3 +66,5 @@ export const esquelasPermisosRelations = relations(
     }),
   })
 );
+
+

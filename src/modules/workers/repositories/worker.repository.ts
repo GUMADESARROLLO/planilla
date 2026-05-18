@@ -10,7 +10,7 @@ import {
   planillas,
   trabajadoresPlanillas,
 } from "@db/schemas";
-import { eq, like, and, isNull, or, sql, type SQL } from "drizzle-orm";
+import { eq, like, and, isNull, or, sql, desc, type SQL } from "drizzle-orm";
 import { NotFoundError, ValidationError } from "@utils/errors";
 import type {
   CreateWorkerDTO,
@@ -18,22 +18,6 @@ import type {
   WorkerFilters,
   WorkerResponse,
 } from "../types";
-
-const workerWithRelations = {
-  with: {
-    nacionalidad: true as const,
-    tallaCamisa: true as const,
-    tallaPantalon: true as const,
-    tipoContrato: true as const,
-    cargo: true as const,
-    genero: true as const,
-    planillas: {
-      with: {
-        planilla: true as const,
-      },
-    },
-  },
-};
 
 function mapWorker(row: any): WorkerResponse {
   return {
@@ -44,34 +28,72 @@ function mapWorker(row: any): WorkerResponse {
     fechaEntrada: row.fechaEntrada,
     fechaSalida: row.fechaSalida ?? null,
     nacionalidadId: row.nacionalidadId,
-    nombreNacionalidad: row.nacionalidad?.nombre,
+    nombreNacionalidad: row.nombreNacionalidad,
     cedulaIdentidad: row.cedulaIdentidad,
     numeroInss: row.numeroInss,
     telefono: row.telefono,
     direccion: row.direccion ?? null,
     saldoVacaciones: row.saldoVacaciones,
     tallaCamisaId: row.tallaCamisaId,
-    nombreTallaCamisa: row.tallaCamisa?.nombre,
+    nombreTallaCamisa: row.nombreTallaCamisa,
     tallaPantalonId: row.tallaPantalonId,
-    nombreTallaPantalon: row.tallaPantalon?.nombre,
+    nombreTallaPantalon: row.nombreTallaPantalon,
     tipoContratoId: row.tipoContratoId,
-    nombreTipoContrato: row.tipoContrato?.nombre,
+    nombreTipoContrato: row.nombreTipoContrato,
     cargoId: row.cargoId,
-    nombreCargo: row.cargo?.nombre,
+    nombreCargo: row.nombreCargo,
     generoId: row.generoId,
-    nombreGenero: row.genero?.nombre,
+    nombreGenero: row.nombreGenero,
     activo: row.activo,
     foto: row.foto ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at ?? null,
-    planillas:
-      row.planillas?.map((tp: any) => ({
-        id: tp.planilla.id,
-        nombre: tp.planilla.nombre,
-        tipo: tp.planilla.tipo,
-      })) ?? [],
+    planillas: row.planillas ?? [],
   };
+}
+
+function workerSelectFields() {
+  return {
+    id: trabajadores.id,
+    nombre: trabajadores.nombre,
+    apellidos: trabajadores.apellidos,
+    email: trabajadores.email,
+    fechaEntrada: trabajadores.fechaEntrada,
+    fechaSalida: trabajadores.fechaSalida,
+    nacionalidadId: trabajadores.nacionalidadId,
+    nombreNacionalidad: nacionalidades.nombre,
+    cedulaIdentidad: trabajadores.cedulaIdentidad,
+    numeroInss: trabajadores.numeroInss,
+    telefono: trabajadores.telefono,
+    direccion: trabajadores.direccion,
+    saldoVacaciones: trabajadores.saldoVacaciones,
+    tallaCamisaId: trabajadores.tallaCamisaId,
+    nombreTallaCamisa: tallasCamisa.nombre,
+    tallaPantalonId: trabajadores.tallaPantalonId,
+    nombreTallaPantalon: tallasPantalon.nombre,
+    tipoContratoId: trabajadores.tipoContratoId,
+    nombreTipoContrato: tiposContrato.nombre,
+    cargoId: trabajadores.cargoId,
+    nombreCargo: cargos.nombre,
+    generoId: trabajadores.generoId,
+    nombreGenero: generos.nombre,
+    activo: trabajadores.activo,
+    foto: trabajadores.foto,
+    created_at: trabajadores.created_at,
+    updated_at: trabajadores.updated_at,
+    deleted_at: trabajadores.deleted_at,
+  };
+}
+
+function workerJoins<T extends Record<string, unknown>>(qb: any) {
+  return qb
+    .leftJoin(nacionalidades, eq(trabajadores.nacionalidadId, nacionalidades.id))
+    .leftJoin(tallasCamisa, eq(trabajadores.tallaCamisaId, tallasCamisa.id))
+    .leftJoin(tallasPantalon, eq(trabajadores.tallaPantalonId, tallasPantalon.id))
+    .leftJoin(tiposContrato, eq(trabajadores.tipoContratoId, tiposContrato.id))
+    .leftJoin(cargos, eq(trabajadores.cargoId, cargos.id))
+    .leftJoin(generos, eq(trabajadores.generoId, generos.id));
 }
 
 function buildWhereClause(filters: WorkerFilters): SQL | undefined {
@@ -121,13 +143,14 @@ export async function findAll(
   const where = buildWhereClause(filters);
 
   const [rows, countResult] = await Promise.all([
-    db.query.trabajadores.findMany({
-      where,
-      ...workerWithRelations,
-      orderBy: (trabajadores, { desc }) => [desc(trabajadores.created_at)],
-      limit,
-      offset,
-    }),
+    workerJoins(
+      db.select(workerSelectFields())
+        .from(trabajadores)
+    )
+      .where(where)
+      .orderBy(desc(trabajadores.created_at))
+      .limit(limit)
+      .offset(offset),
     db
       .select({ count: sql<number>`count(*)` })
       .from(trabajadores)
@@ -140,16 +163,27 @@ export async function findAll(
 }
 
 export async function findById(id: string): Promise<WorkerResponse> {
-  const row = await db.query.trabajadores.findFirst({
-    where: and(eq(trabajadores.id, id), isNull(trabajadores.deleted_at)),
-    ...workerWithRelations,
-  });
+  const [row] = await workerJoins(
+    db.select(workerSelectFields())
+      .from(trabajadores)
+  )
+    .where(and(eq(trabajadores.id, id), isNull(trabajadores.deleted_at)))
+    .limit(1);
 
   if (!row) {
     throw new NotFoundError("Trabajador no encontrado");
   }
 
-  return mapWorker(row);
+  const planillaRows = await db.select({
+    id: planillas.id,
+    nombre: planillas.nombre,
+    tipo: planillas.tipo,
+  })
+    .from(trabajadoresPlanillas)
+    .innerJoin(planillas, eq(trabajadoresPlanillas.planillaId, planillas.id))
+    .where(eq(trabajadoresPlanillas.trabajadorId, id));
+
+  return mapWorker({ ...row, planillas: planillaRows });
 }
 
 async function checkDuplicate(
@@ -298,8 +332,11 @@ export async function softDelete(id: string): Promise<void> {
 
 export async function search(query: string): Promise<WorkerResponse[]> {
   const term = `%${query}%`;
-  const rows = await db.query.trabajadores.findMany({
-    where: and(
+  const rows = await workerJoins(
+    db.select(workerSelectFields())
+      .from(trabajadores)
+  )
+    .where(and(
       isNull(trabajadores.deleted_at),
       or(
         like(trabajadores.nombre, term),
@@ -308,10 +345,8 @@ export async function search(query: string): Promise<WorkerResponse[]> {
         like(trabajadores.cedulaIdentidad, term),
         like(trabajadores.numeroInss, term),
       )!,
-    ),
-    ...workerWithRelations,
-    limit: 20,
-  });
+    ))
+    .limit(20);
 
   return rows.map(mapWorker);
 }

@@ -1,11 +1,16 @@
 import { defineConfig } from "drizzle-kit";
+import "dotenv/config";
 
 export default defineConfig({
   schema: "./src/db/schemas/*",
   out: "./src/db/migrations",
   dialect: "mysql",
   dbCredentials: {
-    url: process.env["DATABASE_URL"] ?? "mysql://root:root@localhost:3306/planilla_hr",
+    host: process.env["DB_HOST"]!,
+    port: Number(process.env["DB_PORT"]!),
+    user: process.env["DB_USER"]!,
+    password: process.env["DB_PASSWORD"]!,
+    database: process.env["DB_NAME"]!,
   },
   verbose: true,
   strict: true,

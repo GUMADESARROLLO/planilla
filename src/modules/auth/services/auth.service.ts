@@ -15,22 +15,23 @@ function mapUser(user: Record<string, unknown>): UserResponse {
   };
 }
 
-export async function login(data: LoginDTO): Promise<{ user: UserResponse; token: string }> {
+export async function login(data: LoginDTO): Promise<{ user: UserResponse; token: string; headers: Headers }> {
   try {
     const result = await auth.api.signInEmail({
       body: {
         email: data.email.toLowerCase().trim(),
         password: data.password,
       },
-    }) as unknown as Record<string, unknown>;
+      returnHeaders: true,
+      returnStatus: true,
+    }) as { headers: Headers; response: Record<string, unknown>; status: number };
 
-    if (!result) {
+    if (!result?.response) {
       throw new UnauthorizedError("Error al iniciar sesión");
     }
 
-    const user = result["user"] as Record<string, unknown>;
-    const session = result["session"] as Record<string, unknown> | undefined;
-    const token = session?.["token"] as string ?? result["token"] as string;
+    const user = result.response["user"] as Record<string, unknown>;
+    const token = result.response["token"] as string;
 
     if (!token) {
       throw new UnauthorizedError("Error al obtener token de sesión");
@@ -39,9 +40,11 @@ export async function login(data: LoginDTO): Promise<{ user: UserResponse; token
     return {
       user: mapUser(user),
       token,
+      headers: result.headers,
     };
   } catch (error) {
     if (error instanceof UnauthorizedError) throw error;
+    console.error("[login error]", error);
     throw new UnauthorizedError("Correo electrónico o contraseña inválidos");
   }
 }

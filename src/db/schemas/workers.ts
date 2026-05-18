@@ -8,7 +8,7 @@ import {
   date,
   decimal,
 } from "drizzle-orm/mysql-core";
-import { relations } from "drizzle-orm";
+import { relations , sql} from "drizzle-orm";
 import {
   tiposContrato,
   cargos,
@@ -20,8 +20,8 @@ import {
 import { trabajadoresPlanillas } from "./workers_planillas";
 
 const auditColumns = {
-  created_at: timestamp("created_at").notNull().defaultNow(),
-  updated_at: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+  created_at: timestamp("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  updated_at: timestamp("updated_at").notNull().default(sql`(CURRENT_TIMESTAMP)`).onUpdateNow(),
   deleted_at: timestamp("deleted_at"),
 };
 
@@ -93,3 +93,5 @@ export const trabajadoresRelations = relations(trabajadores, ({ one, many }) => 
   }),
   planillas: many(trabajadoresPlanillas),
 }));
+
+

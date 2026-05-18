@@ -1,11 +1,12 @@
 ---
-import { LayoutDashboard, Users, FileSpreadsheet, FileText, FolderOpen, Shield, ChevronLeft, ChevronRight, LogOut, Menu, X } from "@lucide/astro";
+import { LayoutDashboard, Users, FileText, FolderOpen, FileSpreadsheet, Shield, ChevronDown, LogOut, X } from "@lucide/astro";
 
 export interface Props {
   currentPath: string;
 }
 
 const { currentPath } = Astro.props;
+const user = Astro.locals.user;
 
 interface NavItem {
   label: string;
@@ -13,21 +14,43 @@ interface NavItem {
   icon: string;
 }
 
-const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
-  { label: "Trabajadores", href: "/workers", icon: "Users" },
-  { label: "Planillas", href: "/payrolls", icon: "FileSpreadsheet" },
-  { label: "Permisos", href: "/permits", icon: "FileText" },
-  { label: "Catálogos", href: "/catalogs", icon: "FolderOpen" },
-  { label: "Usuarios", href: "/users", icon: "Shield" },
-];
+interface NavGroup {
+  label: string;
+  icon: string;
+  children: NavItem[];
+}
 
-function isActive(itemHref: string): boolean {
-  if (itemHref === "/dashboard") {
+type NavEntry = NavItem | NavGroup;
+
+function isNavGroup(entry: NavEntry): entry is NavGroup {
+  return "children" in entry;
+}
+
+function isActive(href: string): boolean {
+  if (href === "/dashboard") {
     return currentPath === "/dashboard" || currentPath === "/";
   }
-  return currentPath.startsWith(itemHref);
+  return currentPath.startsWith(href);
 }
+
+function groupActive(children: NavItem[]): boolean {
+  return children.some((c) => isActive(c.href));
+}
+
+const navEntries: NavEntry[] = [
+  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
+  { label: "Planillas", href: "/payrolls", icon: "FileSpreadsheet" },
+  { label: "Trabajadores", href: "/workers", icon: "Users" },
+  { label: "Permisos", href: "/permits", icon: "FileText" },
+    {
+    label: "Configuración",
+    icon: "FolderOpen",
+    children: [
+      { label: "Catálogos", href: "/catalogs", icon: "FolderOpen" },
+      { label: "Usuarios", href: "/users", icon: "Shield" },
+    ],
+  },
+];
 ---
 
 <div
@@ -38,18 +61,20 @@ function isActive(itemHref: string): boolean {
 
 <aside
   id="sidebar"
-  class="fixed top-0 left-0 z-50 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 ease-in-out
-    -translate-x-full lg:translate-x-0
-    w-[--sidebar-width] lg:w-[--sidebar-width]"
+  class="fixed inset-y-0 left-0 z-50 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col
+    -translate-x-full
+    lg:sticky lg:top-0 lg:z-auto lg:translate-x-0 lg:min-h-screen lg:shrink-0
+    w-[--sidebar-width] overflow-hidden
+    transition-transform duration-300 ease-in-out"
   aria-label="Sidebar de navegación"
 >
   <!-- Brand -->
   <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
-    <a href="/dashboard" class="flex items-center gap-3 text-primary-600 dark:text-primary-400">
+    <a id="sidebar-brand-link" href="/dashboard" class="flex items-center gap-3 text-primary-600 dark:text-primary-400">
       <div class="flex items-center justify-center size-8 bg-primary-600 rounded-lg shrink-0">
         <span class="text-sm font-bold text-white">P</span>
       </div>
-      <span class="font-semibold text-lg text-gray-900 dark:text-white whitespace-nowrap">Plan-IA</span>
+      <span id="sidebar-brand-title" class="font-semibold text-lg text-gray-900 dark:text-white whitespace-nowrap">Plan-IA</span>
     </a>
     <button
       id="sidebar-close-mobile"
@@ -63,12 +88,57 @@ function isActive(itemHref: string): boolean {
 
   <!-- Navigation -->
   <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-    {navItems.map((item) => {
+    {navEntries.map((entry) => {
+      if (isNavGroup(entry)) {
+        const open = groupActive(entry.children);
+        const iconMap = { LayoutDashboard, Users, FileText, FolderOpen, FileSpreadsheet, Shield, ChevronDown };
+        const GroupIcon = iconMap[entry.icon];
+        return (
+          <div class="space-y-1">
+            <button
+              data-sidebar-group
+              data-sidebar-group-open={open}
+              class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              aria-expanded={open}
+              type="button"
+            >
+              {GroupIcon && <GroupIcon class="size-5 shrink-0" />}
+              <span class="flex-1 text-left sidebar-item-label">{entry.label}</span>
+              <ChevronDown class="size-4 transition-transform duration-200" class:list={{ "rotate-180": open }} />
+            </button>
+            <div class="ml-3 space-y-0.5 border-l border-gray-200 dark:border-gray-700 pl-2" class:list={{ hidden: !open }}>
+              {entry.children.map((item) => {
+                const active = isActive(item.href);
+                const ItemIcon = iconMap[item.icon];
+                return (
+                  <a
+                    href={item.href}
+                    class:list={[
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
+                      active
+                        ? "bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200",
+                    ]}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    {ItemIcon && <ItemIcon class="size-4 shrink-0" />}
+                    <span>{item.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      const item = entry;
       const active = isActive(item.href);
-      const IconComponent = { LayoutDashboard, Users, FileSpreadsheet, FileText, FolderOpen, Shield }[item.icon];
+      const iconMap = { LayoutDashboard, Users, FileText, FolderOpen, FileSpreadsheet, Shield, ChevronDown };
+      const IconComponent = iconMap[item.icon];
       return (
         <a
           href={item.href}
+          data-sidebar-nav-item
           class:list={[
             "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200",
             active
@@ -78,7 +148,7 @@ function isActive(itemHref: string): boolean {
           aria-current={active ? "page" : undefined}
         >
           {IconComponent && <IconComponent class="size-5 shrink-0" />}
-          <span>{item.label}</span>
+          <span class="sidebar-item-label">{item.label}</span>
         </a>
       );
     })}
@@ -88,43 +158,29 @@ function isActive(itemHref: string): boolean {
   <div class="border-t border-gray-200 dark:border-gray-800 p-4 shrink-0">
     <div class="flex items-center gap-3 mb-3">
       <div class="size-9 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 font-semibold text-sm shrink-0">
-        AD
+        {user?.name ? user.name.charAt(0).toUpperCase() + (user.name.split(" ")[1]?.charAt(0) ?? "") : "U"}
       </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">Admin</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">admin@planilla.pe</p>
+      <div id="sidebar-user-details" class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name ?? "Usuario"}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email ?? ""}</p>
       </div>
     </div>
     <a
       href="/logout"
+      id="sidebar-logout-link"
       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
     >
       <LogOut class="size-5 shrink-0" />
-      <span>Cerrar sesión</span>
+      <span id="sidebar-logout-label">Cerrar sesión</span>
     </a>
   </div>
 
-  <!-- Desktop collapse toggle -->
-  <button
-    id="sidebar-collapse-desktop"
-    class="hidden lg:flex absolute -right-3 top-20 size-6 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shadow-sm cursor-pointer"
-    aria-label="Colapsar sidebar"
-    type="button"
-  >
-    <ChevronLeft id="sidebar-chevron" class="size-3.5 transition-transform duration-300" />
-  </button>
 </aside>
 
 <script>
   const sidebar = document.getElementById("sidebar")!;
   const overlay = document.getElementById("sidebar-overlay")!;
   const closeMobileBtn = document.getElementById("sidebar-close-mobile")!;
-  const collapseBtn = document.getElementById("sidebar-collapse-desktop")!;
-  const chevron = document.getElementById("sidebar-chevron")!;
-
-  let isCollapsed = false;
-  const COLLAPSED_WIDTH = "4rem";
-  const EXPANDED_WIDTH = "16rem";
 
   function toggleMobileSidebar() {
     const isOpen = !sidebar.classList.contains("-translate-x-full");
@@ -134,18 +190,6 @@ function isActive(itemHref: string): boolean {
     document.body.classList.toggle("overflow-hidden", isOpen);
   }
 
-  function toggleCollapse() {
-    isCollapsed = !isCollapsed;
-    if (isCollapsed) {
-      sidebar.style.width = COLLAPSED_WIDTH;
-      chevron.classList.replace("rotate-0", "rotate-180");
-    } else {
-      sidebar.style.width = EXPANDED_WIDTH;
-      chevron.classList.replace("rotate-180", "rotate-0");
-    }
-  }
-
-  // Mobile: open sidebar when hamburger is clicked (listen for custom event)
   document.addEventListener("toggle-sidebar", () => {
     toggleMobileSidebar();
   });
@@ -153,14 +197,21 @@ function isActive(itemHref: string): boolean {
   closeMobileBtn.addEventListener("click", toggleMobileSidebar);
   overlay.addEventListener("click", toggleMobileSidebar);
 
-  if (collapseBtn) {
-    collapseBtn.addEventListener("click", toggleCollapse);
-  }
-
-  // Close on Escape key
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !sidebar.classList.contains("-translate-x-full")) {
       toggleMobileSidebar();
     }
+  });
+
+  document.querySelectorAll("[data-sidebar-group]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const open = btn.getAttribute("data-sidebar-group-open") === "true";
+      btn.setAttribute("data-sidebar-group-open", String(!open));
+      btn.setAttribute("aria-expanded", String(!open));
+      const chevron = btn.querySelector(".lucide-chevron-down");
+      if (chevron) chevron.classList.toggle("rotate-180", !open);
+      const submenu = btn.nextElementSibling;
+      if (submenu) submenu.classList.toggle("hidden", open);
+    });
   });
 </script>

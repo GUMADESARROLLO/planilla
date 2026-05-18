@@ -9,7 +9,15 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json().catch(() => ({}));
     const data = validateSchema(loginSchema, body);
     const result = await login(data);
-    return successResponse(result);
+    const response = successResponse({ user: result.user, token: result.token });
+
+    result.headers.forEach((value, key) => {
+      if (key.toLowerCase() === "set-cookie") {
+        response.headers.append("set-cookie", value);
+      }
+    });
+
+    return response;
   } catch (error) {
     if (error instanceof ValidationError || error instanceof UnauthorizedError) {
       return errorResponse(error);

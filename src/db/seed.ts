@@ -1,5 +1,6 @@
-import { randomUUID as _randomUUID } from "node:crypto";
-import bcrypt from "bcryptjs";
+import "dotenv/config";
+import { randomUUID as _randomUUID, randomBytes, scryptSync } from "node:crypto";
+import { sql } from "drizzle-orm";
 import { db } from "./index";
 import {
   tiposContrato,
@@ -18,6 +19,17 @@ import { esquelasPermisos } from "./schemas/permits";
 import { trabajadoresPlanillas } from "./schemas/workers_planillas";
 
 const uuid = () => _randomUUID() as string;
+
+function hashBetterAuth(password: string): string {
+  const salt = randomBytes(16).toString("hex");
+  const key = scryptSync(password.normalize("NFKC"), salt, 64, {
+    N: 16384,
+    r: 16,
+    p: 1,
+    maxmem: 128 * 16384 * 16 * 2,
+  });
+  return `${salt}:${key.toString("hex")}`;
+}
 
 async function seed() {
   console.log("🌱 Seeding database...");
@@ -203,7 +215,8 @@ async function seed() {
   }
 
   // ───── 10. Create admin user ─────
-  const passwordHash = await bcrypt.hash("Admin123!", 10);
+  const passwordHash = hashBetterAuth("Admin123!");
+  const now = new Date();
   await db.insert(usuarios).values({
     id: ids.usuarioAdmin,
     email: "admin@planilla.com",
@@ -213,6 +226,17 @@ async function seed() {
     rolId: ids.rolAdmin,
     activo: true,
   });
+
+  // Create user in better-auth's `user` table for authentication
+  await db.execute(
+    sql`INSERT INTO \`user\` (id, email, name, emailVerified, role, createdAt, updatedAt)
+        VALUES (${ids.usuarioAdmin}, 'admin@planilla.com', 'Admin Sistema', false, 'ADMIN', ${now}, ${now})`
+  );
+  // Create credential account in better-auth's `account` table
+  await db.execute(
+    sql`INSERT INTO \`account\` (id, accountId, providerId, userId, password, createdAt, updatedAt)
+        VALUES (${crypto.randomUUID()}, ${crypto.randomUUID()}, 'credential', ${ids.usuarioAdmin}, ${passwordHash}, ${now}, ${now})`
+  );
 
   // ───── 11. Create 5 sample workers ─────
   const workersRows = [

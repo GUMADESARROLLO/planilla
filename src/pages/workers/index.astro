@@ -17,7 +17,7 @@ import {
   tallasPantalon,
   trabajadores,
 } from "@db/schemas";
-import { eq, like, and, isNull, or, sql } from "drizzle-orm";
+import { eq, like, and, isNull, or, sql, desc } from "drizzle-orm";
 import { Pencil, Trash2, Plus, Eye } from "@lucide/astro";
 import WorkerForm from "./_form.astro";
 
@@ -31,7 +31,7 @@ const activoFilter = url.searchParams.get("activo") ?? "";
 const tipoContratoFilter = url.searchParams.get("tipo_contrato_id") ?? "";
 const cargoFilter = url.searchParams.get("cargo_id") ?? "";
 
-const conditions = [isNull(trabajadores.deletedAt)];
+const conditions = [isNull(trabajadores.deleted_at)];
 
 if (search) {
   const term = `%${search}%`;
@@ -53,44 +53,37 @@ if (cargoFilter) conditions.push(eq(trabajadores.cargoId, cargoFilter));
 
 const where = and(...conditions);
 
-const [workersData, countResult, tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList] =
+const [workers, countResult, tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList] =
   await Promise.all([
-    db.query.trabajadores.findMany({
-      where,
-      with: {
-        nacionalidad: true,
-        tallaCamisa: true,
-        tallaPantalon: true,
-        tipoContrato: true,
-        cargo: true,
-        genero: true,
-      },
-      orderBy: (t, { desc }) => [desc(t.createdAt)],
-      limit,
-      offset: (page - 1) * limit,
-    }),
+    db.select({
+      id: trabajadores.id,
+      nombre: trabajadores.nombre,
+      apellidos: trabajadores.apellidos,
+      email: trabajadores.email,
+      telefono: trabajadores.telefono,
+      activo: trabajadores.activo,
+      created_at: trabajadores.created_at,
+      nombreCargo: cargos.nombre,
+      nombreTipoContrato: tiposContrato.nombre,
+    })
+      .from(trabajadores)
+      .leftJoin(cargos, eq(trabajadores.cargoId, cargos.id))
+      .leftJoin(tiposContrato, eq(trabajadores.tipoContratoId, tiposContrato.id))
+      .where(where)
+      .orderBy(desc(trabajadores.created_at))
+      .limit(limit)
+      .offset((page - 1) * limit),
     db.select({ count: sql<number>`count(*)` }).from(trabajadores).where(where),
-    db.select().from(tiposContrato).where(isNull(tiposContrato.deletedAt)),
-    db.select().from(cargos).where(isNull(cargos.deletedAt)),
-    db.select().from(generos).where(isNull(generos.deletedAt)),
-    db.select().from(nacionalidades).where(isNull(nacionalidades.deletedAt)),
-    db.select().from(tallasCamisa).where(isNull(tallasCamisa.deletedAt)),
-    db.select().from(tallasPantalon).where(isNull(tallasPantalon.deletedAt)),
+    db.select().from(tiposContrato).where(isNull(tiposContrato.deleted_at)),
+    db.select().from(cargos).where(isNull(cargos.deleted_at)),
+    db.select().from(generos).where(isNull(generos.deleted_at)),
+    db.select().from(nacionalidades).where(isNull(nacionalidades.deleted_at)),
+    db.select().from(tallasCamisa).where(isNull(tallasCamisa.deleted_at)),
+    db.select().from(tallasPantalon).where(isNull(tallasPantalon.deleted_at)),
   ]);
 
 const total = Number(countResult[0]?.count ?? 0);
 const totalPages = Math.ceil(total / limit);
-
-const workers = workersData.map((w: any) => ({
-  id: w.id,
-  nombre: w.nombre,
-  apellidos: w.apellidos,
-  email: w.email,
-  telefono: w.telefono,
-  activo: w.activo,
-  nombreCargo: w.cargo?.nombre ?? "-",
-  nombreTipoContrato: w.tipoContrato?.nombre ?? "-",
-}));
 ---
 
 <AppLayout title="Trabajadores" {currentPath}>
