@@ -5,10 +5,10 @@ export enum EstadoPermiso {
 }
 
 export interface CreateEsquelaDTO {
-  trabajadorId: string;
+  trabajadorId: number;
   cargo?: string;
   ubicacion: string;
-  tipoPermisoId: string;
+  tipoPermisoId: number;
   cantidadDias: number;
   periodoCorrespondiente: string;
   fechaIncorporacion: string;
@@ -18,7 +18,7 @@ export interface CreateEsquelaDTO {
 export interface UpdateEsquelaDTO {
   cargo?: string;
   ubicacion?: string;
-  tipoPermisoId?: string;
+  tipoPermisoId?: number;
   cantidadDias?: number;
   periodoCorrespondiente?: string;
   fechaIncorporacion?: string;
@@ -26,11 +26,11 @@ export interface UpdateEsquelaDTO {
 }
 
 export interface EsquelaResponse {
-  id: string;
+  id: number;
   fechaElaborada: string;
-  trabajadorId: string;
+  trabajadorId: number;
   trabajador?: {
-    id: string;
+    id: number;
     nombre: string;
     apellidos: string;
     email: string;
@@ -40,9 +40,9 @@ export interface EsquelaResponse {
   } | null;
   cargo: string | null;
   ubicacion: string;
-  tipoPermisoId: string;
+  tipoPermisoId: number;
   tipoPermiso?: {
-    id: string;
+    id: number;
     nombre: string;
     descripcion: string | null;
   } | null;
@@ -63,7 +63,7 @@ export interface EsquelaFilters {
   limit?: number;
   search?: string;
   estado?: EstadoPermiso;
-  trabajadorId?: string;
+  trabajadorId?: number;
 }
 
 export interface PaginatedResult<T> {

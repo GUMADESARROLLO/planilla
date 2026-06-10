@@ -11,7 +11,7 @@ export const GET: APIRoute = async (context) => {
     if (!id) {
       return errorResponse(new AppError("ID de planilla requerido", 400, "VALIDATION_ERROR"));
     }
-    const planilla = await payrollService.findById(id);
+    const planilla = await payrollService.findById(Number(id));
     return successResponse(planilla);
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
@@ -27,7 +27,7 @@ export const PUT: APIRoute = async (context) => {
       return errorResponse(new AppError("ID de planilla requerido", 400, "VALIDATION_ERROR"));
     }
     const body = await context.request.json().catch(() => ({}));
-    const planilla = await payrollService.update(id, body);
+    const planilla = await payrollService.update(Number(id), body);
     return successResponse(planilla);
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
@@ -42,7 +42,7 @@ export const DELETE: APIRoute = async (context) => {
     if (!id) {
       return errorResponse(new AppError("ID de planilla requerido", 400, "VALIDATION_ERROR"));
     }
-    await payrollService.softDelete(id);
+    await payrollService.softDelete(Number(id));
     return successResponse({ message: "Planilla eliminada correctamente" });
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);

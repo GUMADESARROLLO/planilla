@@ -3,8 +3,8 @@ import type { trabajadores } from "@db/schemas";
 export interface WorkerFilters {
   search?: string;
   activo?: boolean;
-  tipo_contrato_id?: string;
-  cargo_id?: string;
+  tipo_contrato_id?: number;
+  cargo_id?: number;
   page?: number;
   limit?: number;
 }
@@ -15,17 +15,17 @@ export interface CreateWorkerDTO {
   email: string;
   fechaEntrada: string;
   fechaSalida?: string | null;
-  nacionalidadId: string;
+  nacionalidadId: number;
   cedulaIdentidad: string;
   numeroInss: string;
   telefono: string;
   direccion?: string | null;
   saldoVacaciones?: string | number;
-  tallaCamisaId: string;
-  tallaPantalonId: string;
-  tipoContratoId: string;
-  cargoId: string;
-  generoId: string;
+  tallaCamisaId: number;
+  tallaPantalonId: number;
+  tipoContratoId: number;
+  cargoId: number;
+  generoId: number;
   activo?: boolean;
   foto?: string | null;
 }
@@ -36,44 +36,46 @@ export interface UpdateWorkerDTO {
   email?: string;
   fechaEntrada?: string;
   fechaSalida?: string | null;
-  nacionalidadId?: string;
+  nacionalidadId?: number;
   cedulaIdentidad?: string;
   numeroInss?: string;
   telefono?: string;
   direccion?: string | null;
   saldoVacaciones?: string | number;
-  tallaCamisaId?: string;
-  tallaPantalonId?: string;
-  tipoContratoId?: string;
-  cargoId?: string;
-  generoId?: string;
+  tallaCamisaId?: number;
+  tallaPantalonId?: number;
+  tipoContratoId?: number;
+  cargoId?: number;
+  generoId?: number;
   activo?: boolean;
   foto?: string | null;
 }
 
 export interface WorkerResponse {
-  id: string;
+  id: number;
   nombre: string;
   apellidos: string;
   email: string;
   fechaEntrada: string;
   fechaSalida: string | null;
-  nacionalidadId: string;
+  nacionalidadId: number;
   nombreNacionalidad?: string;
   cedulaIdentidad: string;
   numeroInss: string;
   telefono: string;
   direccion: string | null;
   saldoVacaciones: string | number;
-  tallaCamisaId: string;
+  tallaCamisaId: number;
   nombreTallaCamisa?: string;
-  tallaPantalonId: string;
+  tallaPantalonId: number;
   nombreTallaPantalon?: string;
-  tipoContratoId: string;
+  tipoContratoId: number;
   nombreTipoContrato?: string;
-  cargoId: string;
+  cargoId: number;
   nombreCargo?: string;
-  generoId: string;
+  nombreDepartamento?: string;
+  nombreUnidad?: string;
+  generoId: number;
   nombreGenero?: string;
   activo: boolean;
   foto: string | null;
@@ -81,7 +83,7 @@ export interface WorkerResponse {
   updatedAt: Date | string;
   deletedAt: Date | string | null;
   planillas?: Array<{
-    id: string;
+    id: number;
     nombre: string;
     tipo: string;
   }>;

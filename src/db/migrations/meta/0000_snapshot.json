@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "7669e362-1f00-4aa3-8dec-916a0ceb63ee",
+  "id": "767660db-99e4-413b-a988-0a2bb7007bb0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -424,10 +424,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -439,6 +439,20 @@
         "descripcion": {
           "name": "descripcion",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "unidad_negocio_id": {
+          "name": "unidad_negocio_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "departamento_id": {
+          "name": "departamento_id",
+          "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -477,10 +491,128 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "cargos_unidad_negocio_id_unidades_negocio_id_fk": {
+          "name": "cargos_unidad_negocio_id_unidades_negocio_id_fk",
+          "tableFrom": "cargos",
+          "tableTo": "unidades_negocio",
+          "columnsFrom": [
+            "unidad_negocio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "cargos_departamento_id_departamentos_id_fk": {
+          "name": "cargos_departamento_id_departamentos_id_fk",
+          "tableFrom": "cargos",
+          "tableTo": "departamentos",
+          "columnsFrom": [
+            "departamento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
         "cargos_id": {
           "name": "cargos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "departamentos": {
+      "name": "departamentos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "unidad_negocio_id": {
+          "name": "unidad_negocio_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "departamentos_unidad_negocio_id_unidades_negocio_id_fk": {
+          "name": "departamentos_unidad_negocio_id_unidades_negocio_id_fk",
+          "tableFrom": "departamentos",
+          "tableTo": "unidades_negocio",
+          "columnsFrom": [
+            "unidad_negocio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "departamentos_id": {
+          "name": "departamentos_id",
           "columns": [
             "id"
           ]
@@ -494,10 +626,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -557,10 +689,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -627,10 +759,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -704,10 +836,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -774,10 +906,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -837,10 +969,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -900,10 +1032,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -970,10 +1102,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -1035,15 +1167,85 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "unidades_negocio": {
+      "name": "unidades_negocio",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "unidades_negocio_id": {
+          "name": "unidades_negocio_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "trabajadores": {
       "name": "trabajadores",
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "nombre": {
           "name": "nombre",
@@ -1082,7 +1284,7 @@
         },
         "nacionalidad_id": {
           "name": "nacionalidad_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1118,14 +1320,14 @@
         },
         "talla_camisa_id": {
           "name": "talla_camisa_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "talla_pantalon_id": {
           "name": "talla_pantalon_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1139,21 +1341,21 @@
         },
         "tipo_contrato_id": {
           "name": "tipo_contrato_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "cargo_id": {
           "name": "cargo_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "genero_id": {
           "name": "genero_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1172,6 +1374,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "salario_base": {
+          "name": "salario_base",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'0.00'"
         },
         "created_at": {
           "name": "created_at",
@@ -1314,14 +1524,14 @@
       "columns": {
         "trabajador_id": {
           "name": "trabajador_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "planilla_id": {
           "name": "planilla_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1381,10 +1591,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "fecha_elaborada": {
           "name": "fecha_elaborada",
@@ -1396,7 +1606,7 @@
         },
         "trabajador_id": {
           "name": "trabajador_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1417,7 +1627,7 @@
         },
         "tipo_permiso_id": {
           "name": "tipo_permiso_id",
-          "type": "char(36)",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

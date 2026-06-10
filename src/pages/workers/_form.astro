@@ -1,8 +1,8 @@
 ---
-import FormField from "@components/ui/FormField.astro";
+import DatePicker from "@components/ui/DatePicker.astro";
 
 export interface CatalogItem {
-  id: string;
+  id: number;
   nombre: string;
 }
 
@@ -32,268 +32,444 @@ const {
 
 const w = worker ?? {};
 const isEdit = mode === "edit";
+const initials = isEdit ? `${(w.nombre ?? "")[0] ?? ""}${(w.apellidos ?? "")[0] ?? ""}` : "NP";
+const fullName = isEdit ? `${w.nombre ?? ""} ${w.apellidos ?? ""}` : "Nuevo Trabajador";
+const subtitle = isEdit
+  ? `Ingresó el ${new Date(w.fechaEntrada).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })} · ${w.numeroInss ?? ""}`
+  : "Complete los datos del nuevo colaborador";
+const telValue = isEdit ? (w.telefono ?? "").replace(/^\+?505-?/, "") : "";
 ---
 
-<div id="worker-form">
+<div id="worker-form" class="wf-form">
   <input type="hidden" name="mode" value={mode} />
   {isEdit && <input type="hidden" name="id" value={w.id} />}
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <FormField label="Nombre" name="nombre" error={errors.nombre} required>
-      <input
-        type="text"
-        id="field-nombre"
-        name="nombre"
-        value={w.nombre ?? ""}
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        placeholder="Nombre del trabajador"
-      />
-    </FormField>
-
-    <FormField label="Apellidos" name="apellidos" error={errors.apellidos} required>
-      <input
-        type="text"
-        id="field-apellidos"
-        name="apellidos"
-        value={w.apellidos ?? ""}
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        placeholder="Apellidos del trabajador"
-      />
-    </FormField>
-
-    <FormField label="Correo Electrónico" name="email" error={errors.email} required>
-      <input
-        type="email"
-        id="field-email"
-        name="email"
-        value={w.email ?? ""}
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        placeholder="correo@ejemplo.com"
-      />
-    </FormField>
-
-    <FormField label="Teléfono" name="telefono" error={errors.telefono} required>
-      <input
-        type="text"
-        id="field-telefono"
-        name="telefono"
-        value={w.telefono ?? ""}
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        placeholder="+505 8888 8888"
-      />
-    </FormField>
-
-    <FormField label="Cédula de Identidad" name="cedulaIdentidad" error={errors.cedulaIdentidad} required>
-      <input
-        type="text"
-        id="field-cedulaIdentidad"
-        name="cedulaIdentidad"
-        value={w.cedulaIdentidad ?? ""}
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        placeholder="001-123456-7890A"
-      />
-    </FormField>
-
-    <FormField label="Número INSS" name="numeroInss" error={errors.numeroInss} required>
-      <input
-        type="text"
-        id="field-numeroInss"
-        name="numeroInss"
-        value={w.numeroInss ?? ""}
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        placeholder="Número INSS"
-      />
-    </FormField>
-
-    <FormField label="Fecha de Entrada" name="fechaEntrada" error={errors.fechaEntrada} required>
-      <input
-        type="date"
-        id="field-fechaEntrada"
-        name="fechaEntrada"
-        value={w.fechaEntrada ?? ""}
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      />
-    </FormField>
-
-    <FormField label="Fecha de Salida" name="fechaSalida" error={errors.fechaSalida}>
-      <input
-        type="date"
-        id="field-fechaSalida"
-        name="fechaSalida"
-        value={w.fechaSalida ?? ""}
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      />
-    </FormField>
-
-    <FormField label="Nacionalidad" name="nacionalidadId" error={errors.nacionalidadId} required>
-      <select
-        id="field-nacionalidadId"
-        name="nacionalidadId"
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      >
-        <option value="">Seleccione nacionalidad</option>
-        {nacionalidades.map((item) => (
-          <option value={item.id} selected={w.nacionalidadId === item.id}>
-            {item.nombre}
-          </option>
-        ))}
-      </select>
-    </FormField>
-
-    <FormField label="Género" name="generoId" error={errors.generoId} required>
-      <select
-        id="field-generoId"
-        name="generoId"
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      >
-        <option value="">Seleccione género</option>
-        {generos.map((item) => (
-          <option value={item.id} selected={w.generoId === item.id}>
-            {item.nombre}
-          </option>
-        ))}
-      </select>
-    </FormField>
-
-    <FormField label="Tipo de Contrato" name="tipoContratoId" error={errors.tipoContratoId} required>
-      <select
-        id="field-tipoContratoId"
-        name="tipoContratoId"
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      >
-        <option value="">Seleccione tipo de contrato</option>
-        {tiposContrato.map((item) => (
-          <option value={item.id} selected={w.tipoContratoId === item.id}>
-            {item.nombre}
-          </option>
-        ))}
-      </select>
-    </FormField>
-
-    <FormField label="Cargo" name="cargoId" error={errors.cargoId} required>
-      <select
-        id="field-cargoId"
-        name="cargoId"
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      >
-        <option value="">Seleccione cargo</option>
-        {cargos.map((item) => (
-          <option value={item.id} selected={w.cargoId === item.id}>
-            {item.nombre}
-          </option>
-        ))}
-      </select>
-    </FormField>
-
-    <FormField label="Talla de Camisa" name="tallaCamisaId" error={errors.tallaCamisaId} required>
-      <select
-        id="field-tallaCamisaId"
-        name="tallaCamisaId"
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      >
-        <option value="">Seleccione talla de camisa</option>
-        {tallasCamisa.map((item) => (
-          <option value={item.id} selected={w.tallaCamisaId === item.id}>
-            {item.nombre}
-          </option>
-        ))}
-      </select>
-    </FormField>
-
-    <FormField label="Talla de Pantalón" name="tallaPantalonId" error={errors.tallaPantalonId} required>
-      <select
-        id="field-tallaPantalonId"
-        name="tallaPantalonId"
-        required
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      >
-        <option value="">Seleccione talla de pantalón</option>
-        {tallasPantalon.map((item) => (
-          <option value={item.id} selected={w.tallaPantalonId === item.id}>
-            {item.nombre}
-          </option>
-        ))}
-      </select>
-    </FormField>
-
-    <FormField label="Saldo de Vacaciones" name="saldoVacaciones" error={errors.saldoVacaciones}>
-      <input
-        type="number"
-        id="field-saldoVacaciones"
-        name="saldoVacaciones"
-        value={w.saldoVacaciones ?? "0.00"}
-        step="0.01"
-        min="0"
-        class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      />
-    </FormField>
-
-    <FormField label="Activo" name="activo" error={errors.activo}>
-      <div class="flex items-center gap-2 mt-1">
-        <input
-          type="checkbox"
-          id="field-activo"
-          name="activo"
-          checked={w.activo !== false}
-          class="size-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-        />
-        <label for="field-activo" class="text-sm text-gray-600 dark:text-gray-400">
-          Trabajador activo
-        </label>
-      </div>
-    </FormField>
+  <!-- Identity card -->
+  <div class="wf-identity">
+    <div class="wf-avatar">{initials}</div>
+    <div class="wf-id-info">
+      <div class="wf-id-name">{fullName}</div>
+      <div class="wf-id-meta">{subtitle}</div>
+    </div>
+    <div class="wf-id-right">
+      {isEdit && (
+        <div class="wf-badge wf-badge-green">
+          <span class="wf-badge-dot"></span>
+          {w.activo !== false ? "Activo" : "Inactivo"}
+        </div>
+      )}
+    </div>
   </div>
 
-  <FormField label="Dirección" name="direccion" error={errors.direccion}>
-    <textarea
-      id="field-direccion"
-      name="direccion"
-      rows="3"
-      class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      placeholder="Dirección del trabajador"
-    >{w.direccion ?? ""}</textarea>
-  </FormField>
-
-  <FormField label="Foto" name="foto" error={errors.foto}>
-    <div class="flex items-start gap-4">
-      <div class="flex-1">
-        <input
-          type="file"
-          id="field-foto"
-          name="foto"
-          accept="image/*"
-          class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-950 dark:file:text-primary-300"
-        />
+  <!-- Sección: Información personal -->
+  <div class="wf-section">
+    <div class="wf-section-header">
+      <div class="wf-section-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
-      <div id="photo-preview" class="shrink-0">
-        {w.foto ? (
-          <img src={w.foto} alt="Foto actual" class="size-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700" />
-        ) : (
-          <div class="size-16 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 text-xs border border-gray-200 dark:border-gray-700">
-            Sin foto
+      <span class="wf-section-title">Información personal</span>
+    </div>
+    <div class="wf-personal-layout">
+      <div class="wf-personal-photo">
+        <label for="field-foto-personal" class="wf-photo-area">
+          <div id="preview-personal" class="wf-photo-preview">
+            {w.foto ? (
+              <img src={w.foto} alt="Foto" class="wf-photo-img" />
+            ) : (
+              <div class="wf-photo-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>Agregar foto</span>
+              </div>
+            )}
           </div>
-        )}
+          <input type="file" id="field-foto-personal" name="foto" accept="image/*" style="display:none" />
+        </label>
+        <p class="wf-photo-hint">JPG, PNG, WEBP · máx 2 MB</p>
+      </div>
+      <div class="wf-fields wf-col-2" style="flex:1; padding:0">
+        <div class="wf-field">
+          <label class="wf-label">Nombre <span class="wf-req">*</span></label>
+          <input type="text" id="field-nombre" name="nombre" value={w.nombre ?? ""} required placeholder="Nombre" />
+        </div>
+        <div class="wf-field">
+          <label class="wf-label">Apellidos <span class="wf-req">*</span></label>
+          <input type="text" id="field-apellidos" name="apellidos" value={w.apellidos ?? ""} required placeholder="Apellidos" />
+        </div>
+        <div class="wf-field">
+          <label class="wf-label">Género <span class="wf-req">*</span></label>
+          <select id="field-generoId" name="generoId" required>
+            <option value="">Seleccionar</option>
+            {generos.map((item) => (
+              <option value={item.id} selected={w.generoId === item.id}>{item.nombre}</option>
+            ))}
+          </select>
+        </div>
+        <div class="wf-field">
+          <label class="wf-label">Cédula de identidad <span class="wf-req">*</span></label>
+          <input type="text" id="field-cedulaIdentidad" name="cedulaIdentidad" value={w.cedulaIdentidad ?? ""} required placeholder="000-000000-0000A" />
+        </div>
+        <div class="wf-field">
+          <label class="wf-label">Número INSS <span class="wf-req">*</span></label>
+          <input type="text" id="field-numeroInss" name="numeroInss" value={w.numeroInss ?? ""} required placeholder="INSS-000-0000" />
+        </div>
+        <div class="wf-field">
+          <label class="wf-label">Nacionalidad <span class="wf-req">*</span></label>
+          <select id="field-nacionalidadId" name="nacionalidadId" required>
+            <option value="">Seleccionar</option>
+            {nacionalidades.map((item) => (
+              <option value={item.id} selected={w.nacionalidadId === item.id}>{item.nombre}</option>
+            ))}
+          </select>
+        </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Sección: Contacto -->
+  <div class="wf-section">
+    <div class="wf-section-header">
+      <div class="wf-section-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .99h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      </div>
+      <span class="wf-section-title">Contacto y ubicación</span>
+    </div>
+    <div class="wf-fields wf-col-3">
+      <div class="wf-field wf-span-2">
+        <label class="wf-label">Correo electrónico <span class="wf-req">*</span></label>
+        <input type="email" id="field-email" name="email" value={w.email ?? ""} required placeholder="correo@empresa.com" />
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Teléfono <span class="wf-req">*</span></label>
+        <div class="wf-input-group">
+          <span class="wf-input-prefix">+505</span>
+          <input type="tel" id="field-telefono" name="telefono" value={telValue} required placeholder="0000-0000" />
+        </div>
       </div>
     </div>
-    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Formatos: JPG, PNG, WEBP. Max 2MB.</p>
-  </FormField>
+    <div class="wf-fields wf-col-1" style="padding-top:0">
+      <div class="wf-field">
+        <label class="wf-label">Dirección</label>
+        <textarea id="field-direccion" name="direccion" rows="2" placeholder="Dirección completa...">{w.direccion ?? ""}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección: Contrato -->
+  <div class="wf-section">
+    <div class="wf-section-header">
+      <div class="wf-section-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <span class="wf-section-title">Datos del contrato</span>
+    </div>
+    <div class="wf-fields wf-col-5">
+      <div class="wf-field">
+        <label class="wf-label">Tipo de contrato <span class="wf-req">*</span></label>
+        <select id="field-tipoContratoId" name="tipoContratoId" required>
+          <option value="">Seleccionar</option>
+          {tiposContrato.map((item) => (
+            <option value={item.id} selected={w.tipoContratoId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Cargo <span class="wf-req">*</span></label>
+        <select id="field-cargoId" name="cargoId" required>
+          <option value="">Seleccionar</option>
+          {cargos.map((item) => (
+            <option value={item.id} selected={w.cargoId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Saldo de vacaciones</label>
+        <input type="number" id="field-saldoVacaciones" name="saldoVacaciones" value={w.saldoVacaciones ?? "0.00"} step="0.01" min="0" placeholder="0.00" />
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Fecha de entrada <span class="wf-req">*</span></label>
+        <DatePicker id="field-fechaEntrada" name="fechaEntrada" value={w.fechaEntrada ?? ""} required />
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Fecha de salida</label>
+        <DatePicker id="field-fechaSalida" name="fechaSalida" value={w.fechaSalida ?? ""} />
+      </div>
+    </div>
+    <div class="wf-toggle-row">
+      <div class="wf-toggle-info">
+        <span>Trabajador activo</span>
+        <small>Al desactivar, el trabajador no aparecerá en reportes ni nóminas activas</small>
+      </div>
+      <label class="wf-toggle">
+        <input type="checkbox" id="field-activo" name="activo" checked={w.activo !== false} />
+        <span class="wf-toggle-track"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Sección: Uniformes -->
+  <div class="wf-section">
+    <div class="wf-section-header">
+      <div class="wf-section-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>
+      </div>
+      <span class="wf-section-title">Uniformes</span>
+    </div>
+    <div class="wf-fields wf-col-2">
+      <div class="wf-field">
+        <label class="wf-label">Talla de camisa <span class="wf-req">*</span></label>
+        <select id="field-tallaCamisaId" name="tallaCamisaId" required>
+          <option value="">Seleccionar</option>
+          {tallasCamisa.map((item) => (
+            <option value={item.id} selected={w.tallaCamisaId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Talla de pantalón <span class="wf-req">*</span></label>
+        <select id="field-tallaPantalonId" name="tallaPantalonId" required>
+          <option value="">Seleccionar</option>
+          {tallasPantalon.map((item) => (
+            <option value={item.id} selected={w.tallaPantalonId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  </div>
+
 </div>
 
+<style>
+  .wf-form {
+    --bg-card: #181e2c;
+    --bg-input: #1c2335;
+    --bg-input-hover: #1f2840;
+    --border: #262f45;
+    --border-focus: #3b6fd4;
+    --border-light: #2d3855;
+    --text-primary: #e8edf7;
+    --text-secondary: #8b9abf;
+    --text-muted: #4d5c7d;
+    --text-label: #6b7fa8;
+    --accent: #3b6fd4;
+    --accent-light: #1e3466;
+    --danger: #e05454;
+    --success: #3dbf7e;
+    --success-bg: #0f2a1e;
+    --success-border: #1a4a30;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+  }
+
+  /* Identity card */
+  .wf-identity {
+    display: flex; align-items: center; gap: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .wf-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent-light);
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 600;
+    color: #a8c4f0; flex-shrink: 0;
+    letter-spacing: .5px;
+  }
+  .wf-id-info { flex: 1; }
+  .wf-id-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .wf-id-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .wf-id-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+
+  .wf-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 11px; border-radius: 999px;
+    font-size: 11px; font-weight: 500;
+  }
+  .wf-badge-green { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); }
+  .wf-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  .wf-upload-trigger {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md); font-size: 12px;
+    color: var(--text-secondary); cursor: pointer;
+    transition: background .15s;
+  }
+  .wf-upload-trigger:hover { background: var(--bg-input); color: var(--text-primary); }
+  .wf-upload-trigger svg { width: 13px; height: 13px; }
+  .wf-upload-hint { font-size: 11px; color: var(--text-muted); }
+
+  /* Sections */
+  .wf-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    margin-bottom: 14px; overflow: hidden;
+  }
+  .wf-section-header {
+    display: flex; align-items: center; gap: 9px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,.015);
+  }
+  .wf-section-icon {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    border: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .wf-section-icon svg { width: 14px; height: 14px; color: var(--text-secondary); }
+  .wf-section-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .07em; }
+
+  /* Fields */
+  .wf-fields { padding: 22px; display: grid; gap: 18px 16px; }
+  .wf-col-5 { grid-template-columns: repeat(5, 1fr); }
+  .wf-col-3 { grid-template-columns: repeat(3, 1fr); }
+  .wf-col-2 { grid-template-columns: repeat(2, 1fr); }
+  .wf-col-1 { grid-template-columns: 1fr; }
+  .wf-span-2 { grid-column: span 2; }
+
+  .wf-label {
+    display: block; font-size: 11px; font-weight: 500;
+    color: var(--text-label); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .wf-req { color: var(--danger); margin-left: 2px; }
+
+  .wf-field input, .wf-field select, .wf-field textarea {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 9px 12px; font-size: 13px;
+    font-family: inherit; color: var(--text-primary);
+    outline: none; transition: border-color .15s, background .15s, box-shadow .15s;
+    -webkit-appearance: none; appearance: none;
+    box-sizing: border-box;
+  }
+  .wf-field input:hover, .wf-field select:hover, .wf-field textarea:hover {
+    background: var(--bg-input-hover);
+    border-color: var(--border-light);
+  }
+  .wf-field input:focus, .wf-field select:focus, .wf-field textarea:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(59,111,212,.18);
+    background: var(--bg-input-hover);
+  }
+  .wf-field input::placeholder, .wf-field textarea::placeholder { color: var(--text-muted); }
+
+  .wf-field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234d5c7d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 11px center;
+    padding-right: 32px; cursor: pointer;
+  }
+  .wf-field select option { background: #1c2335; color: var(--text-primary); }
+
+  .wf-field textarea { resize: none; line-height: 1.6; }
+
+  /* Personal info layout: photo left + fields right */
+  .wf-personal-layout {
+    display: flex; gap: 22px; padding: 22px;
+  }
+  .wf-personal-photo {
+    width: 160px; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .wf-photo-area {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; min-height: 160px;
+    background: var(--bg-input);
+    border: 1px dashed var(--border-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .wf-photo-area:hover { border-color: var(--border-focus); background: var(--bg-input-hover); }
+  .wf-photo-preview { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .wf-photo-img {
+    width: 100%; height: 100%;
+    object-fit: cover; border-radius: var(--radius-md);
+    max-height: 200px;
+  }
+  .wf-photo-placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--text-muted); font-size: 12px;
+  }
+  .wf-photo-placeholder svg { width: 32px; height: 32px; opacity: .5; }
+  .wf-photo-hint { font-size: 10px; color: var(--text-muted); text-align: center; }
+
+  /* Input group (phone prefix) */
+  .wf-input-group { display: flex; }
+  .wf-input-prefix {
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 11px;
+    background: #131720;
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    color: var(--text-muted);
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .wf-input-group input {
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    border-left: none;
+  }
+
+  /* Toggle */
+  .wf-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px;
+    border-top: 1px solid var(--border);
+  }
+  .wf-toggle-info span { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .wf-toggle-info small { display: block; font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .wf-toggle {
+    position: relative; width: 38px; height: 22px;
+    flex-shrink: 0;
+  }
+  .wf-toggle input { opacity: 0; width: 0; height: 0; }
+  .wf-toggle-track {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .wf-toggle-track::before {
+    content: ''; position: absolute;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--text-muted);
+    top: 3px; left: 3px;
+    transition: transform .2s, background .2s;
+  }
+  .wf-toggle input:checked + .wf-toggle-track { background: var(--accent-light); border: 1px solid var(--accent); }
+  .wf-toggle input:checked + .wf-toggle-track::before { transform: translateX(16px); background: var(--accent); }
+
+  .wf-hidden { display: none; }
+
+  @media (max-width: 680px) {
+    .wf-col-5, .wf-col-3, .wf-col-2 { grid-template-columns: 1fr; }
+    .wf-personal-layout { flex-direction: column; }
+    .wf-personal-photo { width: 100%; min-height: 120px; }
+    .wf-span-2 { grid-column: span 1; }
+    .wf-identity { flex-wrap: wrap; }
+    .wf-id-right { flex-direction: row; align-items: center; width: 100%; justify-content: flex-start; }
+  }
+</style>
+
 <script>
-  const fotoInput = document.getElementById("field-foto") as HTMLInputElement;
-  const photoPreview = document.getElementById("photo-preview")!;
+  const fotoInput = document.getElementById("field-foto-personal") as HTMLInputElement;
+  const photoPreview = document.getElementById("preview-personal")!;
 
   fotoInput?.addEventListener("change", () => {
     const file = fotoInput.files?.[0];

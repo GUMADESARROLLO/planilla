@@ -53,7 +53,7 @@ export class CatalogRepository {
     };
   }
 
-  async findById(table: any, id: string): Promise<CatalogEntry | null> {
+  async findById(table: any, id: number): Promise<CatalogEntry | null> {
     const [result] = await db
       .select()
       .from(table)
@@ -91,7 +91,7 @@ export class CatalogRepository {
 
   async update(
     table: any,
-    id: string,
+    id: number,
     data: Partial<CatalogEntry>,
   ): Promise<CatalogEntry | null> {
     const columns = getTableColumns(table);
@@ -108,7 +108,7 @@ export class CatalogRepository {
     return this.findById(table, id);
   }
 
-  async softDelete(table: any, id: string): Promise<void> {
+  async softDelete(table: any, id: number): Promise<void> {
     await db
       .update(table)
       .set({ deleted_at: new Date() } as any)

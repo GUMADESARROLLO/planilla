@@ -20,7 +20,7 @@ export interface DashboardStats {
 }
 
 export interface RecentWorker {
-  id: string;
+  id: number;
   nombre: string;
   apellidos: string;
   email: string;
@@ -29,9 +29,9 @@ export interface RecentWorker {
 }
 
 export interface RecentPermit {
-  id: string;
-  trabajadorId: string;
-  tipoPermisoId: string;
+  id: number;
+  trabajadorId: number;
+  tipoPermisoId: number;
   cantidadDias: number;
   estado: string;
   fechaElaborada: Date | string;

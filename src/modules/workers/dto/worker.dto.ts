@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { emailSchema, dateStringSchema, uuidSchema } from "@utils/validators";
+import { emailSchema, dateStringSchema } from "@utils/validators";
 
 export const createWorkerSchema = z.object({
   nombre: z
@@ -15,7 +15,7 @@ export const createWorkerSchema = z.object({
   email: emailSchema,
   fechaEntrada: dateStringSchema,
   fechaSalida: dateStringSchema.nullable().optional(),
-  nacionalidadId: uuidSchema,
+  nacionalidadId: z.number().int().positive(),
   cedulaIdentidad: z
     .string()
     .min(1, "La cédula de identidad es requerida")
@@ -39,11 +39,11 @@ export const createWorkerSchema = z.object({
     .union([z.string(), z.number()])
     .optional()
     .default("0.00"),
-  tallaCamisaId: uuidSchema,
-  tallaPantalonId: uuidSchema,
-  tipoContratoId: uuidSchema,
-  cargoId: uuidSchema,
-  generoId: uuidSchema,
+  tallaCamisaId: z.number().int().positive(),
+  tallaPantalonId: z.number().int().positive(),
+  tipoContratoId: z.number().int().positive(),
+  cargoId: z.number().int().positive(),
+  generoId: z.number().int().positive(),
   activo: z.boolean().optional().default(true),
   foto: z.string().nullable().optional(),
 });
@@ -64,7 +64,7 @@ export const updateWorkerSchema = z.object({
   email: emailSchema.optional(),
   fechaEntrada: dateStringSchema.optional(),
   fechaSalida: dateStringSchema.nullable().optional(),
-  nacionalidadId: uuidSchema.optional(),
+  nacionalidadId: z.number().int().positive().optional(),
   cedulaIdentidad: z
     .string()
     .min(1, "La cédula de identidad es requerida")
@@ -88,11 +88,11 @@ export const updateWorkerSchema = z.object({
     .optional(),
   direccion: z.string().nullable().optional(),
   saldoVacaciones: z.union([z.string(), z.number()]).optional(),
-  tallaCamisaId: uuidSchema.optional(),
-  tallaPantalonId: uuidSchema.optional(),
-  tipoContratoId: uuidSchema.optional(),
-  cargoId: uuidSchema.optional(),
-  generoId: uuidSchema.optional(),
+  tallaCamisaId: z.number().int().positive().optional(),
+  tallaPantalonId: z.number().int().positive().optional(),
+  tipoContratoId: z.number().int().positive().optional(),
+  cargoId: z.number().int().positive().optional(),
+  generoId: z.number().int().positive().optional(),
   activo: z.boolean().optional(),
   foto: z.string().nullable().optional(),
 });
@@ -105,8 +105,8 @@ export const workerFiltersSchema = z.object({
       if (v === "false" || v === false) return false;
       return undefined;
     }, z.boolean().optional()),
-  tipo_contrato_id: uuidSchema.optional(),
-  cargo_id: uuidSchema.optional(),
+  tipo_contrato_id: z.coerce.number().int().positive().optional(),
+  cargo_id: z.coerce.number().int().positive().optional(),
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(100).optional().default(10),
 });

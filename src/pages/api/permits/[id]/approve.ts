@@ -21,7 +21,7 @@ export const POST: APIRoute = async ({ params, request }) => {
     const data = validateSchema(approveSchema, body);
 
     const result = await permitsService.approve(
-      id,
+      Number(id),
       session.user.id,
       data.firmaDigital,
     );

@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { randomUUID as _randomUUID, randomBytes, scryptSync } from "node:crypto";
+import { randomBytes, scryptSync } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { db } from "./index";
 import {
@@ -12,12 +12,12 @@ import {
   tallasPantalon,
   tiposPermisos,
   roles,
+  unidadesNegocio,
+  departamentos,
 } from "./schemas";
 import { trabajadores } from "./schemas/workers";
 import { esquelasPermisos } from "./schemas/permits";
 import { trabajadoresPlanillas } from "./schemas/workers_planillas";
-
-const uuid = () => _randomUUID() as string;
 
 function hashBetterAuth(password: string): string {
   const salt = randomBytes(16).toString("hex");
@@ -39,72 +39,80 @@ async function seed() {
     process.exit(0);
   }
 
-  // ───── Generate IDs ─────
+  // ───── Generate IDs (sequential ints for autoincrement tables) ─────
   const ids = {
-    contratoFijo: uuid(),
-    contratoIndefinido: uuid(),
-    contratoTemporal: uuid(),
-    contratoProyecto: uuid(),
-    contratoPracticas: uuid(),
+    contratoFijo: 1,
+    contratoIndefinido: 2,
+    contratoTemporal: 3,
+    contratoProyecto: 4,
+    contratoPracticas: 5,
 
-    cargoGerente: uuid(),
-    cargoContador: uuid(),
-    cargoSecretario: uuid(),
-    cargoDesarrollador: uuid(),
-    cargoAnalista: uuid(),
+    cargoGerente: 1,
+    cargoContador: 2,
+    cargoSecretario: 3,
+    cargoDesarrollador: 4,
+    cargoAnalista: 5,
 
-    generoMasculino: uuid(),
-    generoFemenino: uuid(),
-    generoOtro: uuid(),
+    generoMasculino: 1,
+    generoFemenino: 2,
+    generoOtro: 3,
 
-    nacionalidadNicaragua: uuid(),
-    nacionalidadCostaRica: uuid(),
-    nacionalidadHonduras: uuid(),
-    nacionalidadGuatemala: uuid(),
-    nacionalidadElSalvador: uuid(),
+    nacionalidadNicaragua: 1,
+    nacionalidadCostaRica: 2,
+    nacionalidadHonduras: 3,
+    nacionalidadGuatemala: 4,
+    nacionalidadElSalvador: 5,
 
-    planillaQuincenal: uuid(),
-    planillaMensual: uuid(),
-    planillaVehicular: uuid(),
-    planillaAdministrativa: uuid(),
-    planillaTemporal: uuid(),
+    planillaQuincenal: 1,
+    planillaMensual: 2,
+    planillaVehicular: 3,
+    planillaAdministrativa: 4,
+    planillaTemporal: 5,
 
-    tallaCamisaXS: uuid(),
-    tallaCamisaS: uuid(),
-    tallaCamisaM: uuid(),
-    tallaCamisaL: uuid(),
-    tallaCamisaXL: uuid(),
-    tallaCamisaXXL: uuid(),
+    tallaCamisaXS: 1,
+    tallaCamisaS: 2,
+    tallaCamisaM: 3,
+    tallaCamisaL: 4,
+    tallaCamisaXL: 5,
+    tallaCamisaXXL: 6,
 
-    tallaPantalon28: uuid(),
-    tallaPantalon30: uuid(),
-    tallaPantalon32: uuid(),
-    tallaPantalon34: uuid(),
-    tallaPantalon36: uuid(),
-    tallaPantalon38: uuid(),
+    tallaPantalon28: 1,
+    tallaPantalon30: 2,
+    tallaPantalon32: 3,
+    tallaPantalon34: 4,
+    tallaPantalon36: 5,
+    tallaPantalon38: 6,
 
-    permisoEnfermedad: uuid(),
-    permisoVacaciones: uuid(),
-    permisoPersonal: uuid(),
-    permisoMaternidad: uuid(),
-    permisoLuto: uuid(),
+    permisoEnfermedad: 1,
+    permisoVacaciones: 2,
+    permisoPersonal: 3,
+    permisoMaternidad: 4,
+    permisoLuto: 5,
 
-    rolAdmin: uuid(),
-    rolGerente: uuid(),
-    rolSupervisor: uuid(),
-    rolEmpleado: uuid(),
+    rolAdmin: 1,
+    rolGerente: 2,
+    rolSupervisor: 3,
+    rolEmpleado: 4,
 
-    usuarioAdmin: uuid(),
+    trabajador1: 1,
+    trabajador2: 2,
+    trabajador3: 3,
+    trabajador4: 4,
+    trabajador5: 5,
 
-    trabajador1: uuid(),
-    trabajador2: uuid(),
-    trabajador3: uuid(),
-    trabajador4: uuid(),
-    trabajador5: uuid(),
+    esquele1: 1,
+    esquele2: 2,
 
-    esquele1: uuid(),
-    esquele2: uuid(),
+    unidadNegocio1: 1,
+    unidadNegocio2: 2,
+
+    deptoInformatica: 1,
+    deptoContabilidad: 2,
+    deptoRH: 3,
+    deptoGerencia: 4,
   };
+
+  const adminUserId = "usr-1";
 
   // ───── 1. Insert catalog: tipos_contrato ─────
   const tiposContratoRows = [
@@ -118,19 +126,7 @@ async function seed() {
     await db.insert(tiposContrato).values(row);
   }
 
-  // ───── 2. Insert catalog: cargos ─────
-  const cargosRows = [
-    { id: ids.cargoGerente, nombre: "Gerente General" },
-    { id: ids.cargoContador, nombre: "Contador" },
-    { id: ids.cargoSecretario, nombre: "Secretario/a" },
-    { id: ids.cargoDesarrollador, nombre: "Desarrollador" },
-    { id: ids.cargoAnalista, nombre: "Analista" },
-  ];
-  for (const row of cargosRows) {
-    await db.insert(cargos).values(row);
-  }
-
-  // ───── 3. Insert catalog: generos ─────
+  // ───── 2. Insert catalog: generos ─────
   const generosRows = [
     { id: ids.generoMasculino, nombre: "Masculino" },
     { id: ids.generoFemenino, nombre: "Femenino" },
@@ -213,16 +209,48 @@ async function seed() {
     await db.insert(roles).values(row);
   }
 
-  // ───── 10. Create admin user in Better Auth tables ─────
+  // ───── 10. Insert catalog: unidades_negocio ─────
+  const unidadesNegocioRows = [
+    { id: ids.unidadNegocio1, nombre: "UNIMARK SA", descripcion: "Unidad principal de comercialización" },
+    { id: ids.unidadNegocio2, nombre: "LOGÍSTICA INTEGRAL", descripcion: "Unidad de logística y distribución" },
+  ];
+  for (const row of unidadesNegocioRows) {
+    await db.insert(unidadesNegocio).values(row);
+  }
+
+  // ───── 11. Insert catalog: departamentos ─────
+  const departamentosRows = [
+    { id: ids.deptoInformatica, nombre: "INFORMÁTICA", descripcion: "Departamento de tecnologías de la información", unidadNegocioId: ids.unidadNegocio1 },
+    { id: ids.deptoContabilidad, nombre: "CONTABILIDAD", descripcion: "Departamento contable", unidadNegocioId: ids.unidadNegocio1 },
+    { id: ids.deptoRH, nombre: "RECURSOS HUMANOS", descripcion: "Gestión del talento humano", unidadNegocioId: ids.unidadNegocio1 },
+    { id: ids.deptoGerencia, nombre: "GERENCIA GENERAL", descripcion: "Dirección general", unidadNegocioId: ids.unidadNegocio1 },
+  ];
+  for (const row of departamentosRows) {
+    await db.insert(departamentos).values(row);
+  }
+
+  // ───── Insert catalog: cargos ─────
+  const cargosRows = [
+    { id: ids.cargoGerente, nombre: "Gerente General", unidadNegocioId: ids.unidadNegocio1, departamentoId: ids.deptoGerencia },
+    { id: ids.cargoContador, nombre: "Contador", unidadNegocioId: ids.unidadNegocio1, departamentoId: ids.deptoContabilidad },
+    { id: ids.cargoSecretario, nombre: "Secretario/a", unidadNegocioId: ids.unidadNegocio1, departamentoId: ids.deptoGerencia },
+    { id: ids.cargoDesarrollador, nombre: "Desarrollador", unidadNegocioId: ids.unidadNegocio1, departamentoId: ids.deptoInformatica },
+    { id: ids.cargoAnalista, nombre: "Analista", unidadNegocioId: ids.unidadNegocio1, departamentoId: ids.deptoInformatica },
+  ];
+  for (const row of cargosRows) {
+    await db.insert(cargos).values(row);
+  }
+
+  // ───── 12. Create admin user in Better Auth tables ─────
   const passwordHash = hashBetterAuth("Admin123!");
   const now = new Date();
   await db.execute(
     sql`INSERT INTO \`user\` (id, email, name, emailVerified, role, activo, nombre, apellidos, createdAt, updatedAt)
-        VALUES (${ids.usuarioAdmin}, 'admin@planilla.com', 'Admin Sistema', false, 'ADMIN', true, 'Admin', 'Sistema', ${now}, ${now})`
+        VALUES (${adminUserId}, 'admin@planilla.com', 'Admin Sistema', false, 'ADMIN', true, 'Admin', 'Sistema', ${now}, ${now})`
   );
   await db.execute(
     sql`INSERT INTO \`account\` (id, accountId, providerId, userId, password, createdAt, updatedAt)
-        VALUES (${crypto.randomUUID()}, ${crypto.randomUUID()}, 'credential', ${ids.usuarioAdmin}, ${passwordHash}, ${now}, ${now})`
+        VALUES ('acc-1', 'acc-1', 'credential', ${adminUserId}, ${passwordHash}, ${now}, ${now})`
   );
 
   // ───── 11. Create 5 sample workers ─────
@@ -340,7 +368,7 @@ async function seed() {
       fechaIncorporacion: new Date("2026-01-20"),
       observaciones: "Vacaciones anuales programadas",
       estado: "aprobada" as const,
-      aprobadoPor: ids.usuarioAdmin,
+      aprobadoPor: adminUserId,
     },
     {
       id: ids.esquele2,

@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+
 import { and, eq, like, isNull, desc, count, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { esquelasPermisos } from "@/db/schemas/permits";
@@ -16,15 +16,15 @@ import type {
 
 function mapEsquela(row: Record<string, unknown>): EsquelaResponse {
   return {
-    id: row["id"] as string,
+    id: row["id"] as number,
     fechaElaborada:
       row["fechaElaborada"] instanceof Date
         ? (row["fechaElaborada"] as Date).toISOString()
         : String(row["fechaElaborada"] ?? ""),
-    trabajadorId: row["trabajadorId"] as string,
+    trabajadorId: row["trabajadorId"] as number,
     trabajador: row["trabajador"]
       ? {
-          id: (row["trabajador"] as Record<string, unknown>)["id"] as string,
+          id: (row["trabajador"] as Record<string, unknown>)["id"] as number,
           nombre: (row["trabajador"] as Record<string, unknown>)["nombre"] as string,
           apellidos: (row["trabajador"] as Record<string, unknown>)["apellidos"] as string,
           email: (row["trabajador"] as Record<string, unknown>)["email"] as string,
@@ -35,10 +35,10 @@ function mapEsquela(row: Record<string, unknown>): EsquelaResponse {
       : null,
     cargo: (row["cargo"] as string) ?? null,
     ubicacion: row["ubicacion"] as string,
-    tipoPermisoId: row["tipoPermisoId"] as string,
+    tipoPermisoId: row["tipoPermisoId"] as number,
     tipoPermiso: row["tipoPermiso"]
       ? {
-          id: (row["tipoPermiso"] as Record<string, unknown>)["id"] as string,
+          id: (row["tipoPermiso"] as Record<string, unknown>)["id"] as number,
           nombre: (row["tipoPermiso"] as Record<string, unknown>)["nombre"] as string,
           descripcion:
             ((row["tipoPermiso"] as Record<string, unknown>)["descripcion"] as string) ?? null,
@@ -156,7 +156,7 @@ export async function findAll(
   };
 }
 
-export async function findById(id: string): Promise<EsquelaResponse> {
+export async function findById(id: number): Promise<EsquelaResponse> {
   const whereClause = and(
     eq(esquelasPermisos.id, id),
     isNull(esquelasPermisos.deleted_at),
@@ -172,10 +172,7 @@ export async function findById(id: string): Promise<EsquelaResponse> {
 }
 
 export async function create(data: CreateEsquelaDTO): Promise<EsquelaResponse> {
-  const id = crypto.randomUUID();
-
-  await db.insert(esquelasPermisos).values({
-    id,
+  const [inserted] = await db.insert(esquelasPermisos).values({
     trabajadorId: data.trabajadorId,
     cargo: data.cargo ?? null,
     ubicacion: data.ubicacion,
@@ -185,13 +182,13 @@ export async function create(data: CreateEsquelaDTO): Promise<EsquelaResponse> {
     fechaIncorporacion: data.fechaIncorporacion,
     observaciones: data.observaciones ?? null,
     estado: "pendiente",
-  } as any);
+  } as any).$returningId();
 
-  return findById(id);
+  return findById(inserted!.id);
 }
 
 export async function update(
-  id: string,
+  id: number,
   data: UpdateEsquelaDTO,
 ): Promise<EsquelaResponse> {
   const existing = await findById(id);
@@ -217,7 +214,7 @@ export async function update(
   return findById(id);
 }
 
-export async function softDelete(id: string): Promise<void> {
+export async function softDelete(id: number): Promise<void> {
   const existing = await findById(id);
 
   await db
@@ -227,7 +224,7 @@ export async function softDelete(id: string): Promise<void> {
 }
 
 export async function approve(
-  id: string,
+  id: number,
   aprobadoPor: string,
   firmaDigital?: string,
 ): Promise<EsquelaResponse> {
@@ -251,7 +248,7 @@ export async function approve(
 }
 
 export async function reject(
-  id: string,
+  id: number,
   aprobadoPor: string,
 ): Promise<EsquelaResponse> {
   const existing = await findById(id);
@@ -268,7 +265,7 @@ export async function reject(
 }
 
 export async function findByWorker(
-  trabajadorId: string,
+  trabajadorId: number,
 ): Promise<EsquelaResponse[]> {
   const rows = await baseQuery
     .where(

@@ -9,7 +9,7 @@ import * as permitsService from "@modules/permits/services/permits.service";
 const updateEsquelaSchema = z.object({
   cargo: z.string().optional(),
   ubicacion: z.string().optional(),
-  tipoPermisoId: z.string().optional(),
+  tipoPermisoId: z.number().int().positive().optional(),
   cantidadDias: z.number().int().min(1).optional(),
   periodoCorrespondiente: z.string().optional(),
   fechaIncorporacion: z.string().optional(),
@@ -23,7 +23,7 @@ export const GET: APIRoute = async ({ params, request }) => {
     const { id } = params;
     if (!id) throw new NotFoundError("ID no proporcionado");
 
-    const result = await permitsService.findById(id);
+    const result = await permitsService.findById(Number(id));
     return successResponse(result);
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
@@ -41,7 +41,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
     const body = await request.json().catch(() => ({}));
     const data = validateSchema(updateEsquelaSchema, body);
 
-    const result = await permitsService.update(id, data);
+    const result = await permitsService.update(Number(id), data);
     return successResponse(result);
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
@@ -56,7 +56,7 @@ export const DELETE: APIRoute = async ({ params, request }) => {
     const { id } = params;
     if (!id) throw new NotFoundError("ID no proporcionado");
 
-    await permitsService.softDelete(id);
+    await permitsService.softDelete(Number(id));
     return successResponse({ message: "Esquela de permiso eliminada correctamente" });
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);

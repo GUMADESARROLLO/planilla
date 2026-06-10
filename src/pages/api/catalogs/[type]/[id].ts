@@ -10,7 +10,7 @@ const updateCatalogSchema = z.object({
   nombre: z.string().min(1).max(255).optional(),
   descripcion: z.string().optional().nullable(),
   activo: z.boolean().optional(),
-});
+}).passthrough();
 
 export const GET: APIRoute = async (context) => {
   try {
@@ -22,7 +22,7 @@ export const GET: APIRoute = async (context) => {
       throw new AppError("Parámetros no válidos", 400, "INVALID_PARAMS");
     }
 
-    const entry = await catalogService.findById(type, id);
+    const entry = await catalogService.findById(type, Number(id));
     if (!entry) throw new NotFoundError("Entrada no encontrada");
 
     return successResponse(entry);
@@ -45,10 +45,10 @@ export const PUT: APIRoute = async (context) => {
     const body = await context.request.json().catch(() => ({}));
     const data = validateSchema(updateCatalogSchema, body);
 
-    const existing = await catalogService.findById(type, id);
+    const existing = await catalogService.findById(type, Number(id));
     if (!existing) throw new NotFoundError("Entrada no encontrada");
 
-    const updated = await catalogService.update(type, id, data);
+    const updated = await catalogService.update(type, Number(id), data);
     return successResponse(updated);
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
@@ -66,10 +66,10 @@ export const DELETE: APIRoute = async (context) => {
       throw new AppError("Parámetros no válidos", 400, "INVALID_PARAMS");
     }
 
-    const existing = await catalogService.findById(type, id);
+    const existing = await catalogService.findById(type, Number(id));
     if (!existing) throw new NotFoundError("Entrada no encontrada");
 
-    await catalogService.softDelete(type, id);
+    await catalogService.softDelete(type, Number(id));
     return successResponse({ message: "Entrada eliminada correctamente" });
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);

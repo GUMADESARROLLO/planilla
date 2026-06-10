@@ -1,3 +1,4 @@
+import { Building2, Layers } from "@lucide/astro";
 import { db, schemas } from "@db/index";
 import { count, isNull, and } from "drizzle-orm";
 import { catalogRepository } from "../repositories/catalog.repository";
@@ -10,39 +11,17 @@ import type {
 } from "../types";
 
 export const CATALOG_CONFIG: Record<string, CatalogConfig> = {
-  tipos_contrato: {
-    table: schemas.tiposContrato,
-    displayName: "Tipos de Contrato",
-    icon: "FileText",
-  },
-  cargos: { table: schemas.cargos, displayName: "Cargos", icon: "Briefcase" },
-  generos: { table: schemas.generos, displayName: "Géneros", icon: "Users" },
-  nacionalidades: {
-    table: schemas.nacionalidades,
-    displayName: "Nacionalidades",
-    icon: "Globe",
-  },
-  planillas: {
-    table: schemas.planillas,
-    displayName: "Planillas",
-    icon: "FileSpreadsheet",
-  },
-  tallas_camisa: {
-    table: schemas.tallasCamisa,
-    displayName: "Tallas de Camisa",
-    icon: "Shirt",
-  },
-  tallas_pantalon: {
-    table: schemas.tallasPantalon,
-    displayName: "Tallas de Pantalón",
-    icon: "Shirt",
-  },
-  tipos_permisos: {
-    table: schemas.tiposPermisos,
-    displayName: "Tipos de Permisos",
-    icon: "FileCheck",
-  },
-  roles: { table: schemas.roles, displayName: "Roles", icon: "Shield" },
+  unidades_negocio: { table: schemas.unidadesNegocio, displayName: "Unidades de Negocio", icon: "Building2", sortOrder: 1 },
+  departamentos: { table: schemas.departamentos, displayName: "Departamentos", icon: "Layers", sortOrder: 2 },
+  cargos: { table: schemas.cargos, displayName: "Cargos", icon: "Briefcase", sortOrder: 3 },
+  tipos_contrato: { table: schemas.tiposContrato, displayName: "Tipos de Contrato", icon: "FileText", sortOrder: 4 },
+  generos: { table: schemas.generos, displayName: "Géneros", icon: "Users", sortOrder: 5 },
+  nacionalidades: { table: schemas.nacionalidades, displayName: "Nacionalidades", icon: "Globe", sortOrder: 6 },
+  planillas: { table: schemas.planillas, displayName: "Planillas", icon: "FileSpreadsheet", sortOrder: 7 },
+  tallas_camisa: { table: schemas.tallasCamisa, displayName: "Tallas de Camisa", icon: "Shirt", sortOrder: 8 },
+  tallas_pantalon: { table: schemas.tallasPantalon, displayName: "Tallas de Pantalón", icon: "Shirt", sortOrder: 9 },
+  tipos_permisos: { table: schemas.tiposPermisos, displayName: "Tipos de Permisos", icon: "FileCheck", sortOrder: 10 },
+  roles: { table: schemas.roles, displayName: "Roles", icon: "Shield", sortOrder: 11 },
 };
 
 class CatalogService {
@@ -63,7 +42,7 @@ class CatalogService {
     return catalogRepository.findAll(this.getTable(type), filters);
   }
 
-  async findById(type: string, id: string): Promise<CatalogEntry | null> {
+  async findById(type: string, id: number): Promise<CatalogEntry | null> {
     return catalogRepository.findById(this.getTable(type), id);
   }
 
@@ -76,13 +55,13 @@ class CatalogService {
 
   async update(
     type: string,
-    id: string,
+    id: number,
     data: Partial<CatalogEntry>,
   ): Promise<CatalogEntry | null> {
     return catalogRepository.update(this.getTable(type), id, data);
   }
 
-  async softDelete(type: string, id: string): Promise<void> {
+  async softDelete(type: string, id: number): Promise<void> {
     return catalogRepository.softDelete(this.getTable(type), id);
   }
 
@@ -103,7 +82,7 @@ class CatalogService {
       }),
     );
     return entries.sort((a, b) =>
-      a.displayName.localeCompare(b.displayName),
+      (CATALOG_CONFIG[a.type]?.sortOrder ?? 99) - (CATALOG_CONFIG[b.type]?.sortOrder ?? 99),
     );
   }
 }

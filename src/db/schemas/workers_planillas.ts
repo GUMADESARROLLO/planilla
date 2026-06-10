@@ -1,4 +1,4 @@
-import { mysqlTable, char, timestamp, primaryKey } from "drizzle-orm/mysql-core";
+import { mysqlTable, int, timestamp, primaryKey } from "drizzle-orm/mysql-core";
 import { relations , sql} from "drizzle-orm";
 import { trabajadores } from "./workers";
 import { planillas } from "./catalogs";
@@ -6,10 +6,10 @@ import { planillas } from "./catalogs";
 export const trabajadoresPlanillas = mysqlTable(
   "trabajadores_planillas",
   {
-    trabajadorId: char("trabajador_id", { length: 36 })
+    trabajadorId: int("trabajador_id")
       .notNull()
       .references(() => trabajadores.id),
-    planillaId: char("planilla_id", { length: 36 })
+    planillaId: int("planilla_id")
       .notNull()
       .references(() => planillas.id),
     createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),

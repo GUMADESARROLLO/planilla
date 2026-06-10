@@ -12,7 +12,7 @@ export interface UpdatePlanillaDTO {
 }
 
 export interface PlanillaResponse {
-  id: string;
+  id: number;
   nombre: string;
   descripcion: string | null;
   tipo: string;
@@ -22,7 +22,7 @@ export interface PlanillaResponse {
 }
 
 export interface WorkerInfo {
-  id: string;
+  id: number;
   nombre: string;
   apellidos: string;
   email: string;
@@ -35,6 +35,6 @@ export interface PlanillaWithWorkers extends PlanillaResponse {
 }
 
 export interface AssignWorkerDTO {
-  trabajador_id: string;
-  planilla_id: string;
+  trabajador_id: number;
+  planilla_id: number;
 }

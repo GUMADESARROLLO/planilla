@@ -1,5 +1,5 @@
 export interface CatalogEntry {
-  id: string;
+  id: number;
   nombre: string;
   descripcion?: string | null;
   activo: boolean;
@@ -34,6 +34,7 @@ export interface CatalogConfig {
   table: unknown;
   displayName: string;
   icon: string;
+  sortOrder: number;
 }
 
 export type CatalogType =
@@ -45,4 +46,6 @@ export type CatalogType =
   | "tallas_camisa"
   | "tallas_pantalon"
   | "tipos_permisos"
-  | "roles";
+  | "roles"
+  | "unidades_negocio"
+  | "departamentos";

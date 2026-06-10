@@ -17,7 +17,7 @@ export const POST: APIRoute = async (context) => {
       return errorResponse(new ValidationError("ID de trabajador requerido"));
     }
 
-    await payrollService.assignWorker(body.trabajador_id, id);
+    await payrollService.assignWorker(Number(body.trabajador_id), Number(id));
     return successResponse({ message: "Trabajador asignado correctamente" });
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
@@ -38,7 +38,7 @@ export const DELETE: APIRoute = async (context) => {
       return errorResponse(new ValidationError("ID de trabajador requerido"));
     }
 
-    await payrollService.removeWorker(body.trabajador_id, id);
+    await payrollService.removeWorker(Number(body.trabajador_id), Number(id));
     return successResponse({ message: "Trabajador removido correctamente" });
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);

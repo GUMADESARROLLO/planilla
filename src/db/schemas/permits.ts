@@ -1,12 +1,11 @@
 import {
   mysqlTable,
-  char,
+  int,
   varchar,
   boolean,
   timestamp,
   text,
   date,
-  int,
   mysqlEnum,
 } from "drizzle-orm/mysql-core";
 import { relations , sql} from "drizzle-orm";
@@ -21,14 +20,14 @@ const auditColumns = {
 };
 
 export const esquelasPermisos = mysqlTable("esquelas_permisos", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   fechaElaborada: timestamp("fecha_elaborada").notNull().default(sql`CURRENT_TIMESTAMP`),
-  trabajadorId: char("trabajador_id", { length: 36 })
+  trabajadorId: int("trabajador_id")
     .notNull()
     .references(() => trabajadores.id),
   cargo: varchar("cargo", { length: 255 }),
   ubicacion: varchar("ubicacion", { length: 255 }).notNull(),
-  tipoPermisoId: char("tipo_permiso_id", { length: 36 })
+  tipoPermisoId: int("tipo_permiso_id")
     .notNull()
     .references(() => tiposPermisos.id),
   cantidadDias: int("cantidad_dias").notNull(),

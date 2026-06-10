@@ -1,6 +1,5 @@
 ---
 import AppLayout from "@components/layout/AppLayout.astro";
-import Modal from "@components/ui/Modal.astro";
 import Button from "@components/ui/Button.astro";
 import Card from "@components/ui/Card.astro";
 import SearchInput from "@components/shared/SearchInput.astro";
@@ -19,7 +18,7 @@ import {
 } from "@db/schemas";
 import { eq, like, and, isNull, or, sql, desc } from "drizzle-orm";
 import { Pencil, Trash2, Plus, Eye } from "@lucide/astro";
-import WorkerForm from "./_form.astro";
+
 
 const currentPath = Astro.url.pathname;
 const url = Astro.url;
@@ -28,8 +27,8 @@ const page = Number(url.searchParams.get("page")) || 1;
 const limit = Number(url.searchParams.get("limit")) || 10;
 const search = url.searchParams.get("search") ?? "";
 const activoFilter = url.searchParams.get("activo") ?? "";
-const tipoContratoFilter = url.searchParams.get("tipo_contrato_id") ?? "";
-const cargoFilter = url.searchParams.get("cargo_id") ?? "";
+const tipoContratoFilter = url.searchParams.get("tipo_contrato_id");
+const cargoFilter = url.searchParams.get("cargo_id");
 
 const conditions = [isNull(trabajadores.deleted_at)];
 
@@ -48,8 +47,8 @@ if (search) {
 
 if (activoFilter === "true") conditions.push(eq(trabajadores.activo, true));
 if (activoFilter === "false") conditions.push(eq(trabajadores.activo, false));
-if (tipoContratoFilter) conditions.push(eq(trabajadores.tipoContratoId, tipoContratoFilter));
-if (cargoFilter) conditions.push(eq(trabajadores.cargoId, cargoFilter));
+if (tipoContratoFilter) conditions.push(eq(trabajadores.tipoContratoId, Number(tipoContratoFilter)));
+if (cargoFilter) conditions.push(eq(trabajadores.cargoId, Number(cargoFilter)));
 
 const where = and(...conditions);
 
@@ -96,10 +95,13 @@ const totalPages = Math.ceil(total / limit);
           Gestión de trabajadores del sistema
         </p>
       </div>
-      <Button id="btn-nuevo-trabajador" variant="primary" size="md">
-        <Plus slot="icon" class="size-4" />
+      <a
+        href="/workers/new"
+        class="inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 select-none px-4 py-2 text-sm gap-2 bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-sm shadow-primary-200 dark:shadow-primary-950"
+      >
+        <Plus class="size-4" />
         Nuevo Trabajador
-      </Button>
+      </a>
     </div>
 
     <!-- Filters -->
@@ -117,7 +119,7 @@ const totalPages = Math.ceil(total / limit);
             >
               <option value="">Todos los contratos</option>
               {tiposContratoList.map((tc) => (
-                <option value={tc.id} selected={tipoContratoFilter === tc.id}>{tc.nombre}</option>
+                <option value={tc.id} selected={tipoContratoFilter === String(tc.id)}>{tc.nombre}</option>
               ))}
             </select>
           </div>
@@ -129,7 +131,7 @@ const totalPages = Math.ceil(total / limit);
             >
               <option value="">Todos los cargos</option>
               {cargosList.map((c) => (
-                <option value={c.id} selected={cargoFilter === c.id}>{c.nombre}</option>
+                <option value={c.id} selected={cargoFilter === String(c.id)}>{c.nombre}</option>
               ))}
             </select>
           </div>
@@ -206,14 +208,13 @@ const totalPages = Math.ceil(total / limit);
                       >
                         <Eye class="size-4" />
                       </a>
-                      <button
-                        data-edit-id={worker.id}
-                        class="btn-edit p-1.5 rounded-lg text-gray-400 hover:text-warning-600 hover:bg-warning-50 dark:hover:text-warning-400 dark:hover:bg-warning-950/50 transition-colors"
+                      <a
+                        href={`/workers/edit/${worker.id}`}
+                        class="p-1.5 rounded-lg text-gray-400 hover:text-warning-600 hover:bg-warning-50 dark:hover:text-warning-400 dark:hover:bg-warning-950/50 transition-colors"
                         aria-label="Editar trabajador"
-                        type="button"
                       >
                         <Pencil class="size-4" />
-                      </button>
+                      </a>
                       <button
                         data-delete-id={worker.id}
                         data-delete-name={`${worker.nombre} ${worker.apellidos}`}
@@ -241,62 +242,6 @@ const totalPages = Math.ceil(total / limit);
     </Card>
   </div>
 
-  <!-- Create Modal -->
-  <Modal id="modal-create" title="Nuevo Trabajador" size="xl" open={false}>
-    <div slot="body">
-      <WorkerForm
-        tiposContrato={tiposContratoList}
-        cargos={cargosList}
-        generos={generosList}
-        nacionalidades={nacionalidadesList}
-        tallasCamisa={tallasCamisaList}
-        tallasPantalon={tallasPantalonList}
-        mode="create"
-      />
-    </div>
-    <div slot="footer">
-      <button
-        id="btn-create-cancel"
-        type="button"
-        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-      >
-        Cancelar
-      </button>
-      <button
-        id="btn-create-submit"
-        type="button"
-        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors inline-flex items-center gap-2"
-      >
-        <span id="create-spinner" class="hidden size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-        Guardar
-      </button>
-    </div>
-  </Modal>
-
-  <!-- Edit Modal -->
-  <Modal id="modal-edit" title="Editar Trabajador" size="xl" open={false}>
-    <div slot="body">
-      <div id="edit-form-container"></div>
-    </div>
-    <div slot="footer">
-      <button
-        id="btn-edit-cancel"
-        type="button"
-        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-      >
-        Cancelar
-      </button>
-      <button
-        id="btn-edit-submit"
-        type="button"
-        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors inline-flex items-center gap-2"
-      >
-        <span id="edit-spinner" class="hidden size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-        Actualizar
-      </button>
-    </div>
-  </Modal>
-
   <!-- Delete Confirm Dialog -->
   <ConfirmDialog
     id="confirm-delete"
@@ -309,334 +254,7 @@ const totalPages = Math.ceil(total / limit);
 </AppLayout>
 
 <script>
-  const catalogData = {
-    tiposContrato: JSON.parse('<%- JSON.stringify(tiposContratoList) %>'),
-    cargos: JSON.parse('<%- JSON.stringify(cargosList) %>'),
-    generos: JSON.parse('<%- JSON.stringify(generosList) %>'),
-    nacionalidades: JSON.parse('<%- JSON.stringify(nacionalidadesList) %>'),
-    tallasCamisa: JSON.parse('<%- JSON.stringify(tallasCamisaList) %>'),
-    tallasPantalon: JSON.parse('<%- JSON.stringify(tallasPantalonList) %>'),
-  };
-
-  // Modal & Dialog helpers
-  function openModal(id: string) {
-    const overlay = document.querySelector(`#${id} #modal-overlay`) as HTMLElement;
-    const dialog = document.querySelector(`#${id} #modal-dialog`) as HTMLElement;
-    if (!overlay || !dialog) return;
-    overlay.classList.remove("hidden");
-    void dialog.offsetWidth;
-    dialog.classList.remove("scale-95", "opacity-0");
-    dialog.classList.add("scale-100", "opacity-100");
-  }
-
-  function closeModal(id: string) {
-    const overlay = document.querySelector(`#${id} #modal-overlay`) as HTMLElement;
-    const dialog = document.querySelector(`#${id} #modal-dialog`) as HTMLElement;
-    if (!overlay || !dialog) return;
-    dialog.classList.remove("scale-100", "opacity-100");
-    dialog.classList.add("scale-95", "opacity-0");
-    setTimeout(() => overlay.classList.add("hidden"), 150);
-  }
-
-  function openConfirm() {
-    (window as any).__openConfirm?.();
-  }
-
-  function showError(message: string) {
-    alert(message);
-  }
-
-  // Collect form data from a form container
-  function collectFormData(container: HTMLElement): Record<string, any> {
-    const data: Record<string, any> = {};
-    const inputs = container.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-      "input, select, textarea"
-    );
-    inputs.forEach((el) => {
-      if (el.type === "checkbox") {
-        data[el.name] = el.checked;
-      } else if (el.type === "file") {
-        // handled separately
-      } else if (el.name && !el.name.startsWith("_")) {
-        data[el.name] = el.value;
-      }
-    });
-    return data;
-  }
-
-  // Build the edit form HTML (since Astro components can't be dynamically rendered client-side)
-  function buildFormHtml(worker: any): string {
-    const sel = (field: string, value: string) =>
-      worker[field] === value ? "selected" : "";
-    const chk = (field: string) =>
-      worker[field] !== false ? "checked" : "";
-    return `
-    <div id="worker-form">
-      <input type="hidden" name="mode" value="edit" />
-      <input type="hidden" name="id" value="${worker.id}" />
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-nombre">Nombre <span class="text-danger-500 ml-0.5">*</span></label>
-          <input type="text" id="field-nombre" name="nombre" value="${worker.nombre ?? ""}" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-apellidos">Apellidos <span class="text-danger-500 ml-0.5">*</span></label>
-          <input type="text" id="field-apellidos" name="apellidos" value="${worker.apellidos ?? ""}" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-email">Correo Electrónico <span class="text-danger-500 ml-0.5">*</span></label>
-          <input type="email" id="field-email" name="email" value="${worker.email ?? ""}" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-telefono">Teléfono <span class="text-danger-500 ml-0.5">*</span></label>
-          <input type="text" id="field-telefono" name="telefono" value="${worker.telefono ?? ""}" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-cedulaIdentidad">Cédula de Identidad <span class="text-danger-500 ml-0.5">*</span></label>
-          <input type="text" id="field-cedulaIdentidad" name="cedulaIdentidad" value="${worker.cedulaIdentidad ?? ""}" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-numeroInss">Número INSS <span class="text-danger-500 ml-0.5">*</span></label>
-          <input type="text" id="field-numeroInss" name="numeroInss" value="${worker.numeroInss ?? ""}" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-fechaEntrada">Fecha de Entrada <span class="text-danger-500 ml-0.5">*</span></label>
-          <input type="date" id="field-fechaEntrada" name="fechaEntrada" value="${worker.fechaEntrada ?? ""}" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-fechaSalida">Fecha de Salida</label>
-          <input type="date" id="field-fechaSalida" name="fechaSalida" value="${worker.fechaSalida ?? ""}"
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-nacionalidadId">Nacionalidad <span class="text-danger-500 ml-0.5">*</span></label>
-          <select id="field-nacionalidadId" name="nacionalidadId" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">Seleccione nacionalidad</option>
-            ${catalogData.nacionalidades.map((n: any) => `<option value="${n.id}" ${sel("nacionalidadId", n.id)}>${n.nombre}</option>`).join("")}
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-generoId">Género <span class="text-danger-500 ml-0.5">*</span></label>
-          <select id="field-generoId" name="generoId" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">Seleccione género</option>
-            ${catalogData.generos.map((g: any) => `<option value="${g.id}" ${sel("generoId", g.id)}>${g.nombre}</option>`).join("")}
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-tipoContratoId">Tipo de Contrato <span class="text-danger-500 ml-0.5">*</span></label>
-          <select id="field-tipoContratoId" name="tipoContratoId" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">Seleccione tipo de contrato</option>
-            ${catalogData.tiposContrato.map((tc: any) => `<option value="${tc.id}" ${sel("tipoContratoId", tc.id)}>${tc.nombre}</option>`).join("")}
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-cargoId">Cargo <span class="text-danger-500 ml-0.5">*</span></label>
-          <select id="field-cargoId" name="cargoId" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">Seleccione cargo</option>
-            ${catalogData.cargos.map((c: any) => `<option value="${c.id}" ${sel("cargoId", c.id)}>${c.nombre}</option>`).join("")}
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-tallaCamisaId">Talla de Camisa <span class="text-danger-500 ml-0.5">*</span></label>
-          <select id="field-tallaCamisaId" name="tallaCamisaId" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">Seleccione talla de camisa</option>
-            ${catalogData.tallasCamisa.map((tc: any) => `<option value="${tc.id}" ${sel("tallaCamisaId", tc.id)}>${tc.nombre}</option>`).join("")}
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-tallaPantalonId">Talla de Pantalón <span class="text-danger-500 ml-0.5">*</span></label>
-          <select id="field-tallaPantalonId" name="tallaPantalonId" required
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">Seleccione talla de pantalón</option>
-            ${catalogData.tallasPantalon.map((tp: any) => `<option value="${tp.id}" ${sel("tallaPantalonId", tp.id)}>${tp.nombre}</option>`).join("")}
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-saldoVacaciones">Saldo de Vacaciones</label>
-          <input type="number" id="field-saldoVacaciones" name="saldoVacaciones" value="${worker.saldoVacaciones ?? "0.00"}" step="0.01" min="0"
-            class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-activo">Activo</label>
-          <div class="flex items-center gap-2 mt-1">
-            <input type="checkbox" id="field-activo" name="activo" ${chk("activo")}
-              class="size-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-            <label for="field-activo" class="text-sm text-gray-600 dark:text-gray-400">Trabajador activo</label>
-          </div>
-        </div>
-      </div>
-      <div class="mt-4">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-direccion">Dirección</label>
-        <textarea id="field-direccion" name="direccion" rows="3"
-          class="w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">${worker.direccion ?? ""}</textarea>
-      </div>
-      <div class="mt-4">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="field-foto">Foto</label>
-        <div class="flex items-start gap-4">
-          <input type="file" id="field-foto" name="foto" accept="image/*"
-            class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-950 dark:file:text-primary-300" />
-          <div id="photo-preview" class="shrink-0">
-            ${worker.foto
-              ? `<img src="${worker.foto}" alt="Foto" class="size-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700" />`
-              : `<div class="size-16 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 text-xs border border-gray-200 dark:border-gray-700">Sin foto</div>`
-            }
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // Get form data including file as base64
-  async function getFormData(container: HTMLElement, includePhoto: boolean): Promise<Record<string, any>> {
-    const data: Record<string, any> = {};
-    const inputs = container.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-      "input, select, textarea"
-    );
-    for (const el of inputs) {
-      if (el.type === "checkbox") {
-        data[el.name] = el.checked;
-      } else if (el.type === "file" && includePhoto) {
-        const file = (el as HTMLInputElement).files?.[0];
-        if (file) {
-          data[el.name] = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(file);
-          });
-        }
-      } else if (el.type !== "file" && el.name && !el.name.startsWith("_")) {
-        data[el.name] = el.value;
-      }
-    }
-    return data;
-  }
-
-  async function apiCall(url: string, method: string, body?: any): Promise<any> {
-    const options: RequestInit = { method, headers: {} };
-    if (body) {
-      options.headers = { "Content-Type": "application/json" };
-      options.body = JSON.stringify(body);
-    }
-    const res = await fetch(url, options);
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error?.message ?? "Error del servidor");
-    return json.data;
-  }
-
   let deleteTargetId: string | null = null;
-
-  // ---- Nuevo Trabajador ----
-  document.getElementById("btn-nuevo-trabajador")?.addEventListener("click", () => {
-    // Reset create form
-    const modal = document.getElementById("modal-create")!;
-    const form = modal.querySelector("#worker-form") as HTMLElement;
-    if (form) {
-      form.querySelectorAll("input, select, textarea").forEach((el: any) => {
-        if (el.type === "checkbox") el.checked = true;
-        else if (el.type !== "file") el.value = "";
-      });
-    }
-    openModal("modal-create");
-  });
-
-  document.getElementById("btn-create-cancel")?.addEventListener("click", () => closeModal("modal-create"));
-
-  document.getElementById("btn-create-submit")?.addEventListener("click", async () => {
-    const modal = document.getElementById("modal-create")!;
-    const form = modal.querySelector("#worker-form") as HTMLElement;
-    const btn = document.getElementById("btn-create-submit") as HTMLButtonElement;
-    const spinner = document.getElementById("create-spinner")!;
-
-    btn.disabled = true;
-    spinner.classList.remove("hidden");
-
-    try {
-      const data = await getFormData(form, true);
-      await apiCall("/api/workers", "POST", data);
-      window.location.reload();
-    } catch (err: any) {
-      showError(err.message);
-    } finally {
-      btn.disabled = false;
-      spinner.classList.add("hidden");
-    }
-  });
-
-  // ---- Editar ----
-  document.querySelectorAll(".btn-edit").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const id = btn.getAttribute("data-edit-id");
-      if (!id) return;
-
-      const container = document.getElementById("edit-form-container")!;
-      container.innerHTML = '<div class="text-center py-4 text-gray-400">Cargando...</div>';
-      openModal("modal-edit");
-
-      try {
-        const worker = await apiCall(`/api/workers/${id}`, "GET");
-        container.innerHTML = buildFormHtml(worker);
-
-        // Photo preview
-        const fotoInput = container.querySelector<HTMLInputElement>("#field-foto");
-        fotoInput?.addEventListener("change", () => {
-          const file = fotoInput.files?.[0];
-          if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-              alert("La imagen no debe exceder 2MB");
-              fotoInput.value = "";
-              return;
-            }
-            const reader = new FileReader();
-            const preview = container.querySelector("#photo-preview")!;
-            reader.onload = (e) => {
-              preview.innerHTML = `<img src="${e.target?.result}" alt="Preview" class="size-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700" />`;
-            };
-            reader.readAsDataURL(file);
-          }
-        });
-      } catch (err: any) {
-        container.innerHTML = `<p class="text-danger-600 text-sm">Error: ${err.message}</p>`;
-      }
-    });
-  });
-
-  document.getElementById("btn-edit-cancel")?.addEventListener("click", () => closeModal("modal-edit"));
-
-  document.getElementById("btn-edit-submit")?.addEventListener("click", async () => {
-    const container = document.getElementById("edit-form-container")!;
-    const id = container.querySelector<HTMLInputElement>("input[name='id']")?.value;
-    const btn = document.getElementById("btn-edit-submit") as HTMLButtonElement;
-    const spinner = document.getElementById("edit-spinner")!;
-
-    if (!id) return;
-    btn.disabled = true;
-    spinner.classList.remove("hidden");
-
-    try {
-      const data = await getFormData(container, true);
-      delete data.id;
-      delete data.mode;
-      await apiCall(`/api/workers/${id}`, "PUT", data);
-      window.location.reload();
-    } catch (err: any) {
-      showError(err.message);
-    } finally {
-      btn.disabled = false;
-      spinner.classList.add("hidden");
-    }
-  });
 
   // ---- Eliminar ----
   document.querySelectorAll(".btn-delete").forEach((btn) => {
@@ -645,17 +263,19 @@ const totalPages = Math.ceil(total / limit);
       const name = btn.getAttribute("data-delete-name") ?? "este trabajador";
       const msgEl = document.querySelector("#confirm-delete #confirm-message");
       if (msgEl) msgEl.textContent = `¿Estás seguro de eliminar a "${name}"? Esta acción es reversible.`;
-      openConfirm();
+      (window as any).__openConfirm?.();
     });
   });
 
   document.addEventListener("confirm-ok", async () => {
     if (!deleteTargetId) return;
     try {
-      await apiCall(`/api/workers/${deleteTargetId}`, "DELETE");
+      const res = await fetch(`/api/workers/${deleteTargetId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message ?? "Error del servidor");
       window.location.reload();
     } catch (err: any) {
-      showError(err.message);
+      alert(err.message);
     }
     deleteTargetId = null;
   });

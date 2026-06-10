@@ -7,9 +7,11 @@ export interface Props {
   size?: "sm" | "md" | "lg" | "xl";
   onClose?: string;
   class?: string;
+  id?: string;
 }
 
-const { open = false, title, size = "md", class: className = "" } = Astro.props;
+const { open = false, title, size = "md", class: className = "", id } = Astro.props;
+const prefix = id ?? "modal";
 
 const sizeClasses: Record<string, string> = {
   sm: "max-w-sm",
@@ -20,24 +22,25 @@ const sizeClasses: Record<string, string> = {
 ---
 
 <div
-  id="modal-overlay"
+  id={`${prefix}-overlay`}
+  data-prefix={prefix}
   class:list={[
     "fixed inset-0 z-[60] flex items-center justify-center p-4",
     open ? "" : "hidden",
   ]}
   aria-modal="true"
   role="dialog"
-  aria-labelledby={title ? "modal-title" : undefined}
+  aria-labelledby={title ? `${prefix}-title` : undefined}
 >
   <!-- Backdrop -->
   <div
-    id="modal-backdrop"
+    id={`${prefix}-backdrop`}
     class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
   ></div>
 
   <!-- Dialog -->
   <div
-    id="modal-dialog"
+    id={`${prefix}-dialog`}
     class={[
       "relative w-full bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800",
       "transform transition-all duration-200 scale-95 opacity-0",
@@ -49,9 +52,9 @@ const sizeClasses: Record<string, string> = {
     <!-- Header -->
     {title && (
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-        <h2 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
+        <h2 id={`${prefix}-title`} class="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
         <button
-          id="modal-close"
+          id={`${prefix}-close`}
           type="button"
           class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800 transition-colors"
           aria-label="Cerrar"
@@ -76,70 +79,84 @@ const sizeClasses: Record<string, string> = {
 </div>
 
 <script>
-  const overlay = document.getElementById("modal-overlay")!;
-  const dialog = document.getElementById("modal-dialog")!;
-  const backdrop = document.getElementById("modal-backdrop")!;
-  const closeBtn = document.getElementById("modal-close");
+  const instances: Array<{ overlay: HTMLElement; dialog: HTMLElement; backdrop: HTMLElement; closeBtn: HTMLElement | null }> = [];
 
-  function closeModal() {
-    dialog.classList.remove("scale-100", "opacity-100");
-    dialog.classList.add("scale-95", "opacity-0");
-    setTimeout(() => {
-      overlay.classList.add("hidden");
-    }, 150);
-  }
+  document.querySelectorAll<HTMLElement>("[data-prefix]").forEach((overlay) => {
+    const prefix = overlay.dataset.prefix ?? "modal";
+    const dialog = document.getElementById(`${prefix}-dialog`)!;
+    const backdrop = document.getElementById(`${prefix}-backdrop`)!;
+    const closeBtn = document.getElementById(`${prefix}-close`);
 
-  function openModal() {
-    overlay.classList.remove("hidden");
-    // Trigger reflow
-    void dialog.offsetWidth;
-    dialog.classList.remove("scale-95", "opacity-0");
-    dialog.classList.add("scale-100", "opacity-100");
-  }
+    if (!dialog || !backdrop) return;
 
-  if (closeBtn) {
-    closeBtn.addEventListener("click", closeModal);
-  }
+    function closeModal() {
+      dialog.classList.remove("scale-100", "opacity-100");
+      dialog.classList.add("scale-95", "opacity-0");
+      setTimeout(() => overlay.classList.add("hidden"), 150);
+    }
 
-  backdrop.addEventListener("click", closeModal);
+    function openModal() {
+      overlay.classList.remove("hidden");
+      void dialog.offsetWidth;
+      dialog.classList.remove("scale-95", "opacity-0");
+      dialog.classList.add("scale-100", "opacity-100");
+    }
+
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    backdrop.addEventListener("click", closeModal);
+
+    // Expose scoped open/close on the overlay element
+    (overlay as any).__modalOpen = openModal;
+    (overlay as any).__modalClose = closeModal;
+
+    // Focus trap
+    overlay.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        const focusable = dialog.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0]!;
+        const last = focusable[focusable.length - 1]!;
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+
+    // Auto-focus first focusable element on open
+    const observer = new MutationObserver(() => {
+      if (!overlay.classList.contains("hidden")) {
+        const first = dialog.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        first?.focus();
+      }
+    });
+    observer.observe(overlay, { attributes: true, attributeFilter: ["class"] });
+
+    instances.push({ overlay, dialog, backdrop, closeBtn });
+  });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !overlay.classList.contains("hidden")) {
-      closeModal();
+    if (e.key === "Escape") {
+      instances.forEach(({ overlay, dialog }) => {
+        if (!overlay.classList.contains("hidden")) {
+          dialog.classList.remove("scale-100", "opacity-100");
+          dialog.classList.add("scale-95", "opacity-0");
+          setTimeout(() => overlay.classList.add("hidden"), 150);
+        }
+      });
     }
   });
 
-  // Focus trap
-  overlay.addEventListener("keydown", (e) => {
-    if (e.key === "Tab") {
-      const focusable = dialog.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0]!;
-      const last = focusable[focusable.length - 1]!;
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  });
-
-  // Expose open/close functions for parent use
-  (window as any).__openModal = openModal;
-  (window as any).__closeModal = closeModal;
-
-  // Auto-focus first focusable element on open
-  const observer = new MutationObserver(() => {
-    if (!overlay.classList.contains("hidden")) {
-      const first = dialog.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      first?.focus();
-    }
-  });
-  observer.observe(overlay, { attributes: true, attributeFilter: ["class"] });
+  // Legacy global access (for first modal, backward compat)
+  if (instances.length > 0) {
+    (window as any).__openModal = instances[0].overlay.__modalOpen;
+    (window as any).__closeModal = instances[0].overlay.__modalClose;
+  }
 </script>

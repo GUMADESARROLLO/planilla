@@ -1,6 +1,6 @@
 import {
   mysqlTable,
-  char,
+  int,
   varchar,
   boolean,
   timestamp,
@@ -12,7 +12,6 @@ import { trabajadores } from "./workers";
 import { trabajadoresPlanillas } from "./workers_planillas";
 import { esquelasPermisos } from "./permits";
 
-
 const auditColumns = {
   activo: boolean("activo").notNull().default(true),
   created_at: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -21,34 +20,55 @@ const auditColumns = {
 };
 
 export const tiposContrato = mysqlTable("tipos_contrato", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   descripcion: text("descripcion"),
+  ...auditColumns,
+});
+
+export const unidadesNegocio = mysqlTable("unidades_negocio", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  descripcion: text("descripcion"),
+  ...auditColumns,
+});
+
+export const departamentos = mysqlTable("departamentos", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  descripcion: text("descripcion"),
+  unidadNegocioId: int("unidad_negocio_id")
+    .notNull()
+    .references(() => unidadesNegocio.id),
   ...auditColumns,
 });
 
 export const cargos = mysqlTable("cargos", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   descripcion: text("descripcion"),
+  unidadNegocioId: int("unidad_negocio_id")
+    .references(() => unidadesNegocio.id),
+  departamentoId: int("departamento_id")
+    .references(() => departamentos.id),
   ...auditColumns,
 });
 
 export const generos = mysqlTable("generos", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   ...auditColumns,
 });
 
 export const nacionalidades = mysqlTable("nacionalidades", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   codigoIso: varchar("codigo_iso", { length: 10 }),
   ...auditColumns,
 });
 
 export const planillas = mysqlTable("planillas", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   descripcion: text("descripcion"),
   tipo: mysqlEnum("tipo", [
@@ -62,26 +82,26 @@ export const planillas = mysqlTable("planillas", {
 });
 
 export const tallasCamisa = mysqlTable("tallas_camisa", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   ...auditColumns,
 });
 
 export const tallasPantalon = mysqlTable("tallas_pantalon", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   ...auditColumns,
 });
 
 export const tiposPermisos = mysqlTable("tipos_permisos", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   descripcion: text("descripcion"),
   ...auditColumns,
 });
 
 export const roles = mysqlTable("roles", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   descripcion: text("descripcion"),
   ...auditColumns,
@@ -93,8 +113,29 @@ export const tiposContratoRelations = relations(tiposContrato, ({ many }) => ({
   trabajadores: many(trabajadores),
 }));
 
-export const cargosRelations = relations(cargos, ({ many }) => ({
+export const unidadesNegocioRelations = relations(unidadesNegocio, ({ many }) => ({
+  departamentos: many(departamentos),
+  cargos: many(cargos),
+}));
+
+export const departamentosRelations = relations(departamentos, ({ one, many }) => ({
+  unidadNegocio: one(unidadesNegocio, {
+    fields: [departamentos.unidadNegocioId],
+    references: [unidadesNegocio.id],
+  }),
   trabajadores: many(trabajadores),
+}));
+
+export const cargosRelations = relations(cargos, ({ one, many }) => ({
+  trabajadores: many(trabajadores),
+  unidadNegocio: one(unidadesNegocio, {
+    fields: [cargos.unidadNegocioId],
+    references: [unidadesNegocio.id],
+  }),
+  departamento: one(departamentos, {
+    fields: [cargos.departamentoId],
+    references: [departamentos.id],
+  }),
 }));
 
 export const generosRelations = relations(generos, ({ many }) => ({

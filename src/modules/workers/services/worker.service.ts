@@ -56,7 +56,7 @@ export async function getAll(
   return workerRepository.findAll(filters);
 }
 
-export async function getById(id: string): Promise<WorkerResponse> {
+export async function getById(id: number): Promise<WorkerResponse> {
   return workerRepository.findById(id);
 }
 
@@ -76,7 +76,7 @@ export async function create(
 }
 
 export async function update(
-  id: string,
+  id: number,
   data: UpdateWorkerDTO,
 ): Promise<WorkerResponse> {
   const updateData = { ...data };
@@ -88,7 +88,7 @@ export async function update(
   return workerRepository.update(id, updateData);
 }
 
-export async function remove(id: string): Promise<void> {
+export async function remove(id: number): Promise<void> {
   await workerRepository.softDelete(id);
 }
 

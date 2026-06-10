@@ -10,7 +10,7 @@ const createCatalogSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").max(255),
   descripcion: z.string().optional().nullable(),
   activo: z.boolean().optional().default(true),
-});
+}).passthrough();
 
 export const GET: APIRoute = async (context) => {
   try {
@@ -48,12 +48,7 @@ export const POST: APIRoute = async (context) => {
     const body = await context.request.json().catch(() => ({}));
     const data = validateSchema(createCatalogSchema, body);
 
-    const entry = await catalogService.create(type, {
-      id: crypto.randomUUID(),
-      nombre: data.nombre,
-      descripcion: data.descripcion ?? null,
-      activo: data.activo,
-    });
+    const entry = await catalogService.create(type, data);
 
     return successResponse(entry);
   } catch (error) {

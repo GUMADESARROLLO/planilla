@@ -45,7 +45,7 @@ const updatePlanillaSchema = z.object({
 });
 
 const assignWorkerSchema = z.object({
-  trabajador_id: z.string().uuid("ID de trabajador inválido"),
+  trabajador_id: z.number(),
 });
 
 export async function findAll(filters: {
@@ -60,10 +60,7 @@ export async function findAll(filters: {
   return repository.findAll({ page, limit, search: filters.search, activo: filters.activo });
 }
 
-export async function findById(id: string): Promise<PlanillaWithWorkers> {
-  if (!id || id.length !== 36) {
-    throw new ValidationError("ID de planilla inválido");
-  }
+export async function findById(id: number): Promise<PlanillaWithWorkers> {
   return repository.findById(id);
 }
 
@@ -72,10 +69,7 @@ export async function create(data: unknown): Promise<PlanillaResponse> {
   return repository.create(validated as CreatePlanillaDTO);
 }
 
-export async function update(id: string, data: unknown): Promise<PlanillaResponse> {
-  if (!id || id.length !== 36) {
-    throw new ValidationError("ID de planilla inválido");
-  }
+export async function update(id: number, data: unknown): Promise<PlanillaResponse> {
   const validated = validateSchema(updatePlanillaSchema, data);
   if (Object.keys(validated).length === 0) {
     throw new ValidationError("No se proporcionaron campos para actualizar");
@@ -83,34 +77,19 @@ export async function update(id: string, data: unknown): Promise<PlanillaRespons
   return repository.update(id, validated as UpdatePlanillaDTO);
 }
 
-export async function softDelete(id: string): Promise<void> {
-  if (!id || id.length !== 36) {
-    throw new ValidationError("ID de planilla inválido");
-  }
+export async function softDelete(id: number): Promise<void> {
   return repository.softDelete(id);
 }
 
-export async function assignWorker(trabajadorId: string, planillaId: string): Promise<void> {
+export async function assignWorker(trabajadorId: number, planillaId: number): Promise<void> {
   validateSchema(assignWorkerSchema, { trabajador_id: trabajadorId });
-  if (!planillaId || planillaId.length !== 36) {
-    throw new ValidationError("ID de planilla inválido");
-  }
   return repository.assignWorker(trabajadorId, planillaId);
 }
 
-export async function removeWorker(trabajadorId: string, planillaId: string): Promise<void> {
-  if (!trabajadorId || trabajadorId.length !== 36) {
-    throw new ValidationError("ID de trabajador inválido");
-  }
-  if (!planillaId || planillaId.length !== 36) {
-    throw new ValidationError("ID de planilla inválido");
-  }
+export async function removeWorker(trabajadorId: number, planillaId: number): Promise<void> {
   return repository.removeWorker(trabajadorId, planillaId);
 }
 
-export async function getWorkersByPlanilla(planillaId: string): Promise<WorkerInfo[]> {
-  if (!planillaId || planillaId.length !== 36) {
-    throw new ValidationError("ID de planilla inválido");
-  }
+export async function getWorkersByPlanilla(planillaId: number): Promise<WorkerInfo[]> {
   return repository.getWorkersByPlanilla(planillaId);
 }

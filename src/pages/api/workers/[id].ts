@@ -15,7 +15,7 @@ export const GET: APIRoute = async (context) => {
       return errorResponse(new ValidationError("ID de trabajador requerido"));
     }
 
-    const worker = await workerService.getById(id);
+    const worker = await workerService.getById(Number(id));
     return successResponse(worker);
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
@@ -34,7 +34,7 @@ export const PUT: APIRoute = async (context) => {
 
     const body = await context.request.json().catch(() => ({}));
     const data = validateSchema(updateWorkerSchema, body);
-    const worker = await workerService.update(id, data);
+    const worker = await workerService.update(Number(id), data);
 
     return successResponse(worker);
   } catch (error) {
@@ -52,7 +52,7 @@ export const DELETE: APIRoute = async (context) => {
       return errorResponse(new ValidationError("ID de trabajador requerido"));
     }
 
-    await workerService.remove(id);
+    await workerService.remove(Number(id));
     return successResponse({ message: "Trabajador eliminado correctamente" });
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);

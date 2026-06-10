@@ -1,6 +1,6 @@
 import {
   mysqlTable,
-  char,
+  int,
   varchar,
   boolean,
   timestamp,
@@ -26,13 +26,13 @@ const auditColumns = {
 };
 
 export const trabajadores = mysqlTable("trabajadores", {
-  id: char("id", { length: 36 }).notNull().primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   apellidos: varchar("apellidos", { length: 255 }).notNull(),
   fechaEntrada: date("fecha_entrada").notNull(),
   fechaSalida: date("fecha_salida"),
   email: varchar("email", { length: 255 }).notNull().unique(),
-  nacionalidadId: char("nacionalidad_id", { length: 36 })
+  nacionalidadId: int("nacionalidad_id")
     .notNull()
     .references(() => nacionalidades.id),
   numeroInss: varchar("numero_inss", { length: 50 }).notNull().unique(),
@@ -43,24 +43,25 @@ export const trabajadores = mysqlTable("trabajadores", {
   saldoVacaciones: decimal("saldo_vacaciones", { precision: 6, scale: 2 })
     .notNull()
     .default("0.00"),
-  tallaCamisaId: char("talla_camisa_id", { length: 36 })
+  tallaCamisaId: int("talla_camisa_id")
     .notNull()
     .references(() => tallasCamisa.id),
-  tallaPantalonId: char("talla_pantalon_id", { length: 36 })
+  tallaPantalonId: int("talla_pantalon_id")
     .notNull()
     .references(() => tallasPantalon.id),
   direccion: text("direccion"),
-  tipoContratoId: char("tipo_contrato_id", { length: 36 })
+  tipoContratoId: int("tipo_contrato_id")
     .notNull()
     .references(() => tiposContrato.id),
-  cargoId: char("cargo_id", { length: 36 })
+  cargoId: int("cargo_id")
     .notNull()
     .references(() => cargos.id),
-  generoId: char("genero_id", { length: 36 })
+  generoId: int("genero_id")
     .notNull()
     .references(() => generos.id),
   activo: boolean("activo").notNull().default(true),
   foto: varchar("foto", { length: 500 }),
+  salarioBase: decimal("salario_base", { precision: 10, scale: 2 }).default("0.00"),
   ...auditColumns,
 });
 

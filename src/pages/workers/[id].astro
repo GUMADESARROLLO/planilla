@@ -14,6 +14,8 @@ import {
   tiposContrato,
   cargos,
   generos,
+  departamentos,
+  unidadesNegocio,
 } from "@db/schemas";
 import { eq, and, isNull } from "drizzle-orm";
 import { ArrowLeft, Pencil, Mail, Phone, MapPin, Calendar, CreditCard, User, Shirt } from "@lucide/astro";
@@ -22,11 +24,13 @@ export async function getStaticPaths() {
   return [];
 }
 
-const { id } = Astro.params;
+const idParam = Astro.params.id;
 
-if (!id) {
+if (!idParam) {
   return Astro.redirect("/workers");
 }
+
+const id = Number(idParam);
 
 const [workerRow] = await db.select({
   id: trabajadores.id,
@@ -49,6 +53,8 @@ const [workerRow] = await db.select({
   tipoContrato: { nombre: tiposContrato.nombre },
   cargo: { nombre: cargos.nombre },
   genero: { nombre: generos.nombre },
+  departamento: { nombre: departamentos.nombre },
+  unidad: { nombre: unidadesNegocio.nombre },
 })
   .from(trabajadores)
   .leftJoin(nacionalidades, eq(trabajadores.nacionalidadId, nacionalidades.id))
@@ -57,6 +63,8 @@ const [workerRow] = await db.select({
   .leftJoin(tiposContrato, eq(trabajadores.tipoContratoId, tiposContrato.id))
   .leftJoin(cargos, eq(trabajadores.cargoId, cargos.id))
   .leftJoin(generos, eq(trabajadores.generoId, generos.id))
+  .leftJoin(departamentos, eq(cargos.departamentoId, departamentos.id))
+  .leftJoin(unidadesNegocio, eq(departamentos.unidadNegocioId, unidadesNegocio.id))
   .where(and(eq(trabajadores.id, id), isNull(trabajadores.deleted_at)))
   .limit(1);
 
@@ -100,6 +108,8 @@ const infoItems = [
 ];
 
 const employmentInfo = [
+  { label: "Unidad de Negocio", value: worker.unidad?.nombre ?? "-" },
+  { label: "Departamento", value: worker.departamento?.nombre ?? "-" },
   { label: "Cargo", value: worker.cargo?.nombre ?? "-" },
   { label: "Tipo de Contrato", value: worker.tipoContrato?.nombre ?? "-" },
   { label: "Estado", value: worker.activo ? "Activo" : "Inactivo", badge: worker.activo ? "success" : "danger" },
@@ -152,7 +162,7 @@ const employmentInfo = [
         </p>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <a href={`/workers/${worker.id}?edit=true`}>
+        <a href={`/workers/edit/${worker.id}`}>
           <Button variant="outline" size="sm">
             <Pencil slot="icon" class="size-3.5" />
             Editar

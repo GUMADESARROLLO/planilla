@@ -17,7 +17,7 @@ await conn.query(`DROP DATABASE IF EXISTS \`${database}\``);
 await conn.query(`CREATE DATABASE \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
 await conn.query(`USE \`${database}\``);
 
-const rawSql = fs.readFileSync("src/db/migrations/0000_ambiguous_gauntlet.sql", "utf8");
+const rawSql = fs.readFileSync("src/db/migrations/0000_elite_the_hand.sql", "utf8");
 const statements = rawSql.split("--> statement-breakpoint").map(s => s.trim()).filter(s => s.length > 0);
 
 console.log(`Executing ${statements.length} statements...`);

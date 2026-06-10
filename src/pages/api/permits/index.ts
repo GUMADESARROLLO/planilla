@@ -8,10 +8,10 @@ import { EstadoPermiso } from "@modules/permits/types";
 import * as permitsService from "@modules/permits/services/permits.service";
 
 const createEsquelaSchema = z.object({
-  trabajadorId: z.string().min(1, "El trabajador es requerido"),
+  trabajadorId: z.number().int().positive(),
   cargo: z.string().optional(),
   ubicacion: z.string().min(1, "La ubicación es requerida"),
-  tipoPermisoId: z.string().min(1, "El tipo de permiso es requerido"),
+  tipoPermisoId: z.number().int().positive(),
   cantidadDias: z.number().int().min(1, "La cantidad de días debe ser mayor a 0"),
   periodoCorrespondiente: z.string().min(1, "El periodo correspondiente es requerido"),
   fechaIncorporacion: z.string().min(1, "La fecha de incorporación es requerida"),
@@ -29,7 +29,8 @@ export const GET: APIRoute = async ({ request, url }) => {
     );
     const search = url.searchParams.get("search") ?? undefined;
     const estado = url.searchParams.get("estado") ?? undefined;
-    const trabajadorId = url.searchParams.get("trabajador_id") ?? undefined;
+    const trabajadorIdParam = url.searchParams.get("trabajador_id");
+    const trabajadorId = trabajadorIdParam ? Number(trabajadorIdParam) : undefined;
 
     const validEstados: string[] = Object.values(EstadoPermiso);
     const estadoFilter = estado && validEstados.includes(estado)

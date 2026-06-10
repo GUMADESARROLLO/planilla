@@ -7,6 +7,8 @@ import {
   tiposContrato,
   cargos,
   generos,
+  departamentos,
+  unidadesNegocio,
   planillas,
   trabajadoresPlanillas,
 } from "@db/schemas";
@@ -42,6 +44,8 @@ function mapWorker(row: any): WorkerResponse {
     nombreTipoContrato: row.nombreTipoContrato,
     cargoId: row.cargoId,
     nombreCargo: row.nombreCargo,
+    nombreDepartamento: row.nombreDepartamento,
+    nombreUnidad: row.nombreUnidad,
     generoId: row.generoId,
     nombreGenero: row.nombreGenero,
     activo: row.activo,
@@ -76,6 +80,8 @@ function workerSelectFields() {
     nombreTipoContrato: tiposContrato.nombre,
     cargoId: trabajadores.cargoId,
     nombreCargo: cargos.nombre,
+    nombreDepartamento: departamentos.nombre,
+    nombreUnidad: unidadesNegocio.nombre,
     generoId: trabajadores.generoId,
     nombreGenero: generos.nombre,
     activo: trabajadores.activo,
@@ -93,7 +99,9 @@ function workerJoins<T extends Record<string, unknown>>(qb: any) {
     .leftJoin(tallasPantalon, eq(trabajadores.tallaPantalonId, tallasPantalon.id))
     .leftJoin(tiposContrato, eq(trabajadores.tipoContratoId, tiposContrato.id))
     .leftJoin(cargos, eq(trabajadores.cargoId, cargos.id))
-    .leftJoin(generos, eq(trabajadores.generoId, generos.id));
+    .leftJoin(generos, eq(trabajadores.generoId, generos.id))
+    .leftJoin(departamentos, eq(cargos.departamentoId, departamentos.id))
+    .leftJoin(unidadesNegocio, eq(departamentos.unidadNegocioId, unidadesNegocio.id));
 }
 
 function buildWhereClause(filters: WorkerFilters): SQL | undefined {
@@ -162,7 +170,7 @@ export async function findAll(
   return { data: rows.map(mapWorker), total, page, limit };
 }
 
-export async function findById(id: string): Promise<WorkerResponse> {
+export async function findById(id: number): Promise<WorkerResponse> {
   const [row] = await workerJoins(
     db.select(workerSelectFields())
       .from(trabajadores)
@@ -189,7 +197,7 @@ export async function findById(id: string): Promise<WorkerResponse> {
 async function checkDuplicate(
   field: "email" | "numeroInss" | "cedulaIdentidad",
   value: string,
-  excludeId?: string,
+  excludeId?: number,
 ): Promise<void> {
   const column =
     field === "email"
@@ -228,10 +236,7 @@ export async function create(data: CreateWorkerDTO): Promise<WorkerResponse> {
     checkDuplicate("cedulaIdentidad", data.cedulaIdentidad),
   ]);
 
-  const id = crypto.randomUUID();
-
-  await db.insert(trabajadores).values({
-    id,
+  const [inserted] = await db.insert(trabajadores).values({
     nombre: data.nombre,
     apellidos: data.apellidos,
     email: data.email.toLowerCase().trim(),
@@ -250,13 +255,13 @@ export async function create(data: CreateWorkerDTO): Promise<WorkerResponse> {
     generoId: data.generoId,
     activo: data.activo ?? true,
     foto: data.foto ?? null,
-  } as any);
+  } as any).$returningId();
 
-  return findById(id);
+  return findById(inserted!.id);
 }
 
 export async function update(
-  id: string,
+  id: number,
   data: UpdateWorkerDTO,
 ): Promise<WorkerResponse> {
   const existing = await findById(id);
@@ -321,7 +326,7 @@ export async function update(
   return findById(id);
 }
 
-export async function softDelete(id: string): Promise<void> {
+export async function softDelete(id: number): Promise<void> {
   await findById(id);
 
   await db

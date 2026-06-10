@@ -1,0 +1,211 @@
+---
+export interface Props {
+  id?: string;
+  name: string;
+  value?: string;
+  required?: boolean;
+  placeholder?: string;
+}
+
+const { id, name, value = "", required = false, placeholder = "" } = Astro.props;
+---
+
+<div class="rux-date-field" data-date-picker>
+  <svg class="rux-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+    <line x1="16" y1="2" x2="16" y2="6"/>
+    <line x1="8" y1="2" x2="8" y2="6"/>
+    <line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+  <input
+    type="text"
+    id={id}
+    name={name}
+    value={value}
+    {required}
+    placeholder={placeholder || "yyyy-mm-dd"}
+    class="rux-date-input"
+    autocomplete="off"
+    data-date-input
+  />
+</div>
+
+<style>
+  .rux-date-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .rux-date-icon {
+    position: absolute;
+    left: 11px;
+    width: 15px;
+    height: 15px;
+    color: var(--text-muted, #4d5c7d);
+    pointer-events: none;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  .rux-date-input {
+    width: 100%;
+    background: var(--bg-input, #1c2335) !important;
+    border: 1px solid var(--border, #262f45) !important;
+    border-radius: var(--radius-md, 8px) !important;
+    padding: 9px 12px 9px 32px !important;
+    font-size: 13px !important;
+    font-family: inherit !important;
+    color: var(--text-primary, #e8edf7) !important;
+    outline: none !important;
+    transition: border-color .15s, background .15s, box-shadow .15s !important;
+    box-sizing: border-box !important;
+    cursor: pointer;
+  }
+  .rux-date-input:hover {
+    background: var(--bg-input-hover, #1f2840) !important;
+    border-color: var(--border-light, #2d3855) !important;
+  }
+  .rux-date-input:focus {
+    border-color: var(--border-focus, #3b6fd4) !important;
+    box-shadow: 0 0 0 3px rgba(59,111,212,.18) !important;
+    background: var(--bg-input-hover, #1f2840) !important;
+  }
+
+  /* Flatpickr dark theme overrides */
+  .flatpickr-calendar {
+    background: #181e2c !important;
+    border: 1px solid #262f45 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4) !important;
+    font-family: inherit !important;
+    margin-top: 6px !important;
+  }
+  .flatpickr-months {
+    padding: 8px 8px 0 !important;
+  }
+  .flatpickr-months .flatpickr-month {
+    height: 32px !important;
+  }
+  .flatpickr-current-month {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 0 !important;
+  }
+  .flatpickr-current-month .flatpickr-monthDropdown-months {
+    font-size: 13px !important;
+    background: transparent !important;
+    color: #e8edf7 !important;
+    font-weight: 500 !important;
+  }
+  .flatpickr-current-month input.cur-year {
+    font-size: 13px !important;
+    color: #e8edf7 !important;
+    font-weight: 500 !important;
+  }
+  .flatpickr-months .flatpickr-prev-month,
+  .flatpickr-months .flatpickr-next-month {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    width: 22px !important;
+    height: 22px !important;
+    top: 8px !important;
+    color: #8b9abf !important;
+  }
+  .flatpickr-months .flatpickr-prev-month:hover,
+  .flatpickr-months .flatpickr-next-month:hover {
+    color: #e8edf7 !important;
+  }
+  .flatpickr-weekdays {
+    padding: 0 8px !important;
+    height: 28px !important;
+  }
+  .flatpickr-weekday {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #6b7fa8 !important;
+  }
+  .flatpickr-days {
+    padding: 0 8px 8px !important;
+  }
+  .dayContainer {
+    min-width: auto !important;
+    max-width: 100% !important;
+  }
+  .flatpickr-day {
+    font-size: 12px !important;
+    line-height: 30px !important;
+    height: 30px !important;
+    max-width: 30px !important;
+    border-radius: 4px !important;
+    margin: 1px !important;
+    color: #e8edf7 !important;
+  }
+  .flatpickr-day:hover {
+    background: #1f2840 !important;
+    border-color: #2d3855 !important;
+  }
+  .flatpickr-day.selected,
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange,
+  .flatpickr-day.selected.inRange,
+  .flatpickr-day.startRange.inRange,
+  .flatpickr-day.endRange.inRange {
+    background: #3b6fd4 !important;
+    border-color: #3b6fd4 !important;
+    color: #fff !important;
+  }
+  .flatpickr-day.today {
+    border-color: #3b6fd4 !important;
+  }
+  .flatpickr-day.today:hover {
+    background: #1e3466 !important;
+  }
+  .flatpickr-day.inRange {
+    background: #1e3466 !important;
+    border-color: #1e3466 !important;
+    box-shadow: none !important;
+  }
+  .flatpickr-day.prevMonthDay,
+  .flatpickr-day.nextMonthDay {
+    color: #4d5c7d !important;
+  }
+  .flatpickr-day.disabled {
+    color: #262f45 !important;
+  }
+  .flatpickr-day.flatpickr-disabled {
+    color: #262f45 !important;
+  }
+  .flatpickr-current-month .flatpickr-monthDropdown-months option {
+    background: #181e2c !important;
+    color: #e8edf7 !important;
+  }
+  .flatpickr-current-month .flatpickr-monthDropdown-months option:hover {
+    background: #1f2840 !important;
+  }
+</style>
+
+<script>
+  import flatpickr from "flatpickr";
+  import "flatpickr/dist/flatpickr.min.css";
+  import "flatpickr/dist/themes/dark.css";
+  import "flatpickr/dist/l10n/es.js";
+
+  document.querySelectorAll("[data-date-picker]").forEach((el) => {
+    const input = el.querySelector<HTMLInputElement>("[data-date-input]");
+    if (!input) return;
+
+    const fp = flatpickr(input, {
+      dateFormat: "Y-m-d",
+      allowInput: true,
+      locale: "es",
+      disableMobile: true,
+      prevArrow: `<svg viewBox="0 0 10 10" fill="currentColor" style="width:10px;height:10px"><path d="M6.5 1.5L3 5l3.5 3.5"/></svg>`,
+      nextArrow: `<svg viewBox="0 0 10 10" fill="currentColor" style="width:10px;height:10px"><path d="M3.5 1.5L7 5l-3.5 3.5"/></svg>`,
+      onChange: (selectedDates, dateStr) => {
+        input.value = dateStr;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      },
+    });
+  });
+</script>

@@ -34,7 +34,7 @@ export async function findAll(
   return repository.findAll(filters);
 }
 
-export async function findById(id: string): Promise<EsquelaResponse> {
+export async function findById(id: number): Promise<EsquelaResponse> {
   return repository.findById(id);
 }
 
@@ -53,7 +53,7 @@ export async function create(data: CreateEsquelaDTO): Promise<EsquelaResponse> {
 }
 
 export async function update(
-  id: string,
+  id: number,
   data: UpdateEsquelaDTO,
 ): Promise<EsquelaResponse> {
   const existing = await repository.findById(id);
@@ -67,7 +67,7 @@ export async function update(
   return repository.update(id, data);
 }
 
-export async function softDelete(id: string): Promise<void> {
+export async function softDelete(id: number): Promise<void> {
   const existing = await repository.findById(id);
 
   if (existing.estado !== EstadoPermiso.PENDIENTE) {
@@ -80,7 +80,7 @@ export async function softDelete(id: string): Promise<void> {
 }
 
 export async function approve(
-  id: string,
+  id: number,
   aprobadoPor: string,
   firmaDigital?: string,
 ): Promise<{ esquela: EsquelaResponse; pdfBase64: string }> {
@@ -98,7 +98,7 @@ export async function approve(
 }
 
 export async function reject(
-  id: string,
+  id: number,
   aprobadoPor: string,
 ): Promise<EsquelaResponse> {
   const existing = await repository.findById(id);
@@ -112,7 +112,7 @@ export async function reject(
 }
 
 export async function findByWorker(
-  trabajadorId: string,
+  trabajadorId: number,
 ): Promise<EsquelaResponse[]> {
   return repository.findByWorker(trabajadorId);
 }
@@ -130,7 +130,7 @@ function generatePermitPdf(esquela: EsquelaResponse): string {
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`No. ${esquela.id.slice(0, 8).toUpperCase()}`, pageWidth / 2, 33, {
+  doc.text(`No. ${String(esquela.id).slice(0, 8).toUpperCase()}`, pageWidth / 2, 33, {
     align: "center",
   });
 

@@ -73,7 +73,7 @@ export async function findAll(filters: {
   };
 }
 
-export async function findById(id: string): Promise<PlanillaWithWorkers> {
+export async function findById(id: number): Promise<PlanillaWithWorkers> {
   const [planilla] = await db
     .select()
     .from(planillas)
@@ -105,11 +105,9 @@ export async function findById(id: string): Promise<PlanillaWithWorkers> {
 }
 
 export async function create(data: CreatePlanillaDTO): Promise<PlanillaResponse> {
-  const id = crypto.randomUUID();
-  const [row] = await db
+  const [inserted] = await db
     .insert(planillas)
     .values({
-      id,
       nombre: data.nombre,
       descripcion: data.descripcion ?? null,
       tipo: data.tipo,
@@ -119,13 +117,13 @@ export async function create(data: CreatePlanillaDTO): Promise<PlanillaResponse>
   const [created] = await db
     .select()
     .from(planillas)
-    .where(eq(planillas.id, id))
+    .where(eq(planillas.id, inserted!.id))
     .limit(1);
 
   return mapPlanilla(created!);
 }
 
-export async function update(id: string, data: UpdatePlanillaDTO): Promise<PlanillaResponse> {
+export async function update(id: number, data: UpdatePlanillaDTO): Promise<PlanillaResponse> {
   const [existing] = await db
     .select({ id: planillas.id })
     .from(planillas)
@@ -155,7 +153,7 @@ export async function update(id: string, data: UpdatePlanillaDTO): Promise<Plani
   return mapPlanilla(updated!);
 }
 
-export async function softDelete(id: string): Promise<void> {
+export async function softDelete(id: number): Promise<void> {
   const [existing] = await db
     .select({ id: planillas.id })
     .from(planillas)
@@ -172,7 +170,7 @@ export async function softDelete(id: string): Promise<void> {
     .where(eq(planillas.id, id));
 }
 
-export async function assignWorker(trabajadorId: string, planillaId: string): Promise<void> {
+export async function assignWorker(trabajadorId: number, planillaId: number): Promise<void> {
   const [existing] = await db
     .select()
     .from(trabajadoresPlanillas)
@@ -192,7 +190,7 @@ export async function assignWorker(trabajadorId: string, planillaId: string): Pr
   });
 }
 
-export async function removeWorker(trabajadorId: string, planillaId: string): Promise<void> {
+export async function removeWorker(trabajadorId: number, planillaId: number): Promise<void> {
   await db
     .delete(trabajadoresPlanillas)
     .where(
@@ -203,7 +201,7 @@ export async function removeWorker(trabajadorId: string, planillaId: string): Pr
     );
 }
 
-export async function getWorkersByPlanilla(planillaId: string): Promise<WorkerInfo[]> {
+export async function getWorkersByPlanilla(planillaId: number): Promise<WorkerInfo[]> {
   const rows = await db
     .select({
       id: trabajadores.id,

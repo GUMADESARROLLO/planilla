@@ -20,10 +20,10 @@ export const POST: APIRoute = async ({ params, request }) => {
     const body = await request.json().catch(() => ({}));
     const data = validateSchema(rejectSchema, body);
 
-    const result = await permitsService.reject(id, session.user.id);
+    const result = await permitsService.reject(Number(id), session.user.id);
 
     if (data.observaciones) {
-      await permitsService.update(id, { observaciones: data.observaciones });
+      await permitsService.update(Number(id), { observaciones: data.observaciones });
     }
 
     return successResponse(result);
