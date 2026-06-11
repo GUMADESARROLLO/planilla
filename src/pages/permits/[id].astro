@@ -6,6 +6,7 @@ import * as permitsService from "@modules/permits/services/permits.service";
 import type { EsquelaResponse } from "@modules/permits/types";
 import { NotFoundError } from "@utils/errors";
 import { getSession } from "@middleware/auth";
+import { getPhotoUrl } from "@utils/storage";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect("/permits");
@@ -99,7 +100,7 @@ const isRechazada = esquela.estado === "rechazada";
         <div style="width:160px;flex-shrink:0;display:flex;flex-direction:column;gap:6px">
           <label class="dc-label">Foto</label>
           {w?.foto ? (
-            <img src={w.foto} alt={fullName} style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:2px solid var(--border-light)" />
+            <img src={await getPhotoUrl(w.foto) ?? ""} alt={fullName} style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:2px solid var(--border-light)" />
           ) : (
             <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--accent-light);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center">
               <span style="font-size:28px;font-weight:700;color:#a8c4f0">{initials}</span>

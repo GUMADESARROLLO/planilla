@@ -5,44 +5,16 @@ import type {
   WorkerResponse,
 } from "../types";
 import * as workerRepository from "../repositories/worker.repository";
-import { AppError } from "@utils/errors";
-import sharp from "sharp";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { uploadPhoto, deletePhoto } from "@utils/storage";
 
-const UPLOAD_DIR = join(process.cwd(), "public", "uploads", "workers");
-
-async function ensureUploadDir(): Promise<void> {
-  if (!existsSync(UPLOAD_DIR)) {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-  }
-}
-
-async function processPhoto(
-  base64Data: string | null | undefined,
-): Promise<string | null> {
-  if (!base64Data) return null;
-
-  const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
-  if (!matches) return null;
-
-  const ext = matches[1] === "jpeg" ? "jpg" : matches[1] ?? "png";
-  const buffer = Buffer.from(matches[2]!, "base64");
-
-  await ensureUploadDir();
-
-  const filename = `${crypto.randomUUID()}.${ext}`;
-  const filepath = join(UPLOAD_DIR, filename);
-
-  const resized = await sharp(buffer)
-    .resize(400, 400, { fit: "cover", position: "center" })
-    .toFormat(ext === "jpg" ? "jpeg" : "png")
-    .toBuffer();
-
-  await writeFile(filepath, resized);
-
-  return `/uploads/workers/${filename}`;
+function sanitizeKey(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .toLowerCase();
 }
 
 export async function getAll(
@@ -63,29 +35,44 @@ export async function getById(id: number): Promise<WorkerResponse> {
 export async function create(
   data: CreateWorkerDTO,
 ): Promise<WorkerResponse> {
-  let fotoPath: string | null = null;
+  const { foto, ...rest } = data;
+  const worker = await workerRepository.create(rest as CreateWorkerDTO);
 
-  if (data.foto) {
-    fotoPath = await processPhoto(data.foto);
+  if (foto) {
+    const key = `${worker.id}_${sanitizeKey(`${rest.nombre}_${rest.apellidos}`)}`;
+    const url = await uploadPhoto(foto, key);
+    if (url) {
+      return workerRepository.update(worker.id, { foto: url });
+    }
   }
 
-  return workerRepository.create({
-    ...data,
-    foto: fotoPath,
-  });
+  return worker;
 }
 
 export async function update(
   id: number,
   data: UpdateWorkerDTO,
 ): Promise<WorkerResponse> {
-  const updateData = { ...data };
+  const existing = await getById(id);
+  const updateData = { ...data } as Record<string, unknown>;
 
-  if (updateData.foto) {
-    updateData.foto = await processPhoto(updateData.foto);
+  if (typeof data.foto === "string" && data.foto.startsWith("data:image")) {
+    const key = `${id}_${sanitizeKey(`${data.nombre ?? ""}_${data.apellidos ?? ""}`)}`;
+    const url = await uploadPhoto(data.foto, key);
+    if (url) {
+      await deletePhoto(existing.foto);
+      updateData["foto"] = url;
+    } else {
+      delete updateData["foto"];
+    }
+  } else if (data.foto === null) {
+    await deletePhoto(existing.foto);
+    updateData["foto"] = null;
+  } else {
+    delete updateData["foto"];
   }
 
-  return workerRepository.update(id, updateData);
+  return workerRepository.update(id, updateData as UpdateWorkerDTO);
 }
 
 export async function remove(id: number): Promise<void> {

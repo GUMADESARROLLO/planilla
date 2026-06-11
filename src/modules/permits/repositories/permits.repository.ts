@@ -31,6 +31,7 @@ function mapEsquela(row: Record<string, unknown>): EsquelaResponse {
           cedulaIdentidad: (row["trabajador"] as Record<string, unknown>)["cedulaIdentidad"] as string,
           telefono: (row["trabajador"] as Record<string, unknown>)["telefono"] as string,
           cargo: (row["trabajador"] as Record<string, unknown>)["cargo"] as string,
+          foto: (row["trabajador"] as Record<string, unknown>)["foto"] as string | null,
         }
       : null,
     cargo: (row["cargo"] as string) ?? null,
