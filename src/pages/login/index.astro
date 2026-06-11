@@ -1,6 +1,6 @@
 ---
 import AuthLayout from "@layouts/AuthLayout.astro";
-import { Mail, Lock } from "@lucide/astro";
+import { Mail, Lock, Eye, EyeOff } from "@lucide/astro";
 
 const iconClass = "size-4 text-gray-400 dark:text-gray-500 shrink-0";
 ---
@@ -49,8 +49,18 @@ const iconClass = "size-4 text-gray-400 dark:text-gray-500 shrink-0";
           autocomplete="current-password"
           required
           placeholder="••••••••"
-          class="block w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm outline-none"
+          class="block w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm outline-none"
         />
+        <button
+          id="toggle-password"
+          type="button"
+          class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          aria-label="Mostrar contraseña"
+          tabindex="-1"
+        >
+          <Eye id="eye-icon" class={iconClass} />
+          <EyeOff id="eye-off-icon" class={[iconClass, "hidden"].join(" ")} />
+        </button>
       </div>
     </div>
 
@@ -78,6 +88,20 @@ const iconClass = "size-4 text-gray-400 dark:text-gray-500 shrink-0";
   const btnText = document.getElementById("btn-text")!;
   const btnSpinner = document.getElementById("btn-spinner")!;
   const errorContainer = document.getElementById("error-container")!;
+
+  // Toggle password visibility
+  const toggleBtn = document.getElementById("toggle-password") as HTMLButtonElement;
+  const passwordInput = document.getElementById("password") as HTMLInputElement;
+  const eyeIcon = document.getElementById("eye-icon")!;
+  const eyeOffIcon = document.getElementById("eye-off-icon")!;
+
+  toggleBtn?.addEventListener("click", () => {
+    const isPassword = passwordInput.type === "password";
+    passwordInput.type = isPassword ? "text" : "password";
+    toggleBtn.setAttribute("aria-label", isPassword ? "Ocultar contraseña" : "Mostrar contraseña");
+    eyeIcon.classList.toggle("hidden");
+    eyeOffIcon.classList.toggle("hidden");
+  });
 
   form.addEventListener("submit", async (e: Event) => {
     e.preventDefault();

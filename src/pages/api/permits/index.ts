@@ -33,6 +33,10 @@ export const GET: APIRoute = async ({ request, url }) => {
     const estado = url.searchParams.get("estado") ?? undefined;
     const trabajadorIdParam = url.searchParams.get("trabajador_id");
     const trabajadorId = trabajadorIdParam ? Number(trabajadorIdParam) : undefined;
+    const tipoPermisoIdParam = url.searchParams.get("tipo_permiso_id");
+    const tipoPermisoId = tipoPermisoIdParam ? Number(tipoPermisoIdParam) : undefined;
+    const fechaDesde = url.searchParams.get("fecha_desde") ?? undefined;
+    const fechaHasta = url.searchParams.get("fecha_hasta") ?? undefined;
 
     const validEstados: string[] = Object.values(EstadoPermiso);
     const estadoFilter = estado && validEstados.includes(estado)
@@ -45,6 +49,9 @@ export const GET: APIRoute = async ({ request, url }) => {
       search,
       estado: estadoFilter,
       trabajadorId,
+      tipoPermisoId,
+      fechaDesde,
+      fechaHasta,
     });
 
     return paginatedResponse(result.data, result.page, result.limit, result.total);

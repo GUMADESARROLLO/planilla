@@ -8,18 +8,12 @@ import { NotFoundError } from "@utils/errors";
 import { getSession } from "@middleware/auth";
 
 const { id } = Astro.params;
-
-if (!id) {
-  return Astro.redirect("/permits");
-}
+if (!id) return Astro.redirect("/permits");
 
 let esquela: EsquelaResponse;
-try {
-  esquela = await permitsService.findById(id);
-} catch (e) {
-  if (e instanceof NotFoundError) {
-    return Astro.redirect("/permits");
-  }
+try { esquela = await permitsService.findById(id); }
+catch (e) {
+  if (e instanceof NotFoundError) return Astro.redirect("/permits");
   throw e;
 }
 
@@ -28,156 +22,163 @@ const canApprove = session && (session.user.role === "SUPERVISOR" || session.use
 const isPending = esquela.estado === "pendiente";
 
 function fmt(d: string): string {
-  try {
-    return new Date(d).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" });
-  } catch { return d; }
+  try { return new Date(d).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" }); }
+  catch { return d; }
 }
-
 function fmtDT(d: string): string {
-  try {
-    return new Date(d).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  } catch { return d; }
-}
-
-function estadoBadge(estado: string): { color: string; label: string; dot: string } {
-  switch (estado) {
-    case "pendiente": return { color: "bg-amber-100 text-amber-700 border-amber-200", label: "Pendiente", dot: "bg-amber-500" };
-    case "aprobada": return { color: "bg-emerald-100 text-emerald-700 border-emerald-200", label: "Aprobada", dot: "bg-emerald-500" };
-    case "rechazada": return { color: "bg-red-100 text-red-700 border-red-200", label: "Rechazada", dot: "bg-red-500" };
-    default: return { color: "bg-gray-100 text-gray-700 border-gray-200", label: estado, dot: "bg-gray-500" };
-  }
+  try { return new Date(d).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); }
+  catch { return d; }
 }
 
 const w = esquela.trabajador;
-const badge = estadoBadge(esquela.estado);
 const initials = w ? `${(w.nombre ?? "")[0] ?? ""}${(w.apellidos ?? "")[0] ?? ""}` : "??";
 const fullName = w ? `${w.nombre} ${w.apellidos}` : "N/A";
 const cargoText = esquela.cargo ?? w?.cargo ?? "N/A";
-const ubicacionText = esquela.ubicacion;
+const isAprobada = esquela.estado === "aprobada";
+const isRechazada = esquela.estado === "rechazada";
 ---
 
 <AppLayout title={`Esquela - ${fullName}`} currentPath="/permits">
-  <div class="max-w-5xl mx-auto py-8 px-4">
+  <div class="dc-page">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-4">
-        <a href="/permits" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" aria-label="Volver">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    <div class="flex items-start justify-between gap-4 mb-6">
+      <div class="flex items-center gap-3">
+        <a href="/permits" class="dc-back-btn" aria-label="Volver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </a>
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Esquela de Permiso</h1>
-          <p class="text-sm text-gray-400 mt-0.5">ID #{String(esquela.id)}</p>
+          <h1 class="dc-page-title">Esquela de Permiso</h1>
+          <p class="dc-page-sub">ID #{String(esquela.id)}</p>
         </div>
       </div>
-
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         {isPending && canApprove && (
           <>
             <button id="btn-rechazar" type="button"
-              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              class="dc-btn" style="background:var(--danger,#e05454);color:#fff;border:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               Rechazar
             </button>
             <button id="btn-aprobar" type="button"
-              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              class="dc-btn" style="background:var(--accent,#3b6fd4);color:#fff;border:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 13l4 4L19 7"/></svg>
               Aprobar
             </button>
           </>
         )}
-        <span class={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${badge.color}`}>
-          <span class={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
-          {badge.label}
+        <span class={`dc-badge ${isAprobada ? "dc-badge-green" : isRechazada ? "" : ""}`}
+          style={isRechazada ? "background:var(--success-bg,#2a1f08);border-color:var(--success-border,#e0a030);color:var(--amber,#e0a030)" : isPending ? "background:var(--accent-light);border-color:var(--accent);color:var(--accent)" : ""}>
+          <span class="dc-badge-dot" style={isRechazada ? "background:var(--amber)" : isPending ? "background:var(--accent)" : ""}></span>
+          {esquela.estado === "pendiente" ? "Pendiente" : isAprobada ? "Aprobada" : "Rechazada"}
         </span>
       </div>
     </div>
 
     <!-- Alerts -->
-    {esquela.estado === "aprobada" && (
+    {isAprobada && (
       <Alert variant="success" title="Permiso Aprobado" class="mb-6">
         Este permiso ha sido aprobado{esquela.nombreAprobador ? ` por ${esquela.nombreAprobador}` : ""}.
       </Alert>
     )}
-    {esquela.estado === "rechazada" && (
+    {isRechazada && (
       <Alert variant="error" title="Permiso Rechazado" class="mb-6">
         Este permiso ha sido rechazado{esquela.nombreAprobador ? ` por ${esquela.nombreAprobador}` : ""}.
       </Alert>
     )}
-    <div id="action-error" class="hidden mb-6">
-      <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-950 border border-danger-200 dark:border-danger-900 text-sm text-danger-700 dark:text-danger-400"></div>
-    </div>
+    <div id="action-error" class="hidden mb-6 dc-alert-error"></div>
 
-    <!-- Main grid -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-5">
-      <!-- Worker card (3/5) -->
-      <div class="md:col-span-3 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-7">
-        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
-          <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center shrink-0">
-            <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">{initials}</span>
-          </div>
-          <div>
-            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-0.5">Trabajador</p>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">{fullName}</h2>
-            <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">{cargoText}</p>
-          </div>
+    <!-- Información personal -->
+    <div class="dc-section">
+      <div class="dc-section-header">
+        <div class="dc-section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
-
-        <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Cédula de identidad</p>
-            <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{w?.cedulaIdentidad ?? "-"}</p>
+        <span class="dc-section-title">Información personal</span>
+      </div>
+      <div style="display:flex;gap:22px;padding:22px">
+        <div style="width:160px;flex-shrink:0;display:flex;flex-direction:column;gap:6px">
+          <label class="dc-label">Foto</label>
+          {w?.foto ? (
+            <img src={w.foto} alt={fullName} style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:2px solid var(--border-light)" />
+          ) : (
+            <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--accent-light);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center">
+              <span style="font-size:28px;font-weight:700;color:#a8c4f0">{initials}</span>
+            </div>
+          )}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:18px 16px;flex:1;padding:0">
+          <div class="dc-field">
+            <label class="dc-label">Nombre completo</label>
+            <p class="dc-value">{fullName}</p>
           </div>
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Email</p>
-            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{w?.email ?? "-"}</p>
+          <div class="dc-field">
+            <label class="dc-label">Cédula de identidad</label>
+            <p class="dc-value">{w?.cedulaIdentidad ?? "-"}</p>
           </div>
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Teléfono</p>
-            <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{w?.telefono ?? "-"}</p>
+          <div class="dc-field">
+            <label class="dc-label">Email</label>
+            <p class="dc-value">{w?.email ?? "-"}</p>
           </div>
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Ubicación</p>
-            <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{ubicacionText}</p>
+          <div class="dc-field">
+            <label class="dc-label">Teléfono</label>
+            <p class="dc-value">{w?.telefono ?? "-"}</p>
+          </div>
+          <div class="dc-field">
+            <label class="dc-label">Cargo</label>
+            <p class="dc-value">{cargoText}</p>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Permit card (2/5) -->
-      <div class="md:col-span-2 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-7 flex flex-col gap-5">
-        <div>
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Tipo de permiso</p>
-          <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
-            {esquela.tipoPermiso?.nombre ?? "N/A"}
-          </span>
-          {esquela.tipoPermiso?.descripcion && (
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5">{esquela.tipoPermiso.descripcion}</p>
-          )}
+    <!-- Permit detail card -->
+    <div class="dc-section">
+      <div class="dc-section-header">
+        <div class="dc-section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <span class="dc-section-title">Detalles del permiso</span>
+      </div>
+      <div style="padding:22px;display:grid;grid-template-columns:1fr auto;gap:22px">
+
+        <!-- Left column - dates + ubicación (wider) -->
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px">
+            <div>
+              <p class="dc-label">Fecha inicio</p>
+              <p style="font-size:13px;font-weight:600;color:var(--text-primary)">{fmt(esquela.fechaInicio)}</p>
+            </div>
+            <div>
+              <p class="dc-label">Fecha fin</p>
+              <p style="font-size:13px;font-weight:600;color:var(--text-primary)">{fmt(esquela.fechaFin)}</p>
+            </div>
+            <div>
+              <p class="dc-label">Incorporación</p>
+              <p style="font-size:13px;font-weight:600;color:var(--text-primary)">{fmt(esquela.fechaIncorporacion)}</p>
+            </div>
+            <div>
+              <p class="dc-label">Elaborado</p>
+              <p style="font-size:13px;font-weight:600;color:var(--text-primary)">{fmtDT(esquela.fechaElaborada)}</p>
+            </div>
+          </div>
         </div>
 
-        <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-xl px-4 py-3 border border-indigo-100 dark:border-indigo-800">
-          <p class="text-xs font-semibold text-indigo-400 dark:text-indigo-300 uppercase tracking-wider mb-1">Duración</p>
-          <p class="text-3xl font-extrabold text-indigo-700 dark:text-indigo-300 leading-none">
-            {Number(esquela.cantidadDias ?? 0).toFixed(2)}
-            <span class="text-lg font-semibold text-indigo-400 dark:text-indigo-400"> día(s)</span>
-          </p>
-        </div>
+        <!-- Right column - Tipo + Duración (compact) -->
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div>
+            <p class="dc-label">Tipo de permiso</p>
+            <span style="display:inline-block;padding:4px 14px;border-radius:999px;font-size:13px;font-weight:600;background:var(--accent-light);border:1px solid var(--accent);color:#a8c4f0">
+              {esquela.tipoPermiso?.nombre ?? "N/A"}
+            </span>
+            {esquela.tipoPermiso?.descripcion && <p class="dc-value" style="font-size:11px;color:var(--text-muted);margin-top:6px">{esquela.tipoPermiso.descripcion}</p>}
+          </div>
 
-        <div class="grid grid-cols-2 gap-x-4 gap-y-4">
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fecha inicio</p>
-            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{fmt(esquela.fechaInicio)}</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fecha fin</p>
-            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{fmt(esquela.fechaFin)}</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Incorporación</p>
-            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{fmt(esquela.fechaIncorporacion)}</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Elaborado</p>
-            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{fmtDT(esquela.fechaElaborada)}</p>
+          <div style="background:var(--accent-light);border-radius:12px;padding:16px 20px;border:1px solid var(--accent)">
+            <p class="dc-label">Duración</p>
+            <p style="font-size:28px;font-weight:800;color:#a8c4f0;line-height:1">
+              {Number(esquela.cantidadDias ?? 0).toFixed(2)}
+              <span style="font-size:16px;font-weight:500;color:var(--text-muted)"> día(s)</span>
+            </p>
           </div>
         </div>
       </div>
@@ -185,28 +186,41 @@ const ubicacionText = esquela.ubicacion;
 
     <!-- Observaciones -->
     {esquela.observaciones && (
-      <div class="mt-5 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-7">
-        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Observaciones</h3>
-        <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{esquela.observaciones}</p>
+      <div class="dc-section">
+        <div class="dc-section-header">
+          <div class="dc-section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <span class="dc-section-title">Observaciones</span>
+        </div>
+        <div class="dc-fields dc-col-1">
+          <p class="dc-value" style="line-height:1.6;white-space:pre-wrap">{esquela.observaciones}</p>
+        </div>
       </div>
     )}
 
     <!-- Approval Info -->
-    {(esquela.estado === "aprobada" || esquela.estado === "rechazada") && (
-      <div class="mt-5 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-7">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Aprobado/Rechazado por</p>
-            <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{esquela.nombreAprobador ?? "N/A"}</p>
+    {(isAprobada || isRechazada) && (
+      <div class="dc-section">
+        <div class="dc-section-header">
+          <div class="dc-section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
           </div>
-          <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fecha y hora</p>
-            <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{esquela.aprobadoEn ? fmtDT(esquela.aprobadoEn) : "-"}</p>
+          <span class="dc-section-title">Información de aprobación</span>
+        </div>
+        <div class="dc-fields dc-col-3">
+          <div class="dc-field">
+            <label class="dc-label">Aprobado/Rechazado por</label>
+            <p class="dc-value">{esquela.nombreAprobador ?? "N/A"}</p>
+          </div>
+          <div class="dc-field">
+            <label class="dc-label">Fecha y hora</label>
+            <p class="dc-value">{esquela.aprobadoEn ? fmtDT(esquela.aprobadoEn) : "-"}</p>
           </div>
           {esquela.firmaDigital && (
-            <div class="md:col-span-2">
-              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Firma Digital</p>
-              <p class="text-sm text-gray-700 dark:text-gray-300 font-mono break-all bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">{esquela.firmaDigital}</p>
+            <div class="dc-field" style="grid-column:span 3">
+              <label class="dc-label">Firma Digital</label>
+              <p class="dc-value" style="font-family:monospace;word-break:break-all;background:var(--bg-input);padding:12px;border-radius:6px;font-size:12px">{esquela.firmaDigital}</p>
             </div>
           )}
         </div>
@@ -214,29 +228,137 @@ const ubicacionText = esquela.ubicacion;
     )}
 
     {isPending && !canApprove && (
-      <div class="mt-5 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-7 text-center">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Este permiso está pendiente de aprobación por un supervisor o administrador.</p>
+      <div class="dc-section">
+        <div class="dc-fields dc-col-1" style="text-align:center">
+          <p class="dc-value" style="color:var(--text-muted)">Este permiso está pendiente de aprobación por un supervisor o administrador.</p>
+        </div>
       </div>
     )}
   </div>
 </AppLayout>
+
+<style>
+  .dc-page {
+    --bg-card: #181e2c;
+    --bg-input: #1c2335;
+    --bg-input-hover: #1f2840;
+    --border: #262f45;
+    --border-focus: #3b6fd4;
+    --border-light: #2d3855;
+    --text-primary: #e8edf7;
+    --text-secondary: #8b9abf;
+    --text-muted: #4d5c7d;
+    --text-label: #6b7fa8;
+    --accent: #3b6fd4;
+    --accent-light: #1e3466;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --danger: #e05454;
+    --success: #3dbf7e;
+    --success-bg: #0f2a1e;
+    --success-border: #1a4a30;
+    --amber: #e0a030;
+  }
+  .dc-back-btn {
+    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border-light); border-radius: var(--radius-md);
+    background: var(--bg-card); color: var(--text-secondary); cursor: pointer;
+    transition: background .15s, color .15s; flex-shrink: 0;
+  }
+  .dc-back-btn:hover { background: var(--bg-input); color: var(--text-primary); }
+  .dc-back-btn svg { width: 16px; height: 16px; }
+  .dc-page-title { font-size: 17px; font-weight: 600; color: var(--text-primary); }
+  .dc-page-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .dc-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 18px; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: background .15s; line-height: 1;
+  }
+  .dc-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .dc-btn:hover { opacity: .9; }
+
+  .dc-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 11px; border-radius: 999px;
+    font-size: 11px; font-weight: 500; border: 1px solid;
+  }
+  .dc-badge-green { background: var(--success-bg); border-color: var(--success-border); color: var(--success); }
+  .dc-badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  .dc-identity {
+    display: flex; align-items: center; gap: 18px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .dc-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent-light); border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 600; color: #a8c4f0;
+    flex-shrink: 0; letter-spacing: .5px;
+  }
+  .dc-id-info { flex: 1; }
+  .dc-id-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .dc-id-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .dc-section {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); margin-bottom: 14px; overflow: hidden;
+  }
+  .dc-section-header {
+    display: flex; align-items: center; gap: 9px;
+    padding: 14px 22px; border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,.015);
+  }
+  .dc-section-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--bg-input); border: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .dc-section-icon svg { width: 14px; height: 14px; color: var(--text-secondary); }
+  .dc-section-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .07em; }
+
+  .dc-fields { padding: 22px; display: grid; gap: 18px 16px; }
+  .dc-col-3 { grid-template-columns: repeat(3, 1fr); }
+  .dc-col-5 { grid-template-columns: repeat(5, 1fr); }
+  .dc-col-2 { grid-template-columns: repeat(2, 1fr); }
+  .dc-col-1 { grid-template-columns: 1fr; }
+
+  .dc-label {
+    display: block; font-size: 11px; font-weight: 500;
+    color: var(--text-label); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .dc-value { font-size: 13px; color: var(--text-primary); }
+
+  .dc-alert-error {
+    padding: 12px; border-radius: var(--radius-md);
+    background: rgba(224,84,84,.1); border: 1px solid rgba(224,84,84,.3);
+    color: #e05454; font-size: 13px;
+  }
+
+  @media (max-width: 680px) {
+    .dc-col-5, .dc-col-3, .dc-col-2 { grid-template-columns: 1fr; }
+    .dc-identity { flex-wrap: wrap; }
+  }
+</style>
 
 <script define:vars={{ esquelaId: id }}>
   void esquelaId;
   const btnAprobar = document.getElementById("btn-aprobar");
   const btnRechazar = document.getElementById("btn-rechazar");
   const errorDiv = document.getElementById("action-error");
-  const errorMsg = errorDiv?.querySelector("div");
 
-  function showError(message: string) {
-    if (errorDiv && errorMsg) { errorMsg.textContent = message; errorDiv.classList.remove("hidden"); }
-  }
+  function showError(m: string) { if (errorDiv) { errorDiv.textContent = m; errorDiv.classList.remove("hidden"); } }
   function hideError() { if (errorDiv) errorDiv.classList.add("hidden"); }
-
-  function setLoading(button: HTMLElement | null, loading: boolean) {
-    if (!button) return;
-    if (loading) { button.setAttribute("disabled", "true"); button.innerHTML = '<svg class="animate-spin size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Procesando...'; }
-    else { button.removeAttribute("disabled"); }
+  function setLoading(btn: HTMLElement | null, l: boolean) {
+    if (!btn) return;
+    if (l) { btn.setAttribute("disabled", "true"); btn.innerHTML = '<svg class="animate-spin" style="width:14px;height:14px" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Procesando...'; }
+    else btn.removeAttribute("disabled");
   }
 
   btnAprobar?.addEventListener("click", async () => {

@@ -41,6 +41,7 @@ export interface EsquelaResponse {
     cedulaIdentidad: string;
     telefono: string;
     cargo: string;
+    foto?: string | null;
   } | null;
   cargo: string | null;
   ubicacion: string;
@@ -71,6 +72,9 @@ export interface EsquelaFilters {
   search?: string;
   estado?: EstadoPermiso;
   trabajadorId?: number;
+  tipoPermisoId?: number;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export interface PaginatedResult<T> {

@@ -1,7 +1,5 @@
 ---
 import AppLayout from "@components/layout/AppLayout.astro";
-import Card from "@components/ui/Card.astro";
-import Button from "@components/ui/Button.astro";
 import Badge from "@components/ui/Badge.astro";
 import { db } from "@db/index";
 import {
@@ -18,43 +16,27 @@ import {
   unidadesNegocio,
 } from "@db/schemas";
 import { eq, and, isNull } from "drizzle-orm";
-import { ArrowLeft, Pencil, Mail, Phone, MapPin, Calendar, CreditCard, User, Shirt } from "@lucide/astro";
+import { ArrowLeft, Pencil } from "@lucide/astro";
 
-export async function getStaticPaths() {
-  return [];
-}
+export async function getStaticPaths() { return []; }
 
 const idParam = Astro.params.id;
-
-if (!idParam) {
-  return Astro.redirect("/workers");
-}
-
+if (!idParam) return Astro.redirect("/workers");
 const id = Number(idParam);
 
 const [workerRow] = await db.select({
-  id: trabajadores.id,
-  nombre: trabajadores.nombre,
-  apellidos: trabajadores.apellidos,
-  fechaEntrada: trabajadores.fechaEntrada,
-  fechaSalida: trabajadores.fechaSalida,
-  email: trabajadores.email,
-  numeroInss: trabajadores.numeroInss,
-  cedulaIdentidad: trabajadores.cedulaIdentidad,
-  telefono: trabajadores.telefono,
-  saldoVacaciones: trabajadores.saldoVacaciones,
-  direccion: trabajadores.direccion,
-  activo: trabajadores.activo,
-  foto: trabajadores.foto,
-  createdAt: trabajadores.created_at,
+  id: trabajadores.id, nombre: trabajadores.nombre, apellidos: trabajadores.apellidos,
+  fechaEntrada: trabajadores.fechaEntrada, fechaSalida: trabajadores.fechaSalida,
+  email: trabajadores.email, numeroInss: trabajadores.numeroInss,
+  cedulaIdentidad: trabajadores.cedulaIdentidad, telefono: trabajadores.telefono,
+  saldoVacaciones: trabajadores.saldoVacaciones, direccion: trabajadores.direccion,
+  activo: trabajadores.activo, foto: trabajadores.foto, createdAt: trabajadores.created_at,
   nacionalidad: { nombre: nacionalidades.nombre },
   tallaCamisa: { nombre: tallasCamisa.nombre },
   tallaPantalon: { nombre: tallasPantalon.nombre },
   tipoContrato: { nombre: tiposContrato.nombre },
-  cargo: { nombre: cargos.nombre },
-  genero: { nombre: generos.nombre },
-  departamento: { nombre: departamentos.nombre },
-  unidad: { nombre: unidadesNegocio.nombre },
+  cargo: { nombre: cargos.nombre }, genero: { nombre: generos.nombre },
+  departamento: { nombre: departamentos.nombre }, unidad: { nombre: unidadesNegocio.nombre },
 })
   .from(trabajadores)
   .leftJoin(nacionalidades, eq(trabajadores.nacionalidadId, nacionalidades.id))
@@ -68,176 +50,286 @@ const [workerRow] = await db.select({
   .where(and(eq(trabajadores.id, id), isNull(trabajadores.deleted_at)))
   .limit(1);
 
-if (!workerRow) {
-  return Astro.redirect("/workers");
-}
+if (!workerRow) return Astro.redirect("/workers");
 
 const workerPlanillas = await db.select({
-  planilla: {
-    nombre: planillas.nombre,
-    tipo: planillas.tipo,
-  },
+  planilla: { nombre: planillas.nombre, tipo: planillas.tipo },
 })
   .from(trabajadoresPlanillas)
   .leftJoin(planillas, eq(trabajadoresPlanillas.planillaId, planillas.id))
   .where(eq(trabajadoresPlanillas.trabajadorId, id));
 
 const worker = { ...workerRow, planillas: workerPlanillas };
-
 const currentPath = `/workers/${id}`;
 
-function formatDate(date: string | Date | null): string {
-  if (!date) return "-";
-  const d = new Date(date);
-  return d.toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+function fmt(d: string | Date | null): string {
+  if (!d) return "-";
+  return new Date(d).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" });
 }
 
-const infoItems = [
-  { label: "Cédula de Identidad", value: worker.cedulaIdentidad, icon: "CreditCard" },
-  { label: "Número INSS", value: worker.numeroInss, icon: "CreditCard" },
-  { label: "Correo Electrónico", value: worker.email, icon: "Mail" },
-  { label: "Teléfono", value: worker.telefono, icon: "Phone" },
-  { label: "Dirección", value: worker.direccion ?? "-", icon: "MapPin" },
-  { label: "Nacionalidad", value: worker.nacionalidad?.nombre ?? "-", icon: "User" },
-  { label: "Género", value: worker.genero?.nombre ?? "-", icon: "User" },
-  { label: "Fecha de Entrada", value: formatDate(worker.fechaEntrada), icon: "Calendar" },
-  { label: "Fecha de Salida", value: formatDate(worker.fechaSalida), icon: "Calendar" },
-  { label: "Saldo de Vacaciones", value: `C$ ${worker.saldoVacaciones}`, icon: "Calendar" },
-  { label: "Talla de Camisa", value: worker.tallaCamisa?.nombre ?? "-", icon: "Shirt" },
-  { label: "Talla de Pantalón", value: worker.tallaPantalon?.nombre ?? "-", icon: "Shirt" },
-];
-
-const employmentInfo = [
-  { label: "Unidad de Negocio", value: worker.unidad?.nombre ?? "-" },
-  { label: "Departamento", value: worker.departamento?.nombre ?? "-" },
-  { label: "Cargo", value: worker.cargo?.nombre ?? "-" },
-  { label: "Tipo de Contrato", value: worker.tipoContrato?.nombre ?? "-" },
-  { label: "Estado", value: worker.activo ? "Activo" : "Inactivo", badge: worker.activo ? "success" : "danger" },
-];
+const initials = `${(worker.nombre ?? "")[0] ?? ""}${(worker.apellidos ?? "")[0] ?? ""}`;
+const fullName = `${worker.nombre} ${worker.apellidos}`;
+const isActive = worker.activo !== false;
 ---
 
-<AppLayout title={`${worker.nombre} ${worker.apellidos}`} {currentPath}>
-  <div class="space-y-6">
-    <!-- Back link -->
-    <a
-      href="/workers"
-      class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-    >
-      <ArrowLeft class="size-4" />
-      Volver a trabajadores
-    </a>
-
-    <!-- Profile Header -->
-    <div class="flex flex-col sm:flex-row items-start gap-6">
-      <div class="shrink-0">
-        {worker.foto ? (
-          <img
-            src={worker.foto}
-            alt={`${worker.nombre} ${worker.apellidos}`}
-            class="size-24 rounded-xl object-cover border-2 border-gray-200 dark:border-gray-700 shadow-sm"
-          />
-        ) : (
-          <div class="size-24 rounded-xl bg-primary-100 dark:bg-primary-900 flex items-center justify-center border-2 border-gray-200 dark:border-gray-700">
-            <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-              {worker.nombre.charAt(0)}{worker.apellidos.charAt(0)}
-            </span>
-          </div>
-        )}
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white truncate">
-            {worker.nombre} {worker.apellidos}
-          </h1>
-          {worker.activo
-            ? <Badge variant="success" size="md">Activo</Badge>
-            : <Badge variant="danger" size="md">Inactivo</Badge>
-          }
+<AppLayout title={fullName} {currentPath}>
+  <div class="dc-page">
+    <!-- Header -->
+    <div class="flex items-start justify-between gap-4 mb-6">
+      <div class="flex items-center gap-3">
+        <a href="/workers" class="dc-back-btn" aria-label="Volver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <div>
+          <h1 class="dc-page-title">{fullName}</h1>
+          <p class="dc-page-sub">{worker.cargo?.nombre ?? "Sin cargo"} · {worker.tipoContrato?.nombre ?? "Sin contrato"}</p>
         </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {worker.cargo?.nombre ?? "Sin cargo"} &middot; {worker.tipoContrato?.nombre ?? "Sin contrato"}
-        </p>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-          Registrado {formatDate(worker.createdAt)}
-        </p>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <a href={`/workers/edit/${worker.id}`}>
-          <Button variant="outline" size="sm">
-            <Pencil slot="icon" class="size-3.5" />
-            Editar
-          </Button>
+      <div class="flex items-center gap-2">
+        {isActive
+          ? <span class="dc-badge dc-badge-green"><span class="dc-badge-dot"></span>Activo</span>
+          : <Badge variant="danger">Inactivo</Badge>
+        }
+        <a href={`/workers/edit/${worker.id}`} class="dc-btn dc-btn-ghost">
+          <Pencil class="w-3.5 h-3.5" />
+          Editar
         </a>
       </div>
     </div>
 
-    <!-- Info Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Personal Information -->
-      <Card title="Información Personal" class="lg:col-span-2">
-        <div slot="body">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {infoItems.map((item) => (
-              <div class="flex items-start gap-3">
-                <div class="shrink-0 mt-0.5">
-                  <div class="size-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
-                    {item.icon === "Mail" && <Mail class="size-4" />}
-                    {item.icon === "Phone" && <Phone class="size-4" />}
-                    {item.icon === "MapPin" && <MapPin class="size-4" />}
-                    {item.icon === "CreditCard" && <CreditCard class="size-4" />}
-                    {item.icon === "User" && <User class="size-4" />}
-                    {item.icon === "Calendar" && <Calendar class="size-4" />}
-                    {item.icon === "Shirt" && <Shirt class="size-4" />}
-                  </div>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{item.label}</p>
-                  <p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5 break-words">{item.value}</p>
-                </div>
-              </div>
-            ))}
+    <!-- Personal Info -->
+    <div class="dc-section">
+      <div class="dc-section-header">
+        <div class="dc-section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span class="dc-section-title">Información personal</span>
+      </div>
+      <div style="display:flex;gap:22px;padding:22px">
+        <div style="width:160px;flex-shrink:0;display:flex;flex-direction:column;gap:6px">
+          <label class="dc-label">Foto</label>
+          {worker.foto ? (
+            <img src={worker.foto} alt={fullName} style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:2px solid var(--border-light)" />
+          ) : (
+            <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--accent-light);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center">
+              <span style="font-size:28px;font-weight:700;color:#a8c4f0">{initials}</span>
+            </div>
+          )}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:18px 16px;flex:1;padding:0">
+          <div class="dc-field">
+            <label class="dc-label">Cédula de identidad</label>
+            <p class="dc-value">{worker.cedulaIdentidad}</p>
+          </div>
+          <div class="dc-field">
+            <label class="dc-label">Email</label>
+            <p class="dc-value">{worker.email}</p>
+          </div>
+          <div class="dc-field">
+            <label class="dc-label">Teléfono</label>
+            <p class="dc-value">{worker.telefono}</p>
+          </div>
+          <div class="dc-field">
+            <label class="dc-label">Nacionalidad</label>
+            <p class="dc-value">{worker.nacionalidad?.nombre ?? "-"}</p>
+          </div>
+          <div class="dc-field">
+            <label class="dc-label">Género</label>
+            <p class="dc-value">{worker.genero?.nombre ?? "-"}</p>
+          </div>
+          <div class="dc-field">
+            <label class="dc-label">Dirección</label>
+            <p class="dc-value">{worker.direccion ?? "-"}</p>
           </div>
         </div>
-      </Card>
+      </div>
+    </div>
 
-      <!-- Employment Info -->
-      <div class="space-y-6">
-        <Card title="Información Laboral">
-          <div slot="body" class="space-y-4">
-            {employmentInfo.map((item) => (
-              <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{item.label}</p>
-                {"badge" in item ? (
-                  <div class="mt-1">
-                    <Badge variant={item.badge as any} size="md">{item.value}</Badge>
-                  </div>
-                ) : (
-                  <p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{item.value}</p>
-                )}
-              </div>
+    <!-- Contract -->
+    <div class="dc-section">
+      <div class="dc-section-header">
+        <div class="dc-section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <span class="dc-section-title">Datos del contrato</span>
+      </div>
+      <div class="dc-fields dc-col-5">
+        <div class="dc-field">
+          <label class="dc-label">Unidad de Negocio</label>
+          <p class="dc-value">{worker.unidad?.nombre ?? "-"}</p>
+        </div>
+        <div class="dc-field">
+          <label class="dc-label">Departamento</label>
+          <p class="dc-value">{worker.departamento?.nombre ?? "-"}</p>
+        </div>
+        <div class="dc-field">
+          <label class="dc-label">Tipo de Contrato</label>
+          <p class="dc-value">{worker.tipoContrato?.nombre ?? "-"}</p>
+        </div>
+        <div class="dc-field">
+          <label class="dc-label">Fecha de Entrada</label>
+          <p class="dc-value">{fmt(worker.fechaEntrada)}</p>
+        </div>
+        <div class="dc-field">
+          <label class="dc-label">Saldo de Vacaciones</label>
+          <p class="dc-value">{worker.saldoVacaciones} días</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Uniforms -->
+    <div class="dc-section">
+      <div class="dc-section-header">
+        <div class="dc-section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>
+        </div>
+        <span class="dc-section-title">Uniformes</span>
+      </div>
+      <div class="dc-fields dc-col-2">
+        <div class="dc-field">
+          <label class="dc-label">Talla de Camisa</label>
+          <p class="dc-value">{worker.tallaCamisa?.nombre ?? "-"}</p>
+        </div>
+        <div class="dc-field">
+          <label class="dc-label">Talla de Pantalón</label>
+          <p class="dc-value">{worker.tallaPantalon?.nombre ?? "-"}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Planillas -->
+    <div class="dc-section">
+      <div class="dc-section-header">
+        <div class="dc-section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <span class="dc-section-title">Planillas</span>
+      </div>
+      <div class="dc-fields dc-col-1" style="padding-top:0">
+        {worker.planillas.length === 0 ? (
+          <p class="dc-value" style="padding:12px 0">No asignado a ninguna planilla</p>
+        ) : (
+          <div class="flex flex-wrap gap-2" style="padding:12px 0">
+            {worker.planillas.map((tp: any) => (
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:500;background:var(--accent-light);border:1px solid var(--accent);color:#a8c4f0">
+                {tp.planilla.nombre}
+                <span style="font-size:11px;color:#8b9abf">({tp.planilla.tipo})</span>
+              </span>
             ))}
           </div>
-        </Card>
-
-        <!-- Planillas -->
-        <Card title="Planillas">
-          <div slot="body">
-            {worker.planillas.length === 0 ? (
-              <p class="text-sm text-gray-400 dark:text-gray-500">No asignado a ninguna planilla</p>
-            ) : (
-              <ul class="space-y-2">
-                {worker.planillas.map((tp: any) => (
-                  <li class="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">{tp.planilla.nombre}</span>
-                    <Badge variant="info" size="sm">{tp.planilla.tipo}</Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </Card>
+        )}
       </div>
     </div>
   </div>
 </AppLayout>
 
+<style>
+  .dc-page {
+    --bg-card: #181e2c;
+    --bg-input: #1c2335;
+    --bg-input-hover: #1f2840;
+    --border: #262f45;
+    --border-focus: #3b6fd4;
+    --border-light: #2d3855;
+    --text-primary: #e8edf7;
+    --text-secondary: #8b9abf;
+    --text-muted: #4d5c7d;
+    --text-label: #6b7fa8;
+    --accent: #3b6fd4;
+    --accent-light: #1e3466;
+    --success: #3dbf7e;
+    --success-bg: #0f2a1e;
+    --success-border: #1a4a30;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+  }
+
+  .dc-back-btn {
+    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border-light); border-radius: var(--radius-md);
+    background: var(--bg-card); color: var(--text-secondary); cursor: pointer;
+    transition: background .15s, color .15s; flex-shrink: 0;
+  }
+  .dc-back-btn:hover { background: var(--bg-input); color: var(--text-primary); }
+  .dc-back-btn svg { width: 16px; height: 16px; }
+  .dc-page-title { font-size: 17px; font-weight: 600; color: var(--text-primary); }
+  .dc-page-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .dc-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 18px; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: background .15s, border-color .15s;
+    border: 1px solid transparent; line-height: 1;
+    text-decoration: none;
+  }
+  .dc-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .dc-btn-ghost {
+    background: transparent; border-color: var(--border-light);
+    color: var(--text-secondary);
+  }
+  .dc-btn-ghost:hover { background: var(--bg-card); color: var(--text-primary); }
+
+  .dc-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 11px; border-radius: 999px;
+    font-size: 11px; font-weight: 500;
+  }
+  .dc-badge-green { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); }
+  .dc-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  .dc-identity {
+    display: flex; align-items: center; gap: 18px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .dc-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent-light); border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 600; color: #a8c4f0;
+    flex-shrink: 0; letter-spacing: .5px;
+  }
+  .dc-id-info { flex: 1; }
+  .dc-id-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .dc-id-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .dc-section {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); margin-bottom: 14px; overflow: hidden;
+  }
+  .dc-section-header {
+    display: flex; align-items: center; gap: 9px;
+    padding: 14px 22px; border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,.015);
+  }
+  .dc-section-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--bg-input); border: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .dc-section-icon svg { width: 14px; height: 14px; color: var(--text-secondary); }
+  .dc-section-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .07em; }
+
+  .dc-fields { padding: 22px; display: grid; gap: 18px 16px; }
+  .dc-col-3 { grid-template-columns: repeat(3, 1fr); }
+  .dc-col-5 { grid-template-columns: repeat(5, 1fr); }
+  .dc-col-2 { grid-template-columns: repeat(2, 1fr); }
+  .dc-col-1 { grid-template-columns: 1fr; }
+
+  .dc-label {
+    display: block; font-size: 11px; font-weight: 500;
+    color: var(--text-label); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .dc-value {
+    font-size: 13px; color: var(--text-primary); font-weight: 400;
+  }
+
+  @media (max-width: 680px) {
+    .dc-col-5, .dc-col-3, .dc-col-2 { grid-template-columns: 1fr; }
+    .dc-identity { flex-wrap: wrap; }
+  }
+</style>

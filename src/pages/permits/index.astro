@@ -22,6 +22,11 @@ const page = parseInt(currentUrl.searchParams.get("page") ?? "1", 10);
 const limit = 10;
 const search = currentUrl.searchParams.get("search") ?? undefined;
 const estado = currentUrl.searchParams.get("estado") ?? undefined;
+const tipoPermisoId = currentUrl.searchParams.get("tipo_permiso_id")
+  ? Number(currentUrl.searchParams.get("tipo_permiso_id"))
+  : undefined;
+const fechaDesde = currentUrl.searchParams.get("fecha_desde") ?? undefined;
+const fechaHasta = currentUrl.searchParams.get("fecha_hasta") ?? undefined;
 
 const validEstados = ["pendiente", "aprobada", "rechazada"];
 const estadoFilter = estado && validEstados.includes(estado)
@@ -33,6 +38,9 @@ const result = await permitsService.findAll({
   limit,
   search,
   estado: estadoFilter,
+  tipoPermisoId,
+  fechaDesde,
+  fechaHasta,
 });
 
 const [workers, tipos, cargosList, deptosList] = await Promise.all([
@@ -60,11 +68,7 @@ const [workers, tipos, cargosList, deptosList] = await Promise.all([
 ]);
 
 function formatDate(d: string): string {
-  try {
-    return new Date(d).toLocaleDateString("es-ES");
-  } catch {
-    return d;
-  }
+  try { return new Date(d).toLocaleDateString("es-ES"); } catch { return d; }
 }
 
 function estadoVariant(estado: string): string {
@@ -84,13 +88,6 @@ function estadoLabel(estado: string): string {
     default: return estado;
   }
 }
-
-const tabs = [
-  { label: "Todas", href: "/permits", active: !estado },
-  { label: "Pendientes", href: "/permits?estado=pendiente", active: estado === "pendiente" },
-  { label: "Aprobadas", href: "/permits?estado=aprobada", active: estado === "aprobada" },
-  { label: "Rechazadas", href: "/permits?estado=rechazada", active: estado === "rechazada" },
-];
 ---
 
 <AppLayout title="Esquelas de Permisos" currentPath="/permits">
@@ -109,39 +106,32 @@ const tabs = [
     </Button>
   </div>
 
-  <!-- Search + Tabs row -->
-  <div class="mb-4 flex items-center gap-3 flex-wrap">
-    <form method="GET" action="/permits" class="flex items-center gap-2 flex-1 min-w-0">
+  <!-- Search + Filters row -->
+  <div class="mb-4">
+    <form method="GET" action="/permits" class="flex items-center gap-3" id="filter-form">
       <input type="hidden" name="estado" value={estado ?? ""} />
-      <div class="relative flex-1 min-w-[180px] max-w-xs">
+      <div class="relative flex-1 max-w-xs">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         <input
-          type="text" name="search" value={search ?? ""} placeholder="Buscar por nombre..."
+          type="text" name="search" value={search ?? ""} placeholder="Buscar..."
           class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
         />
       </div>
-      <button type="submit" class="px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors shrink-0">Buscar</button>
-      {search && (
-        <a href={estado ? `/permits?estado=${estado}` : "/permits"} class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0">Limpiar</a>
+      <DatePicker name="fecha_desde" value={fechaDesde ?? ""} placeholder="Fecha inicio" />
+      <DatePicker name="fecha_hasta" value={fechaHasta ?? ""} placeholder="Fecha fin" />
+      <select name="tipo_permiso_id"
+        class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+      >
+        <option value="">Todos</option>
+        {tipos.map((tp) => (
+          <option value={tp.id} selected={tipoPermisoId === tp.id}>{tp.nombre}</option>
+        ))}
+      </select>
+      <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors shrink-0">Filtrar</button>
+      {(search || tipoPermisoId || fechaDesde || fechaHasta) && (
+        <a href={estado ? `/permits?estado=${estado}` : "/permits"} class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0">Limpiar</a>
       )}
     </form>
-
-    <!-- Filter Tabs -->
-    <div class="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg shrink-0">
-      {tabs.map((tab) => (
-        <a
-          href={tab.href}
-          class:list={[
-            "px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
-            tab.active
-              ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-              : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-700/50",
-          ]}
-        >
-          {tab.label}
-        </a>
-      ))}
-    </div>
   </div>
 
   <!-- Table -->
@@ -218,7 +208,12 @@ const tabs = [
           totalPages={result.totalPages}
           total={result.total}
           limit={result.limit}
-          baseUrl={currentUrl.pathname + (estado ? `?estado=${estado}` : "") + ((estado && search) ? `&search=${search}` : search ? `?search=${search}` : "")}
+          baseUrl={currentUrl.pathname
+            + (estado ? `?estado=${estado}` : "?")
+            + (search ? `${estado ? "&" : ""}search=${search}` : "")
+            + (tipoPermisoId ? `${(estado || search) ? "&" : "?"}tipo_permiso_id=${tipoPermisoId}` : "")
+            + (fechaDesde ? `${(estado || search || tipoPermisoId) ? "&" : "?"}fecha_desde=${fechaDesde}` : "")
+            + (fechaHasta ? `${(estado || search || tipoPermisoId || fechaDesde) ? "&" : "?"}fecha_hasta=${fechaHasta}` : "")}
         />
       </div>
     </>
@@ -378,12 +373,11 @@ const tabs = [
   deptosListClient.forEach((d) => { deptoIdToName[d.id] = d.nombre; });
 
   import Swal from "sweetalert2";
-
-  // Inputmask for decimal number input
   import $ from "jquery";
-  import "inputmask";
-  $(document).ready(() => {
-    $("#field-cantidadDias").inputmask({
+  import "inputmask/dist/jquery.inputmask.js";
+
+  ($ as any)(document).ready(() => {
+    ($ as any)("#field-cantidadDias").inputmask({
       alias: "decimal",
       digits: 2,
       digitsOptional: true,

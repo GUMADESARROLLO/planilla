@@ -44,23 +44,6 @@ const telValue = isEdit ? (w.telefono ?? "").replace(/^\+?505-?/, "") : "";
   <input type="hidden" name="mode" value={mode} />
   {isEdit && <input type="hidden" name="id" value={w.id} />}
 
-  <!-- Identity card -->
-  <div class="wf-identity">
-    <div class="wf-avatar">{initials}</div>
-    <div class="wf-id-info">
-      <div class="wf-id-name">{fullName}</div>
-      <div class="wf-id-meta">{subtitle}</div>
-    </div>
-    <div class="wf-id-right">
-      {isEdit && (
-        <div class="wf-badge wf-badge-green">
-          <span class="wf-badge-dot"></span>
-          {w.activo !== false ? "Activo" : "Inactivo"}
-        </div>
-      )}
-    </div>
-  </div>
-
   <!-- Sección: Información personal -->
   <div class="wf-section">
     <div class="wf-section-header">

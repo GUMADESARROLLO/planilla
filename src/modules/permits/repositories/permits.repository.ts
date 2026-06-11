@@ -1,5 +1,5 @@
 
-import { and, eq, like, isNull, desc, count, or, sql } from "drizzle-orm";
+import { and, eq, like, isNull, desc, count, or, sql, gte, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { esquelasPermisos } from "@/db/schemas/permits";
 import { trabajadores } from "@/db/schemas/workers";
@@ -85,6 +85,7 @@ const baseQuery = db
       cedulaIdentidad: trabajadores.cedulaIdentidad,
       telefono: trabajadores.telefono,
       cargo: cargos.nombre,
+      foto: trabajadores.foto,
     },
     cargo: esquelasPermisos.cargo,
     ubicacion: esquelasPermisos.ubicacion,
@@ -141,6 +142,18 @@ export async function findAll(
         sql`CONCAT(${trabajadores.nombre}, ' ', ${trabajadores.apellidos}) LIKE ${searchPattern}`,
       ),
     );
+  }
+
+  if (filters.tipoPermisoId) {
+    conditions.push(eq(esquelasPermisos.tipoPermisoId, filters.tipoPermisoId));
+  }
+
+  if (filters.fechaDesde) {
+    conditions.push(gte(esquelasPermisos.fechaInicio, new Date(filters.fechaDesde)));
+  }
+
+  if (filters.fechaHasta) {
+    conditions.push(lte(esquelasPermisos.fechaFin, new Date(filters.fechaHasta)));
   }
 
   const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];

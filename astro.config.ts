@@ -4,6 +4,7 @@ import node from "@astrojs/node";
 import { fileURLToPath } from "url";
 
 export default defineConfig({
+  devToolbar: { enabled: false },
   vite: {
     plugins: [tailwindcss()],
     resolve: {
