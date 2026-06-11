@@ -1,19 +1,13 @@
 ---
 import AppLayout from "@components/layout/AppLayout.astro";
-import Button from "@components/ui/Button.astro";
 import Badge from "@components/ui/Badge.astro";
-import Modal from "@components/ui/Modal.astro";
-import FormField from "@components/ui/FormField.astro";
 import DatePicker from "@components/ui/DatePicker.astro";
 import EmptyState from "@components/ui/EmptyState.astro";
 import ConfirmDialog from "@components/shared/ConfirmDialog.astro";
 import Pagination from "@components/shared/Pagination.astro";
 import * as permitsService from "@modules/permits/services/permits.service";
-import type { EsquelaResponse } from "@modules/permits/types";
 import { db } from "@/db";
-import { trabajadores } from "@/db/schemas/workers";
-import { tiposPermisos, cargos, departamentos } from "@/db/schemas/catalogs";
-import { eq, isNull } from "drizzle-orm";
+import { tiposPermisos } from "@/db/schemas/catalogs";
 import { Eye, Trash2 } from "@lucide/astro";
 
 const currentUrl = Astro.url;
@@ -43,29 +37,9 @@ const result = await permitsService.findAll({
   fechaHasta,
 });
 
-const [workers, tipos, cargosList, deptosList] = await Promise.all([
-  db
-    .select({
-      id: trabajadores.id,
-      nombre: trabajadores.nombre,
-      apellidos: trabajadores.apellidos,
-      cedulaIdentidad: trabajadores.cedulaIdentidad,
-      cargoId: trabajadores.cargoId,
-    })
-    .from(trabajadores)
-    .where(isNull(trabajadores.deleted_at)),
-  db
-    .select({ id: tiposPermisos.id, nombre: tiposPermisos.nombre })
-    .from(tiposPermisos),
-  db
-    .select({ id: cargos.id, nombre: cargos.nombre, departamentoId: cargos.departamentoId })
-    .from(cargos)
-    .where(isNull(cargos.deleted_at)),
-  db
-    .select({ id: departamentos.id, nombre: departamentos.nombre })
-    .from(departamentos)
-    .where(isNull(departamentos.deleted_at)),
-]);
+const tipos = await db
+  .select({ id: tiposPermisos.id, nombre: tiposPermisos.nombre })
+  .from(tiposPermisos);
 
 function formatDate(d: string): string {
   try { return new Date(d).toLocaleDateString("es-ES"); } catch { return d; }
@@ -98,12 +72,6 @@ function estadoLabel(estado: string): string {
         Gestión de esquelas de permisos del personal
       </p>
     </div>
-    <Button id="btn-nueva-esquela" variant="primary">
-      <span slot="icon">
-        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-      </span>
-      Nueva Esquela
-    </Button>
   </div>
 
   <!-- Search + Filters row -->
@@ -232,263 +200,9 @@ function estadoLabel(estado: string): string {
   />
 </AppLayout>
 
-<!-- Create Modal -->
-<Modal id="create-modal" title="Nueva Esquela de Permiso" size="lg">
-  <div slot="body">
-    <form id="create-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="md:col-span-2">
-        <FormField label="Trabajador" name="trabajadorId" required>
-          <select
-            id="field-trabajadorId"
-            name="trabajadorId"
-            required
-            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          >
-            <option value="">Seleccione un trabajador...</option>
-            {workers.map((w) => (
-              <option value={w.id}>{w.nombre} {w.apellidos} - {w.cedulaIdentidad}</option>
-            ))}
-          </select>
-        </FormField>
-      </div>
-
-      <FormField label="Tipo de Permiso" name="tipoPermisoId" required>
-        <select
-          id="field-tipoPermisoId"
-          name="tipoPermisoId"
-          required
-          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        >
-          <option value="">Seleccione un tipo...</option>
-          {tipos.map((tp) => (
-            <option value={tp.id}>{tp.nombre}</option>
-          ))}
-        </select>
-      </FormField>
-
-      <FormField label="Cantidad de Días" name="cantidadDias" required>
-        <input
-          id="field-cantidadDias"
-          name="cantidadDias"
-          type="text"
-          inputmode="decimal"
-          required
-          placeholder="Ej: 5.0"
-          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        />
-      </FormField>
-
-      <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FormField label="Fecha de Inicio" name="fechaInicio" required>
-          <DatePicker id="field-fechaInicio" name="fechaInicio" required />
-        </FormField>
-        <FormField label="Fecha de Fin" name="fechaFin" required>
-          <DatePicker id="field-fechaFin" name="fechaFin" required />
-        </FormField>
-        <FormField label="Fecha de Incorporación" name="fechaIncorporacion" required>
-          <DatePicker id="field-fechaIncorporacion" name="fechaIncorporacion" required />
-        </FormField>
-      </div>
-
-      <FormField label="Cargo" name="cargo" required>
-        <select
-          id="field-cargo"
-          name="cargo"
-          required
-          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        >
-          <option value="">Seleccione cargo...</option>
-          {cargosList.map((c) => (
-            <option value={c.nombre}>{c.nombre}</option>
-          ))}
-        </select>
-      </FormField>
-
-      <FormField label="Ubicación" name="ubicacion" required>
-        <select
-          id="field-ubicacion"
-          name="ubicacion"
-          required
-          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        >
-          <option value="">Seleccione ubicación...</option>
-          {deptosList.map((d) => (
-            <option value={d.nombre}>{d.nombre}</option>
-          ))}
-        </select>
-      </FormField>
-
-      <div class="md:col-span-2">
-        <FormField label="Observaciones" name="observaciones">
-          <textarea
-            id="field-observaciones"
-            name="observaciones"
-            rows="3"
-            placeholder="Observaciones adicionales (opcional)"
-            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
-          ></textarea>
-        </FormField>
-      </div>
-
-      <div id="create-form-error" class="md:col-span-2 hidden">
-        <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-950 border border-danger-200 dark:border-danger-900 text-sm text-danger-700 dark:text-danger-400"></div>
-      </div>
-    </form>
-  </div>
-  <div slot="footer">
-    <button
-      type="button"
-      id="create-cancel"
-      class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-    >
-      Cancelar
-    </button>
-    <button
-      type="button"
-      id="create-submit"
-      class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
-    >
-      Guardar Esquela
-    </button>
-  </div>
-</Modal>
-
-<textarea id="cargos-data" class="hidden" set:html={JSON.stringify(cargosList)}></textarea>
-<textarea id="workers-data" class="hidden" set:html={JSON.stringify(workers.map(w => ({ id: w.id, cargoId: w.cargoId })))}></textarea>
-<textarea id="deptos-data" class="hidden" set:html={JSON.stringify(deptosList)}></textarea>
-
 <script>
-  const cargosListClient: Array<{id: number; nombre: string; departamentoId: number | null}> = JSON.parse((document.getElementById("cargos-data") as HTMLTextAreaElement)?.value ?? "[]");
-  const deptosListClient: Array<{id: number; nombre: string}> = JSON.parse((document.getElementById("deptos-data") as HTMLTextAreaElement)?.value ?? "[]");
-  const workersCargoMap: Record<number, number | null> = {};
-  JSON.parse((document.getElementById("workers-data") as HTMLTextAreaElement)?.value ?? "[]").forEach((w: any) => { workersCargoMap[w.id] = w.cargoId ?? null; });
-  const cargoIdToName: Record<number, string> = {};
-  const deptoIdToName: Record<number, string> = {};
-  const cargoIdToDeptoName: Record<number, string> = {};
-  cargosListClient.forEach((c) => {
-    cargoIdToName[c.id] = c.nombre;
-    if (c.departamentoId) {
-      const depto = deptosListClient.find(d => d.id === c.departamentoId);
-      if (depto) cargoIdToDeptoName[c.id] = depto.nombre;
-    }
-  });
-  deptosListClient.forEach((d) => { deptoIdToName[d.id] = d.nombre; });
-
   import Swal from "sweetalert2";
-  import $ from "jquery";
-  import "inputmask/dist/jquery.inputmask.js";
 
-  ($ as any)(document).ready(() => {
-    ($ as any)("#field-cantidadDias").inputmask({
-      alias: "decimal",
-      digits: 2,
-      digitsOptional: true,
-      min: 0,
-      groupSeparator: "",
-      autoGroup: false,
-      rightAlign: false,
-      allowMinus: false,
-      placeholder: "0",
-    });
-  });
-
-  const btnNueva = document.getElementById("btn-nueva-esquela");
-  const modalOverlay = document.querySelector("#\\#create-modal");
-  const cancelBtn = document.getElementById("create-cancel");
-  const submitBtn = document.getElementById("create-submit");
-  const form = document.getElementById("create-form") as HTMLFormElement;
-  const errorDiv = document.getElementById("create-form-error");
-  const errorMsg = errorDiv?.querySelector("div");
-
-  function openModal() {
-    (window as any).__openModal?.();
-  }
-
-  function closeModal() {
-    form.reset();
-    if (errorDiv) errorDiv.classList.add("hidden");
-    (window as any).__closeModal?.();
-  }
-
-  btnNueva?.addEventListener("click", openModal);
-  cancelBtn?.addEventListener("click", closeModal);
-
-  // Auto-populate cargo + ubicacion when worker is selected
-  const workerSelect = document.getElementById("field-trabajadorId") as HTMLSelectElement | null;
-  const cargoSelect = document.getElementById("field-cargo") as HTMLSelectElement | null;
-  const ubicacionSelect = document.getElementById("field-ubicacion") as HTMLSelectElement | null;
-  workerSelect?.addEventListener("change", () => {
-    const workerId = Number(workerSelect.value);
-    const cargoId = workersCargoMap[workerId] ?? null;
-    if (cargoSelect && cargoId && cargoIdToName[cargoId]) {
-      cargoSelect.value = cargoIdToName[cargoId];
-    } else if (cargoSelect) {
-      cargoSelect.value = "";
-    }
-    if (ubicacionSelect && cargoId && cargoIdToDeptoName[cargoId]) {
-      ubicacionSelect.value = cargoIdToDeptoName[cargoId];
-    } else if (ubicacionSelect) {
-      ubicacionSelect.value = "";
-    }
-  });
-
-  submitBtn?.addEventListener("click", async () => {
-    if (!form) return;
-
-    const formData = new FormData(form);
-    const payload = {
-      trabajadorId: Number(formData.get("trabajadorId")),
-      cargo: formData.get("cargo") || undefined,
-      ubicacion: formData.get("ubicacion") as string,
-      tipoPermisoId: Number(formData.get("tipoPermisoId")),
-      cantidadDias: parseFloat(formData.get("cantidadDias") as string),
-      fechaInicio: formData.get("fechaInicio"),
-      fechaFin: formData.get("fechaFin"),
-      fechaIncorporacion: formData.get("fechaIncorporacion"),
-      observaciones: formData.get("observaciones") || undefined,
-    };
-
-    if (!payload.trabajadorId || !payload.tipoPermisoId || !payload.ubicacion || !payload.cantidadDias || !payload.fechaInicio || !payload.fechaFin || !payload.fechaIncorporacion) {
-      if (errorDiv && errorMsg) {
-        errorMsg.textContent = "Todos los campos marcados con * son requeridos.";
-        errorDiv.classList.remove("hidden");
-      }
-      return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Guardando...";
-
-    try {
-      const res = await fetch("/api/permits", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const json = await res.json();
-
-      if (res.ok) {
-        closeModal();
-        window.location.reload();
-      } else {
-        if (errorDiv && errorMsg) {
-          errorMsg.textContent = json?.error?.message || "Error al crear la esquela";
-          errorDiv.classList.remove("hidden");
-        }
-      }
-    } catch {
-      if (errorDiv && errorMsg) {
-        errorMsg.textContent = "Error de conexión. Intente nuevamente.";
-        errorDiv.classList.remove("hidden");
-      }
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Guardar Esquela";
-    }
-  });
-
-  // ---- Delete ----
   let deleteTargetId: string | null = null;
 
   document.querySelectorAll(".btn-delete").forEach((btn) => {
