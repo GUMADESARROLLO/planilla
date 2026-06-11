@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "6e22eee2-c411-4266-8fc5-1a3206e023e1",
+  "id": "9b86bcf8-4880-465d-9fc3-650ebe702080",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -1685,6 +1685,13 @@
         "aprobado_por": {
           "name": "aprobado_por",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "aprobado_en": {
+          "name": "aprobado_en",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

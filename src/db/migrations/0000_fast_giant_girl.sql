@@ -228,6 +228,7 @@ CREATE TABLE `esquelas_permisos` (
 	`observaciones` text,
 	`estado` enum('pendiente','aprobada','rechazada') NOT NULL DEFAULT 'pendiente',
 	`aprobado_por` varchar(255),
+	`aprobado_en` timestamp NULL DEFAULT NULL,
 	`firma_digital` text,
 	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

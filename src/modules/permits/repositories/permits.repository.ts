@@ -58,6 +58,7 @@ function mapEsquela(row: Record<string, unknown>): EsquelaResponse {
     observaciones: (row["observaciones"] as string) ?? null,
     estado: row["estado"] as EstadoPermiso,
     aprobadoPor: (row["aprobadoPor"] as string) ?? null,
+    aprobadoEn: row["aprobadoEn"] ? String(row["aprobadoEn"]) : null,
     nombreAprobador: (row["nombreAprobador"] as string) ?? null,
     firmaDigital: (row["firmaDigital"] as string) ?? null,
     createdAt:
@@ -101,6 +102,7 @@ const baseQuery = db
     observaciones: esquelasPermisos.observaciones,
     estado: esquelasPermisos.estado,
     aprobadoPor: esquelasPermisos.aprobadoPor,
+    aprobadoEn: esquelasPermisos.aprobadoEn,
     nombreAprobador: sql<string>`(SELECT CONCAT(u.nombre, ' ', u.apellidos) FROM \`user\` u WHERE u.id = ${esquelasPermisos.aprobadoPor})`,
     firmaDigital: esquelasPermisos.firmaDigital,
     createdAt: esquelasPermisos.created_at,
@@ -247,6 +249,7 @@ export async function approve(
   const updateData: Record<string, unknown> = {
     estado: "aprobada",
     aprobadoPor,
+    aprobadoEn: new Date(),
   };
 
   if (firmaDigital !== undefined) {
@@ -272,6 +275,7 @@ export async function reject(
     .set({
       estado: "rechazada",
       aprobadoPor,
+      aprobadoEn: new Date(),
     })
     .where(eq(esquelasPermisos.id, id));
 

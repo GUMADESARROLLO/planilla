@@ -45,6 +45,7 @@ export const esquelasPermisos = mysqlTable("esquelas_permisos", {
   aprobadoPor: varchar("aprobado_por", { length: 255 }).references(
     () => authUser.id
   ),
+  aprobadoEn: timestamp("aprobado_en"),
   firmaDigital: text("firma_digital"),
   ...auditColumns,
 });

@@ -58,6 +58,7 @@ export interface EsquelaResponse {
   observaciones: string | null;
   estado: EstadoPermiso;
   aprobadoPor: string | null;
+  aprobadoEn: string | null;
   nombreAprobador?: string | null;
   firmaDigital: string | null;
   createdAt: string;

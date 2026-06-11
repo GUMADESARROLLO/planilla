@@ -6,34 +6,43 @@ export interface Props {
   title?: string;
   dismissible?: boolean;
   class?: string;
+  messageClass?: string;
 }
 
 const { variant = "info", title, dismissible = false, class: className = "" } = Astro.props;
 
-const config: Record<string, { icon: string; iconClass: string; containerClass: string }> = {
+const config: Record<string, { icon: string; iconClass: string; containerClass: string; titleClass: string; messageClass: string }> = {
   success: {
     icon: "CheckCircle",
-    iconClass: "text-success-500",
+    iconClass: "text-success-600",
     containerClass: "bg-success-50 border-success-200 dark:bg-success-950 dark:border-success-900",
+    titleClass: "text-success-800 dark:text-success-300",
+    messageClass: "text-success-700 dark:text-success-300",
   },
   error: {
     icon: "XCircle",
-    iconClass: "text-danger-500",
+    iconClass: "text-danger-600",
     containerClass: "bg-danger-50 border-danger-200 dark:bg-danger-950 dark:border-danger-900",
+    titleClass: "text-danger-800 dark:text-danger-300",
+    messageClass: "text-danger-700 dark:text-danger-300",
   },
   warning: {
     icon: "AlertTriangle",
-    iconClass: "text-warning-500",
+    iconClass: "text-warning-600",
     containerClass: "bg-warning-50 border-warning-200 dark:bg-warning-950 dark:border-warning-900",
+    titleClass: "text-warning-800 dark:text-warning-300",
+    messageClass: "text-warning-700 dark:text-warning-300",
   },
   info: {
     icon: "Info",
-    iconClass: "text-info-500",
+    iconClass: "text-info-600",
     containerClass: "bg-info-50 border-info-200 dark:bg-info-950 dark:border-info-900",
+    titleClass: "text-info-800 dark:text-info-300",
+    messageClass: "text-info-700 dark:text-info-300",
   },
 };
 
-const { icon: IconName, iconClass, containerClass } = config[variant] ?? config.info;
+const { icon: IconName, iconClass, containerClass, titleClass, messageClass } = config[variant] ?? config.info;
 const IconComponent = { CheckCircle, AlertTriangle, XCircle, Info }[IconName];
 ---
 
@@ -44,8 +53,8 @@ const IconComponent = { CheckCircle, AlertTriangle, XCircle, Info }[IconName];
 >
   {IconComponent && <IconComponent class={["size-5 mt-0.5 shrink-0", iconClass].join(" ")} />}
   <div class="flex-1 min-w-0">
-    {title && <p class="text-sm font-semibold text-gray-900 dark:text-white">{title}</p>}
-    <div class="text-sm text-gray-700 dark:text-gray-300">
+    {title && <p class={["text-sm font-semibold", titleClass].join(" ")}>{title}</p>}
+    <div class={["text-sm", messageClass].join(" ")}>
       <slot />
     </div>
   </div>
