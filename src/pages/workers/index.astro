@@ -107,11 +107,11 @@ const totalPages = Math.ceil(total / limit);
     <!-- Filters -->
     <Card padding={false}>
       <div class="p-4 border-b border-gray-200 dark:border-gray-800">
-        <form id="filter-form" method="GET" class="flex flex-wrap items-end gap-3">
-          <div class="flex-1 min-w-[200px] max-w-xs">
+        <form id="filter-form" method="GET" class="flex items-center gap-3">
+          <div class="flex-1 max-w-xs">
             <SearchInput value={search} placeholder="Buscar trabajadores..." name="search" />
           </div>
-          <div>
+          <div class="flex items-center gap-2 ml-auto">
             <select
               id="filter-tipo-contrato"
               name="tipo_contrato_id"
@@ -122,8 +122,6 @@ const totalPages = Math.ceil(total / limit);
                 <option value={tc.id} selected={tipoContratoFilter === String(tc.id)}>{tc.nombre}</option>
               ))}
             </select>
-          </div>
-          <div>
             <select
               id="filter-cargo"
               name="cargo_id"
@@ -134,8 +132,6 @@ const totalPages = Math.ceil(total / limit);
                 <option value={c.id} selected={cargoFilter === String(c.id)}>{c.nombre}</option>
               ))}
             </select>
-          </div>
-          <div>
             <select
               id="filter-activo"
               name="activo"
@@ -145,16 +141,11 @@ const totalPages = Math.ceil(total / limit);
               <option value="true" selected={activoFilter === "true"}>Activos</option>
               <option value="false" selected={activoFilter === "false"}>Inactivos</option>
             </select>
+            <Button type="submit" variant="secondary" size="md">Filtrar</Button>
+            {search || activoFilter || tipoContratoFilter || cargoFilter ? (
+              <a href="/workers" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Limpiar</a>
+            ) : null}
           </div>
-          <Button type="submit" variant="secondary" size="md">Filtrar</Button>
-          {search || activoFilter || tipoContratoFilter || cargoFilter ? (
-            <a
-              href="/workers"
-              class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              Limpiar
-            </a>
-          ) : null}
         </form>
       </div>
 

@@ -11,6 +11,9 @@ import {
   unidadesNegocio,
   planillas,
   trabajadoresPlanillas,
+  horarios,
+  municipios,
+  deptosNi,
 } from "@db/schemas";
 import { eq, like, and, isNull, or, sql, desc, type SQL } from "drizzle-orm";
 import { NotFoundError, ValidationError } from "@utils/errors";
@@ -48,8 +51,13 @@ function mapWorker(row: any): WorkerResponse {
     nombreUnidad: row.nombreUnidad,
     generoId: row.generoId,
     nombreGenero: row.nombreGenero,
+    horarioId: row.horarioId ?? null,
+    nombreHorario: row.nombreHorario ?? null,
     activo: row.activo,
     foto: row.foto ?? null,
+    municipioId: row.municipioId ?? null,
+    nombreMunicipio: row.nombreMunicipio ?? null,
+    nombreDepto: row.nombreDepto ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at ?? null,
@@ -84,8 +92,13 @@ function workerSelectFields() {
     nombreUnidad: unidadesNegocio.nombre,
     generoId: trabajadores.generoId,
     nombreGenero: generos.nombre,
+    horarioId: trabajadores.horarioId,
+    nombreHorario: horarios.nombre,
     activo: trabajadores.activo,
     foto: trabajadores.foto,
+    municipioId: trabajadores.municipioId,
+    nombreMunicipio: municipios.nombre,
+    nombreDepto: deptosNi.nombre,
     created_at: trabajadores.created_at,
     updated_at: trabajadores.updated_at,
     deleted_at: trabajadores.deleted_at,
@@ -100,8 +113,11 @@ function workerJoins<T extends Record<string, unknown>>(qb: any) {
     .leftJoin(tiposContrato, eq(trabajadores.tipoContratoId, tiposContrato.id))
     .leftJoin(cargos, eq(trabajadores.cargoId, cargos.id))
     .leftJoin(generos, eq(trabajadores.generoId, generos.id))
+    .leftJoin(horarios, eq(trabajadores.horarioId, horarios.id))
     .leftJoin(departamentos, eq(cargos.departamentoId, departamentos.id))
-    .leftJoin(unidadesNegocio, eq(departamentos.unidadNegocioId, unidadesNegocio.id));
+    .leftJoin(unidadesNegocio, eq(departamentos.unidadNegocioId, unidadesNegocio.id))
+    .leftJoin(municipios, eq(trabajadores.municipioId, municipios.id))
+    .leftJoin(deptosNi, eq(municipios.deptoNiId, deptosNi.id));
 }
 
 function buildWhereClause(filters: WorkerFilters): SQL | undefined {
@@ -253,8 +269,10 @@ export async function create(data: CreateWorkerDTO): Promise<WorkerResponse> {
     tipoContratoId: data.tipoContratoId,
     cargoId: data.cargoId,
     generoId: data.generoId,
+    horarioId: data.horarioId ?? null,
     activo: data.activo ?? true,
     foto: data.foto ?? null,
+    municipioId: data.municipioId ?? null,
   } as any).$returningId();
 
   return findById(inserted!.id);
@@ -311,8 +329,10 @@ export async function update(
     updateData["tipoContratoId"] = data.tipoContratoId;
   if (data.cargoId !== undefined) updateData["cargoId"] = data.cargoId;
   if (data.generoId !== undefined) updateData["generoId"] = data.generoId;
+  if (data.horarioId !== undefined) updateData["horarioId"] = data.horarioId;
   if (data.activo !== undefined) updateData["activo"] = data.activo;
   if (data.foto !== undefined) updateData["foto"] = data.foto;
+  if (data.municipioId !== undefined) updateData["municipioId"] = data.municipioId;
 
   if (Object.keys(updateData).length === 0) {
     return existing;

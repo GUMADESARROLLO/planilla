@@ -1,4 +1,4 @@
-import { Building2, Layers } from "@lucide/astro";
+import { Building2, Layers, Clock } from "@lucide/astro";
 import { db, schemas } from "@db/index";
 import { count, isNull, and } from "drizzle-orm";
 import { catalogRepository } from "../repositories/catalog.repository";
@@ -22,6 +22,7 @@ export const CATALOG_CONFIG: Record<string, CatalogConfig> = {
   tallas_pantalon: { table: schemas.tallasPantalon, displayName: "Tallas de Pantalón", icon: "Shirt", sortOrder: 9 },
   tipos_permisos: { table: schemas.tiposPermisos, displayName: "Tipos de Permisos", icon: "FileCheck", sortOrder: 10 },
   roles: { table: schemas.roles, displayName: "Roles", icon: "Shield", sortOrder: 11 },
+  horarios: { table: schemas.horarios, displayName: "Horarios", icon: "Clock", sortOrder: 12 },
 };
 
 class CatalogService {

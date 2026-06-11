@@ -79,6 +79,19 @@ CREATE TABLE `departamentos` (
 	CONSTRAINT `departamentos_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
+CREATE TABLE `deptos_ni` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`zona` varchar(100) NOT NULL,
+	`nombre` varchar(255) NOT NULL,
+	`cabecera` varchar(255) NOT NULL,
+	`iso` varchar(10) NOT NULL,
+	`activo` boolean NOT NULL DEFAULT true,
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`deleted_at` timestamp NULL DEFAULT NULL,
+	CONSTRAINT `deptos_ni_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
 CREATE TABLE `generos` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`nombre` varchar(255) NOT NULL,
@@ -87,6 +100,30 @@ CREATE TABLE `generos` (
 	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`deleted_at` timestamp NULL DEFAULT NULL,
 	CONSTRAINT `generos_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `horarios` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`nombre` varchar(255) NOT NULL,
+	`descripcion` text,
+	`hora_inicio` varchar(5) NOT NULL,
+	`hora_fin` varchar(5) NOT NULL,
+	`activo` boolean NOT NULL DEFAULT true,
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`deleted_at` timestamp NULL DEFAULT NULL,
+	CONSTRAINT `horarios_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `municipios` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`nombre` varchar(255) NOT NULL,
+	`depto_ni_id` int NOT NULL,
+	`activo` boolean NOT NULL DEFAULT true,
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`deleted_at` timestamp NULL DEFAULT NULL,
+	CONSTRAINT `municipios_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
 CREATE TABLE `nacionalidades` (
@@ -197,6 +234,8 @@ CREATE TABLE `trabajadores` (
 	`activo` boolean NOT NULL DEFAULT true,
 	`foto` varchar(500),
 	`salario_base` decimal(10,2) DEFAULT '0.00',
+	`horario_id` int,
+	`municipio_id` int,
 	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	`deleted_at` timestamp NULL DEFAULT NULL,
@@ -241,12 +280,15 @@ ALTER TABLE `session` ADD CONSTRAINT `session_userId_user_id_fk` FOREIGN KEY (`u
 ALTER TABLE `cargos` ADD CONSTRAINT `cargos_unidad_negocio_id_unidades_negocio_id_fk` FOREIGN KEY (`unidad_negocio_id`) REFERENCES `unidades_negocio`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `cargos` ADD CONSTRAINT `cargos_departamento_id_departamentos_id_fk` FOREIGN KEY (`departamento_id`) REFERENCES `departamentos`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `departamentos` ADD CONSTRAINT `departamentos_unidad_negocio_id_unidades_negocio_id_fk` FOREIGN KEY (`unidad_negocio_id`) REFERENCES `unidades_negocio`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `municipios` ADD CONSTRAINT `municipios_depto_ni_id_deptos_ni_id_fk` FOREIGN KEY (`depto_ni_id`) REFERENCES `deptos_ni`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `trabajadores` ADD CONSTRAINT `trabajadores_nacionalidad_id_nacionalidades_id_fk` FOREIGN KEY (`nacionalidad_id`) REFERENCES `nacionalidades`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `trabajadores` ADD CONSTRAINT `trabajadores_talla_camisa_id_tallas_camisa_id_fk` FOREIGN KEY (`talla_camisa_id`) REFERENCES `tallas_camisa`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `trabajadores` ADD CONSTRAINT `trabajadores_talla_pantalon_id_tallas_pantalon_id_fk` FOREIGN KEY (`talla_pantalon_id`) REFERENCES `tallas_pantalon`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `trabajadores` ADD CONSTRAINT `trabajadores_tipo_contrato_id_tipos_contrato_id_fk` FOREIGN KEY (`tipo_contrato_id`) REFERENCES `tipos_contrato`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `trabajadores` ADD CONSTRAINT `trabajadores_cargo_id_cargos_id_fk` FOREIGN KEY (`cargo_id`) REFERENCES `cargos`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `trabajadores` ADD CONSTRAINT `trabajadores_genero_id_generos_id_fk` FOREIGN KEY (`genero_id`) REFERENCES `generos`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `trabajadores` ADD CONSTRAINT `trabajadores_horario_id_horarios_id_fk` FOREIGN KEY (`horario_id`) REFERENCES `horarios`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `trabajadores` ADD CONSTRAINT `trabajadores_municipio_id_municipios_id_fk` FOREIGN KEY (`municipio_id`) REFERENCES `municipios`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `trabajadores_planillas` ADD CONSTRAINT `trabajadores_planillas_trabajador_id_trabajadores_id_fk` FOREIGN KEY (`trabajador_id`) REFERENCES `trabajadores`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `trabajadores_planillas` ADD CONSTRAINT `trabajadores_planillas_planilla_id_planillas_id_fk` FOREIGN KEY (`planilla_id`) REFERENCES `planillas`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `esquelas_permisos` ADD CONSTRAINT `esquelas_permisos_trabajador_id_trabajadores_id_fk` FOREIGN KEY (`trabajador_id`) REFERENCES `trabajadores`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint

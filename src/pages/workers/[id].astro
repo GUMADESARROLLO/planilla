@@ -14,6 +14,9 @@ import {
   generos,
   departamentos,
   unidadesNegocio,
+  horarios,
+  municipios,
+  deptosNi,
 } from "@db/schemas";
 import { eq, and, isNull } from "drizzle-orm";
 import { ArrowLeft, Pencil } from "@lucide/astro";
@@ -37,6 +40,9 @@ const [workerRow] = await db.select({
   tipoContrato: { nombre: tiposContrato.nombre },
   cargo: { nombre: cargos.nombre }, genero: { nombre: generos.nombre },
   departamento: { nombre: departamentos.nombre }, unidad: { nombre: unidadesNegocio.nombre },
+  horario: { nombre: horarios.nombre },
+  municipio: { nombre: municipios.nombre },
+  deptoNi: { nombre: deptosNi.nombre },
 })
   .from(trabajadores)
   .leftJoin(nacionalidades, eq(trabajadores.nacionalidadId, nacionalidades.id))
@@ -45,8 +51,11 @@ const [workerRow] = await db.select({
   .leftJoin(tiposContrato, eq(trabajadores.tipoContratoId, tiposContrato.id))
   .leftJoin(cargos, eq(trabajadores.cargoId, cargos.id))
   .leftJoin(generos, eq(trabajadores.generoId, generos.id))
+  .leftJoin(horarios, eq(trabajadores.horarioId, horarios.id))
   .leftJoin(departamentos, eq(cargos.departamentoId, departamentos.id))
   .leftJoin(unidadesNegocio, eq(departamentos.unidadNegocioId, unidadesNegocio.id))
+  .leftJoin(municipios, eq(trabajadores.municipioId, municipios.id))
+  .leftJoin(deptosNi, eq(municipios.deptoNiId, deptosNi.id))
   .where(and(eq(trabajadores.id, id), isNull(trabajadores.deleted_at)))
   .limit(1);
 
@@ -141,6 +150,14 @@ const isActive = worker.activo !== false;
             <label class="dc-label">Dirección</label>
             <p class="dc-value">{worker.direccion ?? "-"}</p>
           </div>
+          <div class="dc-field">
+            <label class="dc-label">Municipio</label>
+            <p class="dc-value">{worker.municipio?.nombre ?? "-"}</p>
+          </div>
+          <div class="dc-field">
+            <label class="dc-label">Departamento (NI)</label>
+            <p class="dc-value">{worker.deptoNi?.nombre ?? "-"}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -173,6 +190,10 @@ const isActive = worker.activo !== false;
         <div class="dc-field">
           <label class="dc-label">Saldo de Vacaciones</label>
           <p class="dc-value">{worker.saldoVacaciones} días</p>
+        </div>
+        <div class="dc-field">
+          <label class="dc-label">Horario</label>
+          <p class="dc-value">{worker.horario?.nombre ?? "-"}</p>
         </div>
       </div>
     </div>

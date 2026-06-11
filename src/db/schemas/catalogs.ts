@@ -43,6 +43,33 @@ export const departamentos = mysqlTable("departamentos", {
   ...auditColumns,
 });
 
+export const deptosNi = mysqlTable("deptos_ni", {
+  id: int("id").autoincrement().primaryKey(),
+  zona: varchar("zona", { length: 100 }).notNull(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  cabecera: varchar("cabecera", { length: 255 }).notNull(),
+  iso: varchar("iso", { length: 10 }).notNull(),
+  ...auditColumns,
+});
+
+export const municipios = mysqlTable("municipios", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  deptoNiId: int("depto_ni_id")
+    .notNull()
+    .references(() => deptosNi.id),
+  ...auditColumns,
+});
+
+export const horarios = mysqlTable("horarios", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  descripcion: text("descripcion"),
+  horaInicio: varchar("hora_inicio", { length: 5 }).notNull(),
+  horaFin: varchar("hora_fin", { length: 5 }).notNull(),
+  ...auditColumns,
+});
+
 export const cargos = mysqlTable("cargos", {
   id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
@@ -123,6 +150,10 @@ export const departamentosRelations = relations(departamentos, ({ one, many }) =
     fields: [departamentos.unidadNegocioId],
     references: [unidadesNegocio.id],
   }),
+  trabajadores: many(trabajadores),
+}));
+
+export const horariosRelations = relations(horarios, ({ many }) => ({
   trabajadores: many(trabajadores),
 }));
 

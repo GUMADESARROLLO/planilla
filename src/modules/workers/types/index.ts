@@ -26,8 +26,10 @@ export interface CreateWorkerDTO {
   tipoContratoId: number;
   cargoId: number;
   generoId: number;
+  horarioId?: number | null;
   activo?: boolean;
   foto?: string | null;
+  municipioId?: number | null;
 }
 
 export interface UpdateWorkerDTO {
@@ -47,8 +49,10 @@ export interface UpdateWorkerDTO {
   tipoContratoId?: number;
   cargoId?: number;
   generoId?: number;
+  horarioId?: number | null;
   activo?: boolean;
   foto?: string | null;
+  municipioId?: number | null;
 }
 
 export interface WorkerResponse {
@@ -77,8 +81,13 @@ export interface WorkerResponse {
   nombreUnidad?: string;
   generoId: number;
   nombreGenero?: string;
+  horarioId: number | null;
+  nombreHorario?: string;
   activo: boolean;
   foto: string | null;
+  municipioId: number | null;
+  nombreMunicipio?: string;
+  nombreDepto?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
   deletedAt: Date | string | null;

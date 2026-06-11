@@ -48,4 +48,5 @@ export type CatalogType =
   | "tipos_permisos"
   | "roles"
   | "unidades_negocio"
-  | "departamentos";
+  | "departamentos"
+  | "horarios";

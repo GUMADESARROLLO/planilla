@@ -10,13 +10,16 @@ import {
   nacionalidades,
   tallasCamisa,
   tallasPantalon,
+  horarios,
+  deptosNi,
+  municipios,
 } from "@db/schemas";
 import { isNull } from "drizzle-orm";
 import WorkerForm from "./_form.astro";
 
 const currentPath = "/workers";
 
-const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList] =
+const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList, horariosList, deptosNiList, municipiosList] =
   await Promise.all([
     db.select().from(tiposContrato).where(isNull(tiposContrato.deleted_at)),
     db.select().from(cargos).where(isNull(cargos.deleted_at)),
@@ -24,6 +27,9 @@ const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCam
     db.select().from(nacionalidades).where(isNull(nacionalidades.deleted_at)),
     db.select().from(tallasCamisa).where(isNull(tallasCamisa.deleted_at)),
     db.select().from(tallasPantalon).where(isNull(tallasPantalon.deleted_at)),
+    db.select().from(horarios).where(isNull(horarios.deleted_at)),
+    db.select().from(deptosNi),
+    db.select().from(municipios),
   ]);
 ---
 
@@ -67,6 +73,9 @@ const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCam
         nacionalidades={nacionalidadesList}
         tallasCamisa={tallasCamisaList}
         tallasPantalon={tallasPantalonList}
+        horarios={horariosList}
+        deptosNi={deptosNiList}
+        municipios={municipiosList}
         mode="create"
       />
     </form>
@@ -75,6 +84,13 @@ const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCam
 
 <script>
   import Swal from "sweetalert2";
+  import $ from "jquery";
+  import "inputmask/dist/jquery.inputmask.js";
+
+  ($ as any)(document).ready(() => {
+    ($ as any)("#field-telefono").inputmask("9999-9999", { placeholder: "0000-0000" });
+    ($ as any)("#field-cedulaIdentidad").inputmask("999-999999-9999A", { placeholder: "000-000000-0000A" });
+  });
 
   document.getElementById("btn-submit-worker")?.addEventListener("click", async () => {
     const form = document.getElementById("worker-form-page") as HTMLFormElement;
@@ -107,7 +123,7 @@ const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCam
       }
     }
 
-    const numFields = ["nacionalidadId","tallaCamisaId","tallaPantalonId","tipoContratoId","cargoId","generoId","saldoVacaciones"];
+    const numFields = ["nacionalidadId","tallaCamisaId","tallaPantalonId","tipoContratoId","cargoId","generoId","horarioId","saldoVacaciones","municipioId"];
     for (const f of numFields) {
       if (data[f] !== undefined && data[f] !== "") data[f] = Number(data[f]);
     }

@@ -44,8 +44,10 @@ export const createWorkerSchema = z.object({
   tipoContratoId: z.number().int().positive(),
   cargoId: z.number().int().positive(),
   generoId: z.number().int().positive(),
+  horarioId: z.number().int().positive().optional().nullable(),
   activo: z.boolean().optional().default(true),
   foto: z.string().nullable().optional(),
+  municipioId: z.number().int().positive().optional().nullable(),
 });
 
 export const updateWorkerSchema = z.object({
@@ -93,8 +95,10 @@ export const updateWorkerSchema = z.object({
   tipoContratoId: z.number().int().positive().optional(),
   cargoId: z.number().int().positive().optional(),
   generoId: z.number().int().positive().optional(),
+  horarioId: z.number().int().positive().optional().nullable(),
   activo: z.boolean().optional(),
   foto: z.string().nullable().optional(),
+  municipioId: z.number().int().positive().optional().nullable(),
 });
 
 export const workerFiltersSchema = z.object({

@@ -16,6 +16,9 @@ import {
   nacionalidades,
   tallasCamisa,
   tallasPantalon,
+  departamentos,
+  horarios,
+  municipios,
 } from "./catalogs";
 import { trabajadoresPlanillas } from "./workers_planillas";
 
@@ -62,6 +65,8 @@ export const trabajadores = mysqlTable("trabajadores", {
   activo: boolean("activo").notNull().default(true),
   foto: varchar("foto", { length: 500 }),
   salarioBase: decimal("salario_base", { precision: 10, scale: 2 }).default("0.00"),
+  horarioId: int("horario_id").references(() => horarios.id),
+  municipioId: int("municipio_id").references(() => municipios.id),
   ...auditColumns,
 });
 
@@ -91,6 +96,14 @@ export const trabajadoresRelations = relations(trabajadores, ({ one, many }) => 
   genero: one(generos, {
     fields: [trabajadores.generoId],
     references: [generos.id],
+  }),
+  horario: one(horarios, {
+    fields: [trabajadores.horarioId],
+    references: [horarios.id],
+  }),
+  municipio: one(municipios, {
+    fields: [trabajadores.municipioId],
+    references: [municipios.id],
   }),
   planillas: many(trabajadoresPlanillas),
 }));

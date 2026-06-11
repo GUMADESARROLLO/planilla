@@ -4,6 +4,7 @@ import DatePicker from "@components/ui/DatePicker.astro";
 export interface CatalogItem {
   id: number;
   nombre: string;
+  deptoNiId?: number;
 }
 
 export interface Props {
@@ -13,6 +14,9 @@ export interface Props {
   nacionalidades: CatalogItem[];
   tallasCamisa: CatalogItem[];
   tallasPantalon: CatalogItem[];
+  horarios: CatalogItem[];
+  deptosNi: CatalogItem[];
+  municipios: CatalogItem[];
   worker?: Record<string, any>;
   mode: "create" | "edit";
   errors?: Record<string, string>;
@@ -25,10 +29,16 @@ const {
   nacionalidades,
   tallasCamisa,
   tallasPantalon,
+  horarios,
+  deptosNi,
+  municipios,
   worker,
   mode,
   errors = {},
 } = Astro.props;
+
+const sortedDeptos = [...deptosNi].sort((a, b) => a.nombre.localeCompare(b.nombre));
+const sortedMunicipios = [...municipios].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
 const w = worker ?? {};
 const isEdit = mode === "edit";
@@ -135,6 +145,26 @@ const telValue = isEdit ? (w.telefono ?? "").replace(/^\+?505-?/, "") : "";
         <textarea id="field-direccion" name="direccion" rows="2" placeholder="Dirección completa...">{w.direccion ?? ""}</textarea>
       </div>
     </div>
+    <div class="wf-fields wf-col-2" style="padding-top:0">
+      <div class="wf-field">
+        <label class="wf-label">Departamento (NI)</label>
+        <select id="field-deptoNiId" name="deptoNiId">
+          <option value="">Seleccionar</option>
+          {sortedDeptos.map((item) => (
+            <option value={item.id} selected={w.deptoNiId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Municipio</label>
+        <select id="field-municipioId" name="municipioId">
+          <option value="">Seleccionar</option>
+          {sortedMunicipios.map((item) => (
+            <option value={item.id} data-depto={item.deptoNiId} selected={w.municipioId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
+      </div>
+    </div>
   </div>
 
   <!-- Sección: Contrato -->
@@ -167,6 +197,17 @@ const telValue = isEdit ? (w.telefono ?? "").replace(/^\+?505-?/, "") : "";
       <div class="wf-field">
         <label class="wf-label">Saldo de vacaciones</label>
         <input type="number" id="field-saldoVacaciones" name="saldoVacaciones" value={w.saldoVacaciones ?? "0.00"} step="0.01" min="0" placeholder="0.00" />
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Horario</label>
+        <select id="field-horarioId" name="horarioId"
+          class="w-full bg-[var(--bg-input)] border-[1px_solid_var(--border)] rounded-[var(--radius-md)] p-[8px_11px] text-[13px] text-[var(--text-primary)] outline-none appearance-none cursor-pointer"
+          style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%234d5c7d%27 stroke-width=%272.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 11px center;padding-right:32px">
+          <option value="">Sin horario</option>
+          {horarios.map((item) => (
+            <option value={item.id} selected={w.horarioId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
       </div>
       <div class="wf-field">
         <label class="wf-label">Fecha de entrada <span class="wf-req">*</span></label>
@@ -469,4 +510,23 @@ const telValue = isEdit ? (w.telefono ?? "").replace(/^\+?505-?/, "") : "";
       reader.readAsDataURL(file);
     }
   });
+
+  const deptoSelect = document.getElementById("field-deptoNiId") as HTMLSelectElement;
+  const municipioSelect = document.getElementById("field-municipioId") as HTMLSelectElement;
+
+  function filterMunicipios() {
+    const selectedDepto = deptoSelect.value;
+    const currentVal = municipioSelect.value;
+    for (const opt of municipioSelect.options) {
+      if (!opt.value) continue;
+      const deptoId = opt.getAttribute("data-depto");
+      opt.style.display = !selectedDepto || deptoId === selectedDepto ? "" : "none";
+    }
+    if (municipioSelect.selectedOptions[0]?.style?.display === "none") {
+      municipioSelect.value = "";
+    }
+  }
+
+  deptoSelect?.addEventListener("change", filterMunicipios);
+  filterMunicipios();
 </script>

@@ -11,6 +11,9 @@ import {
   tallasCamisa,
   tallasPantalon,
   trabajadores,
+  horarios,
+  deptosNi,
+  municipios,
 } from "@db/schemas";
 import { eq, isNull } from "drizzle-orm";
 import WorkerForm from "../_form.astro";
@@ -20,7 +23,7 @@ const idParam = Astro.params.id;
 if (!idParam) return Astro.redirect("/workers");
 const id = Number(idParam);
 
-const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList] =
+const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList, horariosList, deptosNiList, municipiosList] =
   await Promise.all([
     db.select({
       id: trabajadores.id,
@@ -38,11 +41,13 @@ const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList
       saldoVacaciones: trabajadores.saldoVacaciones,
       tallaCamisaId: trabajadores.tallaCamisaId,
       tallaPantalonId: trabajadores.tallaPantalonId,
+      horarioId: trabajadores.horarioId,
       direccion: trabajadores.direccion,
       tipoContratoId: trabajadores.tipoContratoId,
       cargoId: trabajadores.cargoId,
       generoId: trabajadores.generoId,
       salarioBase: trabajadores.salarioBase,
+      municipioId: trabajadores.municipioId,
       created_at: trabajadores.created_at,
       updated_at: trabajadores.updated_at,
       deleted_at: trabajadores.deleted_at,
@@ -57,6 +62,9 @@ const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList
     db.select().from(nacionalidades).where(isNull(nacionalidades.deleted_at)),
     db.select().from(tallasCamisa).where(isNull(tallasCamisa.deleted_at)),
     db.select().from(tallasPantalon).where(isNull(tallasPantalon.deleted_at)),
+    db.select().from(horarios).where(isNull(horarios.deleted_at)),
+    db.select().from(deptosNi),
+    db.select().from(municipios),
   ]);
 
 if (!workerRow) return Astro.redirect("/workers");
@@ -106,6 +114,9 @@ const worker = { ...workerRow, fechaEntrada: fmt(workerRow.fechaEntrada), fechaS
         nacionalidades={nacionalidadesList}
         tallasCamisa={tallasCamisaList}
         tallasPantalon={tallasPantalonList}
+        horarios={horariosList}
+        deptosNi={deptosNiList}
+        municipios={municipiosList}
         worker={worker}
         mode="edit"
       />
@@ -115,6 +126,13 @@ const worker = { ...workerRow, fechaEntrada: fmt(workerRow.fechaEntrada), fechaS
 
 <script>
   import Swal from "sweetalert2";
+  import $ from "jquery";
+  import "inputmask/dist/jquery.inputmask.js";
+
+  ($ as any)(document).ready(() => {
+    ($ as any)("#field-telefono").inputmask("9999-9999", { placeholder: "0000-0000" });
+    ($ as any)("#field-cedulaIdentidad").inputmask("999-999999-9999A", { placeholder: "000-000000-0000A" });
+  });
 
   document.getElementById("btn-submit-worker")?.addEventListener("click", async () => {
     const form = document.getElementById("worker-form-page") as HTMLFormElement;
@@ -147,7 +165,7 @@ const worker = { ...workerRow, fechaEntrada: fmt(workerRow.fechaEntrada), fechaS
       }
     }
 
-    const numFields = ["nacionalidadId","tallaCamisaId","tallaPantalonId","tipoContratoId","cargoId","generoId","saldoVacaciones"];
+    const numFields = ["nacionalidadId","tallaCamisaId","tallaPantalonId","tipoContratoId","cargoId","generoId","horarioId","saldoVacaciones","municipioId"];
     for (const f of numFields) {
       if (data[f] !== undefined && data[f] !== "") data[f] = Number(data[f]);
     }

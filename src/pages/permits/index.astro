@@ -117,9 +117,10 @@ function estadoLabel(estado: string): string {
           class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
         />
       </div>
-      <DatePicker name="fecha_desde" value={fechaDesde ?? ""} placeholder="Fecha inicio" />
-      <DatePicker name="fecha_hasta" value={fechaHasta ?? ""} placeholder="Fecha fin" />
-      <select name="tipo_permiso_id"
+      <div class="flex items-center gap-2 ml-auto">
+        <DatePicker name="fecha_desde" value={fechaDesde ?? ""} placeholder="Fecha inicio" />
+        <DatePicker name="fecha_hasta" value={fechaHasta ?? ""} placeholder="Fecha fin" />
+        <select name="tipo_permiso_id"
         class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
       >
         <option value="">Todos</option>
@@ -131,6 +132,7 @@ function estadoLabel(estado: string): string {
       {(search || tipoPermisoId || fechaDesde || fechaHasta) && (
         <a href={estado ? `/permits?estado=${estado}` : "/permits"} class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0">Limpiar</a>
       )}
+      </div>
     </form>
   </div>
 

@@ -63,6 +63,17 @@ const columns: Column[] = [
         render: (v: number) => deptosList.find(d => d.id === v)?.nombre ?? "-",
       } as Column]
     : []),
+  ...(type === "horarios"
+    ? [{
+        key: "horaInicio",
+        label: "Hora Entrada",
+        render: (v: string) => v ?? "-",
+      } as Column, {
+        key: "horaFin",
+        label: "Hora Salida",
+        render: (v: string) => v ?? "-",
+      } as Column]
+    : []),
   {
     key: "descripcion",
     label: "Descripción",
@@ -137,7 +148,8 @@ const columns: Column[] = [
         placeholder="Nombre del registro"
       />
     </FormField>
-    <FormField label="Descripción" name="descripcion">
+    {type !== "horarios" && (
+      <FormField label="Descripción" name="descripcion">
       <textarea
         id="form-descripcion"
         name="descripcion"
@@ -146,6 +158,7 @@ const columns: Column[] = [
         placeholder="Descripción opcional"
       ></textarea>
     </FormField>
+    )}
     {type === "departamentos" && (
       <FormField label="Unidad de Negocio" name="unidadNegocioId" required>
         <select
@@ -189,6 +202,43 @@ const columns: Column[] = [
         </FormField>
       </>
     )}
+      {type === "horarios" && (
+        <>
+          <FormField label="Horario" name="descripcion">
+            <textarea
+              id="form-descripcion"
+              name="descripcion"
+              rows={2}
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors resize-none"
+              placeholder="Descripción del horario"
+            ></textarea>
+          </FormField>
+          <div class="grid grid-cols-2 gap-3">
+            <FormField label="Hora de Entrada" name="horaInicio" required>
+              <input
+                id="form-hora-inicio"
+                name="horaInicio"
+                type="text"
+                required
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                placeholder="07:30"
+                autocomplete="off"
+              />
+            </FormField>
+            <FormField label="Hora de Salida" name="horaFin" required>
+              <input
+                id="form-hora-fin"
+                name="horaFin"
+                type="text"
+                required
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                placeholder="17:30"
+                autocomplete="off"
+              />
+            </FormField>
+          </div>
+        </>
+      )}
     <label class="flex items-center gap-3 cursor-pointer">
       <input
         id="form-activo"
@@ -233,6 +283,9 @@ const columns: Column[] = [
 
 <script>
   import Swal from "sweetalert2";
+  import flatpickr from "flatpickr";
+  import "flatpickr/dist/flatpickr.min.css";
+  import "flatpickr/dist/themes/dark.css";
   const catalogType = document.getElementById("catalog-page-type")?.getAttribute("data-type") ?? "";
   const state = { type: catalogType, editingId: null };
 
@@ -244,6 +297,8 @@ const columns: Column[] = [
   const formUnidad = document.getElementById("form-unidad-negocio") as HTMLSelectElement | null;
   const formCargoUnidad = document.getElementById("form-cargo-unidad") as HTMLSelectElement | null;
   const formCargoDepto = document.getElementById("form-cargo-depto") as HTMLSelectElement | null;
+  const formHoraInicio = document.getElementById("form-hora-inicio") as HTMLInputElement | null;
+  const formHoraFin = document.getElementById("form-hora-fin") as HTMLInputElement | null;
 
   const btnNuevo = document.getElementById("btn-nuevo") as HTMLElement;
   const modalCancel = document.getElementById("modal-cancel") as HTMLElement;
@@ -278,6 +333,25 @@ const columns: Column[] = [
     formCargoUnidad.addEventListener("change", filterCargoDeptos);
   }
 
+  // Flatpickr time pickers for horarios
+  let fpHoraInicio: any = null;
+  let fpHoraFin: any = null;
+  [formHoraInicio, formHoraFin].forEach((el) => {
+    if (el) {
+      const fp = flatpickr(el, {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        altFormat: "h:i K",
+        altInput: true,
+        time_24hr: false,
+        allowInput: true,
+      });
+      if (el === formHoraInicio) fpHoraInicio = fp;
+      else fpHoraFin = fp;
+    }
+  });
+
   function resetForm() {
     formId.value = "";
     formNombre.value = "";
@@ -286,6 +360,8 @@ const columns: Column[] = [
     if (formUnidad) formUnidad.value = "";
     if (formCargoUnidad) formCargoUnidad.value = "";
     if (formCargoDepto) { formCargoDepto.innerHTML = '<option value="">Seleccione departamento</option>'; }
+    if (formHoraInicio) { formHoraInicio.value = ""; if (fpHoraInicio) fpHoraInicio.clear(); }
+    if (formHoraFin) { formHoraFin.value = ""; if (fpHoraFin) fpHoraFin.clear(); }
     state.editingId = null;
   }
 
@@ -300,6 +376,10 @@ const columns: Column[] = [
       formCargoDepto.value = row.departamentoId ?? "";
       filterCargoDeptos();
     }
+    if (formHoraInicio && row.horaInicio) { formHoraInicio.value = row.horaInicio; if (fpHoraInicio) fpHoraInicio.setDate(row.horaInicio); }
+    else if (formHoraInicio) { formHoraInicio.value = ""; if (fpHoraInicio) fpHoraInicio.clear(); }
+    if (formHoraFin && row.horaFin) { formHoraFin.value = row.horaFin; if (fpHoraFin) fpHoraFin.setDate(row.horaFin); }
+    else if (formHoraFin) { formHoraFin.value = ""; if (fpHoraFin) fpHoraFin.clear(); }
     state.editingId = row.id;
   }
 
@@ -335,6 +415,8 @@ const columns: Column[] = [
     if (formUnidad) body.unidadNegocioId = formUnidad.value ? Number(formUnidad.value) : null;
     if (formCargoUnidad) body.unidadNegocioId = formCargoUnidad.value ? Number(formCargoUnidad.value) : null;
     if (formCargoDepto) body.departamentoId = formCargoDepto.value ? Number(formCargoDepto.value) : null;
+    if (formHoraInicio) body.horaInicio = formHoraInicio.value || null;
+    if (formHoraFin) body.horaFin = formHoraFin.value || null;
 
     const isEditing = state.editingId !== null;
     const url = isEditing
