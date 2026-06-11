@@ -1,6 +1,7 @@
 import {
   mysqlTable,
   int,
+  decimal,
   varchar,
   boolean,
   timestamp,
@@ -30,7 +31,9 @@ export const esquelasPermisos = mysqlTable("esquelas_permisos", {
   tipoPermisoId: int("tipo_permiso_id")
     .notNull()
     .references(() => tiposPermisos.id),
-  cantidadDias: int("cantidad_dias").notNull(),
+  cantidadDias: decimal("cantidad_dias", { precision: 8, scale: 2 }).notNull(),
+  fechaInicio: date("fecha_inicio").notNull(),
+  fechaFin: date("fecha_fin").notNull(),
   periodoCorrespondiente: varchar("periodo_correspondiente", {
     length: 255,
   }).notNull(),

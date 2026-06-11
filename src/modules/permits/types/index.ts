@@ -10,7 +10,9 @@ export interface CreateEsquelaDTO {
   ubicacion: string;
   tipoPermisoId: number;
   cantidadDias: number;
-  periodoCorrespondiente: string;
+  fechaInicio: Date | string;
+  fechaFin: Date | string;
+  periodoCorrespondiente?: string;
   fechaIncorporacion: string;
   observaciones?: string;
 }
@@ -20,6 +22,8 @@ export interface UpdateEsquelaDTO {
   ubicacion?: string;
   tipoPermisoId?: number;
   cantidadDias?: number;
+  fechaInicio?: Date | string;
+  fechaFin?: Date | string;
   periodoCorrespondiente?: string;
   fechaIncorporacion?: string;
   observaciones?: string;
@@ -46,7 +50,9 @@ export interface EsquelaResponse {
     nombre: string;
     descripcion: string | null;
   } | null;
-  cantidadDias: number;
+  cantidadDias: string;
+  fechaInicio: string;
+  fechaFin: string;
   periodoCorrespondiente: string;
   fechaIncorporacion: string;
   observaciones: string | null;

@@ -1,0 +1,335 @@
+---
+import AppLayout from "@components/layout/AppLayout.astro";
+import Card from "@components/ui/Card.astro";
+import Badge from "@components/ui/Badge.astro";
+import Modal from "@components/ui/Modal.astro";
+import FormField from "@components/ui/FormField.astro";
+import Button from "@components/ui/Button.astro";
+import ConfirmDialog from "@components/shared/ConfirmDialog.astro";
+import { db } from "@db/index";
+import { authUser } from "@db/schemas/auth-schemas";
+import { eq, desc } from "drizzle-orm";
+import { requireAuth } from "@middleware/auth";
+import { Plus, Pencil, Trash2, Shield } from "@lucide/astro";
+
+await requireAuth(Astro);
+
+const users = await db
+  .select()
+  .from(authUser)
+  .orderBy(desc(authUser.createdAt));
+
+const path = Astro.url.pathname;
+
+function formatDate(d: Date | null): string {
+  if (!d) return "-";
+  return new Date(d).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function roleBadge(role: string | null): string {
+  if (role === "ADMIN") return "danger";
+  if (role === "SUPERVISOR") return "warning";
+  return "default";
+}
+---
+
+<AppLayout title="Usuarios" currentPath={path}>
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center justify-center size-10 rounded-xl bg-primary-100 dark:bg-primary-900/50">
+          <Shield class="size-5 text-primary-600 dark:text-primary-400" />
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Usuarios</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5" id="users-count">
+            {users.length} {users.length === 1 ? "usuario" : "usuarios"} en el sistema
+          </p>
+        </div>
+      </div>
+      <Button id="btn-nuevo-usuario" variant="primary">
+        <Plus slot="icon" class="size-4" />
+        Nuevo Usuario
+      </Button>
+    </div>
+
+    <Card padding={false}>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Nombre</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Email</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rol</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Estado</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Registrado</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            {users.length === 0 ? (
+              <tr>
+                <td colspan="6" class="px-4 py-12 text-center text-sm text-gray-400">
+                  No hay usuarios registrados
+                </td>
+              </tr>
+            ) : (
+              users.map((user) => (
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-user-id={user.id}>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                    {user.nombre ? `${user.nombre} ${user.apellidos ?? ""}`.trim() : user.name}
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{user.email}</td>
+                  <td class="px-4 py-3">
+                    <Badge variant={roleBadge(user.role)}>{user.role ?? "USER"}</Badge>
+                  </td>
+                  <td class="px-4 py-3">
+                    {user.activo
+                      ? <Badge variant="success">Activo</Badge>
+                      : <Badge variant="danger">Inactivo</Badge>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{formatDate(user.createdAt)}</td>
+                  <td class="px-4 py-3 text-right">
+                    <div class="flex items-center justify-end gap-1">
+                      <button
+                        data-edit-id={user.id}
+                        class="btn-edit p-1.5 rounded-lg text-gray-400 hover:text-warning-600 hover:bg-warning-50 dark:hover:text-warning-400 dark:hover:bg-warning-950/50 transition-colors"
+                        aria-label="Editar usuario"
+                        type="button"
+                      >
+                        <Pencil class="size-4" />
+                      </button>
+                      <button
+                        data-delete-id={user.id}
+                        data-delete-name={user.nombre ?? user.name}
+                        class="btn-delete p-1.5 rounded-lg text-gray-400 hover:text-danger-600 hover:bg-danger-50 dark:hover:text-danger-400 dark:hover:bg-danger-950/50 transition-colors"
+                        aria-label="Desactivar usuario"
+                        type="button"
+                      >
+                        <Trash2 class="size-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  </div>
+
+  <!-- Create Modal -->
+  <Modal id="modal-create" title="Nuevo Usuario" size="md" open={false}>
+    <form id="user-create-form" slot="body" class="space-y-4" novalidate>
+      <FormField label="Nombre completo" name="name" required>
+        <input id="create-name" name="name" type="text" required
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+          placeholder="Nombre del usuario" />
+      </FormField>
+      <div class="grid grid-cols-2 gap-3">
+        <FormField label="Nombres" name="nombre">
+          <input id="create-nombre" name="nombre" type="text"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+            placeholder="Nombres (opcional)" />
+        </FormField>
+        <FormField label="Apellidos" name="apellidos">
+          <input id="create-apellidos" name="apellidos" type="text"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+            placeholder="Apellidos (opcional)" />
+        </FormField>
+      </div>
+      <FormField label="Correo electrónico" name="email" required>
+        <input id="create-email" name="email" type="email" required
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+          placeholder="correo@ejemplo.com" />
+      </FormField>
+      <FormField label="Contraseña" name="password" required>
+        <input id="create-password" name="password" type="password" required minlength={6}
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+          placeholder="Mínimo 6 caracteres" />
+      </FormField>
+      <FormField label="Rol" name="role">
+        <select id="create-role" name="role"
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors">
+          <option value="USER">Usuario</option>
+          <option value="SUPERVISOR">Supervisor</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+      </FormField>
+    </form>
+    <div slot="footer">
+      <button id="create-cancel" type="button"
+        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancelar</button>
+      <button id="create-submit" type="button"
+        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">Guardar</button>
+    </div>
+  </Modal>
+
+  <!-- Edit Modal -->
+  <Modal id="modal-edit" title="Editar Usuario" size="md" open={false}>
+    <form id="user-edit-form" slot="body" class="space-y-4" novalidate>
+      <input type="hidden" id="edit-id" name="id" />
+      <FormField label="Nombre completo" name="name" required>
+        <input id="edit-name" name="name" type="text" required
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors" />
+      </FormField>
+      <div class="grid grid-cols-2 gap-3">
+        <FormField label="Nombres" name="nombre">
+          <input id="edit-nombre" name="nombre" type="text"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors" />
+        </FormField>
+        <FormField label="Apellidos" name="apellidos">
+          <input id="edit-apellidos" name="apellidos" type="text"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors" />
+        </FormField>
+      </div>
+      <FormField label="Correo electrónico" name="email" required>
+        <input id="edit-email" name="email" type="email" required
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors" />
+      </FormField>
+      <FormField label="Rol" name="role">
+        <select id="edit-role" name="role"
+          class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors">
+          <option value="USER">Usuario</option>
+          <option value="SUPERVISOR">Supervisor</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+      </FormField>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input id="edit-activo" name="activo" type="checkbox" checked
+          class="size-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 cursor-pointer" />
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300 select-none">Usuario activo</span>
+      </label>
+    </form>
+    <div slot="footer">
+      <button id="edit-cancel" type="button"
+        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancelar</button>
+      <button id="edit-submit" type="button"
+        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">Actualizar</button>
+    </div>
+  </Modal>
+
+  <!-- Delete Confirm -->
+  <ConfirmDialog
+    id="confirm-delete"
+    title="Desactivar Usuario"
+    message="¿Estás seguro de que deseas desactivar este usuario? Podrás reactivarlo después."
+    confirmText="Desactivar"
+    cancelText="Cancelar"
+    variant="danger"
+  />
+</AppLayout>
+
+<script>
+  let deleteTargetId: string | null = null;
+
+  // ---- Create ----
+  document.getElementById("btn-nuevo-usuario")?.addEventListener("click", () => {
+    (document.getElementById("user-create-form") as HTMLFormElement).reset();
+    (window as any).__openModal?.();
+  });
+
+  document.getElementById("create-cancel")?.addEventListener("click", () => (window as any).__closeModal?.());
+
+  document.getElementById("create-submit")?.addEventListener("click", async () => {
+    const name = (document.getElementById("create-name") as HTMLInputElement).value.trim();
+    const email = (document.getElementById("create-email") as HTMLInputElement).value.trim();
+    const password = (document.getElementById("create-password") as HTMLInputElement).value;
+    if (!name || !email || !password) { alert("Nombre, email y contraseña son requeridos"); return; }
+
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          nombre: (document.getElementById("create-nombre") as HTMLInputElement).value || null,
+          apellidos: (document.getElementById("create-apellidos") as HTMLInputElement).value || null,
+          role: (document.getElementById("create-role") as HTMLSelectElement).value,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message ?? "Error al crear");
+      (window as any).__closeModal?.();
+      window.location.reload();
+    } catch (err: any) { alert(err.message); }
+  });
+
+  // ---- Edit ----
+  document.querySelectorAll(".btn-edit").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.getAttribute("data-edit-id");
+      if (!id) return;
+
+      try {
+        const res = await fetch(`/api/users/${id}`);
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error?.message ?? "Error al cargar");
+
+        const u = json.data;
+        (document.getElementById("edit-id") as HTMLInputElement).value = u.id;
+        (document.getElementById("edit-name") as HTMLInputElement).value = u.name ?? "";
+        (document.getElementById("edit-nombre") as HTMLInputElement).value = u.nombre ?? "";
+        (document.getElementById("edit-apellidos") as HTMLInputElement).value = u.apellidos ?? "";
+        (document.getElementById("edit-email") as HTMLInputElement).value = u.email ?? "";
+        (document.getElementById("edit-role") as HTMLSelectElement).value = u.role ?? "USER";
+        (document.getElementById("edit-activo") as HTMLInputElement).checked = u.activo !== false;
+        (window as any).__openModal?.();
+      } catch (err: any) { alert(err.message); }
+    });
+  });
+
+  document.getElementById("edit-cancel")?.addEventListener("click", () => (window as any).__closeModal?.());
+
+  document.getElementById("edit-submit")?.addEventListener("click", async () => {
+    const id = (document.getElementById("edit-id") as HTMLInputElement).value;
+    if (!id) return;
+
+    try {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: (document.getElementById("edit-name") as HTMLInputElement).value.trim(),
+          nombre: (document.getElementById("edit-nombre") as HTMLInputElement).value || null,
+          apellidos: (document.getElementById("edit-apellidos") as HTMLInputElement).value || null,
+          email: (document.getElementById("edit-email") as HTMLInputElement).value.trim(),
+          role: (document.getElementById("edit-role") as HTMLSelectElement).value,
+          activo: (document.getElementById("edit-activo") as HTMLInputElement).checked,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message ?? "Error al actualizar");
+      (window as any).__closeModal?.();
+      window.location.reload();
+    } catch (err: any) { alert(err.message); }
+  });
+
+  // ---- Delete ----
+  document.querySelectorAll(".btn-delete").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      deleteTargetId = btn.getAttribute("data-delete-id");
+      const name = btn.getAttribute("data-delete-name") ?? "este usuario";
+      const msgEl = document.querySelector("#confirm-delete #confirm-message");
+      if (msgEl) msgEl.textContent = `¿Estás seguro de desactivar a "${name}"?`;
+      (window as any).__openConfirm?.();
+    });
+  });
+
+  document.addEventListener("confirm-ok", async () => {
+    if (!deleteTargetId) return;
+    try {
+      const res = await fetch(`/api/users/${deleteTargetId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message ?? "Error al desactivar");
+      window.location.reload();
+    } catch (err: any) { alert(err.message); }
+    deleteTargetId = null;
+  });
+
+  document.addEventListener("confirm-cancel", () => { deleteTargetId = null; });
+</script>

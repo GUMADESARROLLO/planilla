@@ -44,7 +44,15 @@ function mapEsquela(row: Record<string, unknown>): EsquelaResponse {
             ((row["tipoPermiso"] as Record<string, unknown>)["descripcion"] as string) ?? null,
         }
       : null,
-    cantidadDias: row["cantidadDias"] as number,
+    cantidadDias: String(row["cantidadDias"] ?? "0"),
+    fechaInicio:
+      row["fechaInicio"] instanceof Date
+        ? (row["fechaInicio"] as Date).toISOString()
+        : String(row["fechaInicio"] ?? ""),
+    fechaFin:
+      row["fechaFin"] instanceof Date
+        ? (row["fechaFin"] as Date).toISOString()
+        : String(row["fechaFin"] ?? ""),
     periodoCorrespondiente: row["periodoCorrespondiente"] as string,
     fechaIncorporacion: row["fechaIncorporacion"] as string,
     observaciones: (row["observaciones"] as string) ?? null,
@@ -86,6 +94,8 @@ const baseQuery = db
       descripcion: tiposPermisos.descripcion,
     },
     cantidadDias: esquelasPermisos.cantidadDias,
+    fechaInicio: esquelasPermisos.fechaInicio,
+    fechaFin: esquelasPermisos.fechaFin,
     periodoCorrespondiente: esquelasPermisos.periodoCorrespondiente,
     fechaIncorporacion: esquelasPermisos.fechaIncorporacion,
     observaciones: esquelasPermisos.observaciones,
@@ -177,8 +187,10 @@ export async function create(data: CreateEsquelaDTO): Promise<EsquelaResponse> {
     cargo: data.cargo ?? null,
     ubicacion: data.ubicacion,
     tipoPermisoId: data.tipoPermisoId,
-    cantidadDias: data.cantidadDias,
-    periodoCorrespondiente: data.periodoCorrespondiente,
+    cantidadDias: String(data.cantidadDias),
+    fechaInicio: data.fechaInicio,
+    fechaFin: data.fechaFin,
+    periodoCorrespondiente: data.periodoCorrespondiente ?? "",
     fechaIncorporacion: data.fechaIncorporacion,
     observaciones: data.observaciones ?? null,
     estado: "pendiente",
@@ -197,7 +209,9 @@ export async function update(
   if (data.cargo !== undefined) updateData["cargo"] = data.cargo;
   if (data.ubicacion !== undefined) updateData["ubicacion"] = data.ubicacion;
   if (data.tipoPermisoId !== undefined) updateData["tipoPermisoId"] = data.tipoPermisoId;
-  if (data.cantidadDias !== undefined) updateData["cantidadDias"] = data.cantidadDias;
+  if (data.cantidadDias !== undefined) updateData["cantidadDias"] = String(data.cantidadDias);
+  if (data.fechaInicio !== undefined) updateData["fechaInicio"] = data.fechaInicio;
+  if (data.fechaFin !== undefined) updateData["fechaFin"] = data.fechaFin;
   if (data.periodoCorrespondiente !== undefined)
     updateData["periodoCorrespondiente"] = data.periodoCorrespondiente;
   if (data.fechaIncorporacion !== undefined)

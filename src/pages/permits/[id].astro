@@ -88,7 +88,7 @@ function estadoLabel(estado: string): string {
         </a>
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Esquela de Permiso</h1>
-          <p class="text-sm text-gray-500 dark:text-gray-400">ID: {esquela.id.slice(0, 8).toUpperCase()}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">ID: #{String(esquela.id)}</p>
         </div>
       </div>
       <Badge variant={estadoVariant(esquela.estado)} size="md">
@@ -157,11 +157,15 @@ function estadoLabel(estado: string): string {
           </div>
           <div>
             <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Cantidad de Días</p>
-            <p class="text-sm font-medium text-gray-900 dark:text-white">{esquela.cantidadDias} día(s)</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{Number(esquela.cantidadDias ?? 0).toFixed(2)} día(s)</p>
           </div>
           <div>
-            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Periodo Correspondiente</p>
-            <p class="text-sm text-gray-700 dark:text-gray-300">{esquela.periodoCorrespondiente}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Fecha de Inicio</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{formatDate(esquela.fechaInicio)}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Fecha de Fin</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{formatDate(esquela.fechaFin)}</p>
           </div>
           <div>
             <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Fecha de Incorporación</p>

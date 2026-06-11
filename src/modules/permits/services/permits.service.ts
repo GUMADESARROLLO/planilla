@@ -44,8 +44,8 @@ export async function create(data: CreateEsquelaDTO): Promise<EsquelaResponse> {
   if (!data.ubicacion) throw new ValidationError("La ubicación es requerida");
   if (!data.cantidadDias || data.cantidadDias < 1)
     throw new ValidationError("La cantidad de días debe ser mayor a 0");
-  if (!data.periodoCorrespondiente)
-    throw new ValidationError("El periodo correspondiente es requerido");
+  if (!data.fechaInicio) throw new ValidationError("La fecha de inicio es requerida");
+  if (!data.fechaFin) throw new ValidationError("La fecha de fin es requerida");
   if (!data.fechaIncorporacion)
     throw new ValidationError("La fecha de incorporación es requerida");
 

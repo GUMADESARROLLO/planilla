@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "767660db-99e4-413b-a988-0a2bb7007bb0",
+  "id": "6e22eee2-c411-4266-8fc5-1a3206e023e1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -1634,7 +1634,21 @@
         },
         "cantidad_dias": {
           "name": "cantidad_dias",
-          "type": "int",
+          "type": "decimal(8,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fecha_inicio": {
+          "name": "fecha_inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fecha_fin": {
+          "name": "fecha_fin",
+          "type": "date",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

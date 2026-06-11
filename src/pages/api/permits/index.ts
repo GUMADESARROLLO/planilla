@@ -12,8 +12,10 @@ const createEsquelaSchema = z.object({
   cargo: z.string().optional(),
   ubicacion: z.string().min(1, "La ubicación es requerida"),
   tipoPermisoId: z.number().int().positive(),
-  cantidadDias: z.number().int().min(1, "La cantidad de días debe ser mayor a 0"),
-  periodoCorrespondiente: z.string().min(1, "El periodo correspondiente es requerido"),
+  cantidadDias: z.number().positive("La cantidad de días debe ser mayor a 0"),
+  fechaInicio: z.string().min(1, "La fecha de inicio es requerida"),
+  fechaFin: z.string().min(1, "La fecha de fin es requerida"),
+  periodoCorrespondiente: z.string().optional(),
   fechaIncorporacion: z.string().min(1, "La fecha de incorporación es requerida"),
   observaciones: z.string().optional(),
 });
