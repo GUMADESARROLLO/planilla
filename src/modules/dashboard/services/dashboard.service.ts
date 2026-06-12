@@ -17,6 +17,12 @@ export interface DashboardStats {
   rejectedPermits: number;
   workersByContract: { nombre: string; count: number }[];
   workersByGender: { nombre: string; count: number }[];
+  vacacionesByUnidad: {
+    unidadNegocio: string;
+    departamento: string;
+    totalVacaciones: number;
+    workerCount: number;
+  }[];
 }
 
 export interface RecentWorker {
@@ -48,6 +54,7 @@ class DashboardService {
       [rejectedPermits],
       workersByContract,
       workersByGender,
+      vacacionesByUnidad,
     ] = await Promise.all([
       db
         .select({ value: count() })
@@ -110,6 +117,30 @@ class DashboardService {
         .where(isNull(schemas.trabajadores.deleted_at))
         .groupBy(schemas.generos.nombre)
         .execute(),
+      db
+        .select({
+          unidadNegocio: schemas.unidadesNegocio.nombre,
+          departamento: schemas.departamentos.nombre,
+          totalVacaciones: sql<string>`COALESCE(SUM(${schemas.trabajadores.saldoVacaciones}), 0)`,
+          workerCount: count(),
+        })
+        .from(schemas.trabajadores)
+        .innerJoin(
+          schemas.cargos,
+          eq(schemas.trabajadores.cargoId, schemas.cargos.id),
+        )
+        .innerJoin(
+          schemas.departamentos,
+          eq(schemas.cargos.departamentoId, schemas.departamentos.id),
+        )
+        .innerJoin(
+          schemas.unidadesNegocio,
+          eq(schemas.departamentos.unidadNegocioId, schemas.unidadesNegocio.id),
+        )
+        .where(isNull(schemas.trabajadores.deleted_at))
+        .groupBy(schemas.unidadesNegocio.nombre, schemas.departamentos.nombre)
+        .orderBy(schemas.unidadesNegocio.nombre, schemas.departamentos.nombre)
+        .execute(),
     ]);
 
     return {
@@ -121,6 +152,12 @@ class DashboardService {
       rejectedPermits: Number(rejectedPermits?.value ?? 0),
       workersByContract: workersByContract as { nombre: string; count: number }[],
       workersByGender: workersByGender as { nombre: string; count: number }[],
+      vacacionesByUnidad: (vacacionesByUnidad as any[]).map((v: any) => ({
+        unidadNegocio: v.unidadNegocio,
+        departamento: v.departamento,
+        totalVacaciones: Number(v.totalVacaciones),
+        workerCount: Number(v.workerCount),
+      })),
     };
   }
 

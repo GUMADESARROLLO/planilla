@@ -179,34 +179,46 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
         </div>
       </Card>
 
-      <!-- Workers by Gender -->
-      <Card title="Trabajadores por Género" subtitle="Distribución actual">
-        <div slot="body" class="space-y-3">
-          {stats.workersByGender.length > 0 ? (
-            stats.workersByGender.map((item) => {
-              const pct = stats.totalWorkers > 0
-                ? ((item.count / stats.totalWorkers) * 100).toFixed(1)
-                : "0";
-              return (
-                <div class="flex items-center gap-3">
-                  <span class="text-sm text-gray-700 dark:text-gray-300 w-36 truncate shrink-0">
-                    {item.nombre}
-                  </span>
-                  <div class="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-success-500 rounded-full transition-all"
-                      style={`width: ${pct}%`}
-                    ></div>
+      <!-- Vacaciones acumuladas por departamento -->
+      <Card title="Vacaciones por Departamento" subtitle="Saldo acumulado por unidad de negocio">
+        <div slot="body" class="space-y-4">
+          {stats.vacacionesByUnidad.length > 0 ? (
+            (() => {
+              let currentUnidad = "";
+              const rows: any[] = [];
+              for (const item of stats.vacacionesByUnidad) {
+                if (item.unidadNegocio !== currentUnidad) {
+                  currentUnidad = item.unidadNegocio;
+                  rows.push({ type: "header", label: currentUnidad });
+                }
+                rows.push({ type: "item", ...item });
+              }
+              return rows.map((row: any) =>
+                row.type === "header" ? (
+                  <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-3 first:mt-0">
+                    {row.label}
+                  </p>
+                ) : (
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-700 dark:text-gray-300 w-40 truncate shrink-0">
+                      {row.departamento}
+                    </span>
+                    <div class="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        class="h-full bg-warning-500 rounded-full transition-all"
+                        style={`width: ${Math.min((row.totalVacaciones / 30) * 100, 100)}%`}
+                      ></div>
+                    </div>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white w-16 text-right shrink-0">
+                      {row.totalVacaciones.toFixed(1)}
+                    </span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500 w-12 text-right shrink-0">
+                      {row.workerCount} trab.
+                    </span>
                   </div>
-                  <span class="text-sm font-medium text-gray-900 dark:text-white w-16 text-right shrink-0">
-                    {item.count}
-                  </span>
-                  <span class="text-xs text-gray-400 dark:text-gray-500 w-12 text-right shrink-0">
-                    {pct}%
-                  </span>
-                </div>
+                )
               );
-            })
+            })()
           ) : (
             <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
               No hay datos disponibles
@@ -220,6 +232,10 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Recent Workers -->
       <Card title="Últimos Trabajadores" subtitle="Registros recientes">
+        <a slot="action" href="/workers" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
+          Ver todos
+          <ArrowRight class="size-3.5" />
+        </a>
         <div slot="body" class="-mx-6 -mt-2">
           <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
             <thead class="bg-gray-50 dark:bg-gray-900">
@@ -255,16 +271,14 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
             </tbody>
           </table>
         </div>
-        <div slot="footer">
-          <a href="/workers" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
-            Ver todos
-            <ArrowRight class="size-3.5" />
-          </a>
-        </div>
       </Card>
 
       <!-- Recent Permits -->
       <Card title="Permisos Pendientes" subtitle="Últimas solicitudes">
+        <a slot="action" href="/permits" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
+          Ver todos
+          <ArrowRight class="size-3.5" />
+        </a>
         <div slot="body" class="-mx-6 -mt-2">
           <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
             <thead class="bg-gray-50 dark:bg-gray-900">
@@ -298,12 +312,6 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
               )}
             </tbody>
           </table>
-        </div>
-        <div slot="footer">
-          <a href="/permits" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
-            Ver todos
-            <ArrowRight class="size-3.5" />
-          </a>
         </div>
       </Card>
     </div>

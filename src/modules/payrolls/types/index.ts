@@ -26,7 +26,12 @@ export interface WorkerInfo {
   nombre: string;
   apellidos: string;
   email: string;
+  cedulaIdentidad: string;
+  numeroInss: string;
+  fechaEntrada: Date | string | null;
+  telefono: string;
   cargo: string;
+  salarioBase: string | number;
   activo: boolean;
 }
 
