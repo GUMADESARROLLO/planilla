@@ -61,9 +61,9 @@ const navEntries: NavEntry[] = [
 
 <aside
   id="sidebar"
-  class="fixed inset-y-0 left-0 z-50 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col
-    -translate-x-full
-    lg:sticky lg:top-0 lg:z-auto lg:translate-x-0 lg:min-h-screen lg:shrink-0
+  class="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col
+    fixed inset-y-0 left-0 z-50 -translate-x-full
+    lg:relative lg:translate-x-0 lg:z-auto lg:min-h-screen lg:shrink-0
     w-[--sidebar-width] overflow-hidden
     transition-transform duration-300 ease-in-out"
   aria-label="Sidebar de navegación"
@@ -182,24 +182,81 @@ const navEntries: NavEntry[] = [
   const overlay = document.getElementById("sidebar-overlay")!;
   const closeMobileBtn = document.getElementById("sidebar-close-mobile")!;
 
-  function toggleMobileSidebar() {
-    const isOpen = !sidebar.classList.contains("-translate-x-full");
-    sidebar.classList.toggle("-translate-x-full", !isOpen);
-    overlay.classList.toggle("opacity-0", !isOpen);
-    overlay.classList.toggle("pointer-events-none", !isOpen);
-    document.body.classList.toggle("overflow-hidden", isOpen);
+  function getStoredState(): boolean {
+    const stored = localStorage.getItem("sidebar-expanded");
+    return stored !== null ? stored === "true" : true;
   }
 
-  document.addEventListener("toggle-sidebar", () => {
-    toggleMobileSidebar();
+  function applyState(expanded: boolean) {
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      sidebar.classList.remove("hidden", "-translate-x-full");
+      sidebar.classList.add("-translate-x-full");
+    } else if (expanded) {
+      sidebar.classList.remove("hidden");
+    } else {
+      sidebar.classList.add("hidden");
+      sidebar.classList.remove("-translate-x-full");
+    }
+    localStorage.setItem("sidebar-expanded", String(!isMobile && expanded));
+  }
+
+  function toggleSidebar() {
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      const isOpen = !sidebar.classList.contains("-translate-x-full");
+      sidebar.classList.remove("hidden");
+      sidebar.classList.toggle("-translate-x-full", !isOpen);
+      overlay.classList.toggle("opacity-0", !isOpen);
+      overlay.classList.toggle("pointer-events-none", !isOpen);
+      document.body.classList.toggle("overflow-hidden", isOpen);
+    } else {
+      const isHidden = sidebar.classList.contains("hidden");
+      applyState(isHidden);
+    }
+  }
+
+  // Initialize
+  const stored = getStoredState();
+  const isMobileInit = window.innerWidth < 1024;
+  if (isMobileInit || !stored) {
+    sidebar.classList.add("-translate-x-full");
+    if (!isMobileInit) sidebar.classList.add("hidden");
+  } else {
+    sidebar.classList.remove("hidden", "-translate-x-full");
+  }
+
+  // Handle resize
+  let prevWidth = window.innerWidth;
+  window.addEventListener("resize", () => {
+    const wasMobile = prevWidth < 1024;
+    const nowMobile = window.innerWidth < 1024;
+    prevWidth = window.innerWidth;
+    if (wasMobile && !nowMobile) {
+      // Mobile -> Desktop: respect stored state
+      const expanded = getStoredState();
+      sidebar.classList.remove("hidden", "-translate-x-full");
+      if (!expanded) sidebar.classList.add("hidden");
+    } else if (!wasMobile && nowMobile) {
+      // Desktop -> Mobile: force hidden
+      sidebar.classList.remove("hidden");
+      sidebar.classList.add("-translate-x-full");
+    }
   });
 
-  closeMobileBtn.addEventListener("click", toggleMobileSidebar);
-  overlay.addEventListener("click", toggleMobileSidebar);
+  document.addEventListener("toggle-sidebar", toggleSidebar);
+
+  closeMobileBtn.addEventListener("click", () => {
+    if (window.innerWidth < 1024) toggleSidebar();
+  });
+  overlay.addEventListener("click", () => {
+    if (window.innerWidth < 1024) toggleSidebar();
+  });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !sidebar.classList.contains("-translate-x-full")) {
-      toggleMobileSidebar();
+    if (e.key === "Escape" && window.innerWidth >= 1024) {
+      const current = document.documentElement.getAttribute("data-sidebar") !== "collapsed";
+      if (current) applyState(false);
     }
   });
 
