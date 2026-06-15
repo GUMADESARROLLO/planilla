@@ -118,7 +118,7 @@ function fmtSal(sal: any): string {
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{w.cedulaIdentidad || "-"}</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{w.numeroInss || "-"}</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{fmtFecha(w.fechaEntrada)}</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">-</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{w.cuentaNomina || "-"}</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtSal(w.salarioBase)}</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>

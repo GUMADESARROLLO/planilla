@@ -99,6 +99,7 @@ export async function findById(id: number): Promise<PlanillaWithWorkers> {
       fechaEntrada: trabajadores.fechaEntrada,
       telefono: trabajadores.telefono,
       cargo: cargos.nombre,
+      cuentaNomina: trabajadores.cuentaNomina,
       salarioBase: trabajadores.salarioBase,
       activo: trabajadores.activo,
     })
@@ -226,6 +227,7 @@ export async function getWorkersByPlanilla(planillaId: number): Promise<WorkerIn
       fechaEntrada: trabajadores.fechaEntrada,
       telefono: trabajadores.telefono,
       cargo: cargos.nombre,
+      cuentaNomina: trabajadores.cuentaNomina,
       salarioBase: trabajadores.salarioBase,
       activo: trabajadores.activo,
     })

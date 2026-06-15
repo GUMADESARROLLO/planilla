@@ -43,6 +43,7 @@ export interface WorkerInfo {
   fechaEntrada: Date | string | null;
   telefono: string;
   cargo: string;
+  cuentaNomina: string | null;
   salarioBase: string | number;
   activo: boolean;
 }
