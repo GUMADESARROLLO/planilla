@@ -12,15 +12,19 @@ import type {
 } from "../types";
 import { NotFoundError } from "@utils/errors";
 
-function mapPlanilla(row: typeof planillas.$inferSelect): PlanillaResponse {
+function mapPlanilla(row: Record<string, unknown>): PlanillaResponse {
   return {
-    id: row.id,
-    nombre: row.nombre,
-    descripcion: row.descripcion,
-    tipo: row.tipo,
-    activo: row.activo,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    id: row["id"] as number,
+    nombre: row["nombre"] as string,
+    descripcion: (row["descripcion"] as string) ?? null,
+    tipo: row["tipo"] as string,
+    activo: row["activo"] as boolean,
+    unidadNegocioId: (row["unidad_negocio_id"] as number) ?? null,
+    fechaDesde: (row["fecha_desde"] as Date) ?? null,
+    fechaHasta: (row["fecha_hasta"] as Date) ?? null,
+    codigo: (row["codigo"] as string) ?? null,
+    createdAt: row["created_at"] as Date,
+    updatedAt: row["updated_at"] as Date,
   };
 }
 
@@ -116,7 +120,11 @@ export async function create(data: CreatePlanillaDTO): Promise<PlanillaResponse>
       nombre: data.nombre,
       descripcion: data.descripcion ?? null,
       tipo: data.tipo,
-    })
+      unidadNegocioId: data.unidadNegocioId ?? null,
+      fechaDesde: data.fechaDesde ? new Date(data.fechaDesde) : null,
+      fechaHasta: data.fechaHasta ? new Date(data.fechaHasta) : null,
+      codigo: data.codigo ?? null,
+    } as any)
     .$returningId();
 
   const [created] = await db

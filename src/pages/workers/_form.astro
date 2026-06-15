@@ -18,9 +18,11 @@ export interface Props {
   horarios: CatalogItem[];
   deptosNi: CatalogItem[];
   municipios: CatalogItem[];
+  tiposMoneda?: CatalogItem[];
+  formasPago?: CatalogItem[];
   worker?: Record<string, any>;
-  mode: "create" | "edit";
   errors?: Record<string, string>;
+  mode: "create" | "edit";
 }
 
 const {
@@ -33,6 +35,8 @@ const {
   horarios,
   deptosNi,
   municipios,
+  tiposMoneda = [],
+  formasPago = [],
   worker,
   mode,
   errors = {},
@@ -210,6 +214,85 @@ const telValue = isEdit ? (w.telefono ?? "").replace(/^\+?505-?/, "") : "";
           ))}
         </select>
       </div>
+    </div>
+    <div class="wf-fields wf-col-5">
+      <div class="wf-field">
+        <label class="wf-label">Salario mensual bruto C$</label>
+        <input type="number" id="field-salarioBase" name="salarioBase" value={w.salarioBase ?? "0.00"} step="0.01" min="0" placeholder="0.00" />
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Tipo de moneda <span class="wf-req">*</span></label>
+        <select id="field-tipoMonedaId" name="tipoMonedaId">
+          <option value="">Seleccionar</option>
+          {tiposMoneda.map((item) => (
+            <option value={item.id} selected={w.tipoMonedaId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Forma de pago <span class="wf-req">*</span></label>
+        <select id="field-formaPagoId" name="formaPagoId">
+          <option value="">Seleccionar</option>
+          {formasPago.map((item) => (
+            <option value={item.id} selected={w.formaPagoId === item.id}>{item.nombre}</option>
+          ))}
+        </select>
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Cuenta nómina</label>
+        <input type="text" id="field-cuentaNomina" name="cuentaNomina" value={w.cuentaNomina ?? ""} placeholder="Número de cuenta" />
+      </div>
+      <div class="wf-field">
+        <label class="wf-label">Sueldo embargable</label>
+        <label class="wf-toggle" style="margin-top:8px">
+          <input type="checkbox" id="field-sueldoEmbargable" name="sueldoEmbargable" checked={w.sueldoEmbargable === true} />
+          <span class="wf-toggle-track"></span>
+        </label>
+      </div>
+      <div class="wf-field" id="field-sueldoEmbargablePct-wrapper" style={{display: w.sueldoEmbargable === true ? "block" : "none"}}>
+        <label class="wf-label">% Sueldo embargable</label>
+        <input type="number" id="field-sueldoEmbargablePorcentaje" name="sueldoEmbargablePorcentaje" value={w.sueldoEmbargablePorcentaje ?? ""} step="0.01" min="0" max="100" placeholder="%" />
+      </div>
+    </div>
+    <div class="wf-section" style="margin-top:16px;padding:16px;background:var(--bg-card);border-radius:12px;border:1px solid var(--border)">
+      <label class="wf-toggle-row" style="margin-bottom:12px">
+        <div class="wf-toggle-info">
+          <span>Depreciación vehicular</span>
+          <small>¿El trabajador cuenta con depreciación vehicular?</small>
+        </div>
+        <label class="wf-toggle">
+          <input type="checkbox" id="field-depreciacionVehicular" name="depreciacionVehicular" checked={w.depreciacionVehicular === true} />
+          <span class="wf-toggle-track"></span>
+        </label>
+      </label>
+      <div id="field-depreciacion-body" style={{display: w.depreciacionVehicular === true ? "block" : "none"}}>
+        <div class="flex flex-wrap items-start gap-6">
+          <div class="space-y-3 flex-1 min-w-[180px]">
+            <div style="max-width:220px">
+              <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Monto aplicar</label>
+              <input type="text" id="field-depreciacionMontoAplicar" name="depreciacionMontoAplicar" value={w.depreciacionMontoAplicar ?? ""} placeholder="0.00"
+                class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors" />
+            </div>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="field-depreciacionMontoFijo" name="depreciacionMontoFijo" checked={w.depreciacionMontoFijo === true}
+                class="size-5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+              <span class="text-sm font-medium text-gray-900 dark:text-white">Hacer monto fijo</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="field-depreciacionDolar" name="depreciacionDolar" checked={w.depreciacionDolar === true}
+                class="size-5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+              <span class="text-sm font-medium text-gray-900 dark:text-white">Dolar</span>
+            </label>
+          </div>
+          <div class="flex-1 min-w-[200px]">
+            <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Descripción vehículo</label>
+            <textarea id="field-descripcionVehiculo" name="descripcionVehiculo" rows={4} placeholder="Marca, modelo, placa..."
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors resize-none"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="wf-fields wf-col-2" style="margin-top:16px">
       <div class="wf-field">
         <label class="wf-label">Fecha de entrada <span class="wf-req">*</span></label>
         <DatePicker id="field-fechaEntrada" name="fechaEntrada" value={w.fechaEntrada ?? ""} required />
@@ -530,4 +613,18 @@ const telValue = isEdit ? (w.telefono ?? "").replace(/^\+?505-?/, "") : "";
 
   deptoSelect?.addEventListener("change", filterMunicipios);
   filterMunicipios();
+
+  // Toggle sueldo embargable percentage field
+  const sueldoEmbCheck = document.getElementById("field-sueldoEmbargable") as HTMLInputElement;
+  const sueldoPctWrapper = document.getElementById("field-sueldoEmbargablePct-wrapper");
+  sueldoEmbCheck?.addEventListener("change", () => {
+    if (sueldoPctWrapper) sueldoPctWrapper.style.display = sueldoEmbCheck.checked ? "block" : "none";
+  });
+
+  // Toggle depreciacion vehicular section
+  const depreCheck = document.getElementById("field-depreciacionVehicular") as HTMLInputElement;
+  const depreBody = document.getElementById("field-depreciacion-body");
+  depreCheck?.addEventListener("change", () => {
+    if (depreBody) depreBody.style.display = depreCheck.checked ? "block" : "none";
+  });
 </script>

@@ -19,6 +19,8 @@ import {
   departamentos,
   horarios,
   municipios,
+  tiposMoneda,
+  formasPago,
 } from "./catalogs";
 import { trabajadoresPlanillas } from "./workers_planillas";
 
@@ -67,6 +69,16 @@ export const trabajadores = mysqlTable("trabajadores", {
   salarioBase: decimal("salario_base", { precision: 10, scale: 2 }).default("0.00"),
   horarioId: int("horario_id").references(() => horarios.id),
   municipioId: int("municipio_id").references(() => municipios.id),
+  tipoMonedaId: int("tipo_moneda_id").references(() => tiposMoneda.id),
+  formaPagoId: int("forma_pago_id").references(() => formasPago.id),
+  cuentaNomina: varchar("cuenta_nomina", { length: 100 }),
+  sueldoEmbargable: boolean("sueldo_embargable").default(false),
+  sueldoEmbargablePorcentaje: decimal("sueldo_embargable_porcentaje", { precision: 5, scale: 2 }),
+  depreciacionVehicular: boolean("depreciacion_vehicular").default(false),
+  depreciacionMontoAplicar: varchar("depreciacion_monto_aplicar", { length: 50 }),
+  depreciacionMontoFijo: boolean("depreciacion_monto_fijo").default(false),
+  depreciacionDolar: boolean("depreciacion_dolar").default(false),
+  descripcionVehiculo: varchar("descripcion_vehiculo", { length: 255 }),
   ...auditColumns,
 });
 

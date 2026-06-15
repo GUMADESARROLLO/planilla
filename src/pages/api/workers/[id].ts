@@ -39,6 +39,7 @@ export const PUT: APIRoute = async (context) => {
     return successResponse(worker);
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
+    console.error("[PUT /api/workers/[id]]", error);
     return errorResponse(new AppError("Error al actualizar trabajador", 500));
   }
 };

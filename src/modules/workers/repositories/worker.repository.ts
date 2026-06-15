@@ -39,6 +39,7 @@ function mapWorker(row: any): WorkerResponse {
     telefono: row.telefono,
     direccion: row.direccion ?? null,
     saldoVacaciones: row.saldoVacaciones,
+    salarioBase: row.salarioBase,
     tallaCamisaId: row.tallaCamisaId,
     nombreTallaCamisa: row.nombreTallaCamisa,
     tallaPantalonId: row.tallaPantalonId,
@@ -58,6 +59,16 @@ function mapWorker(row: any): WorkerResponse {
     municipioId: row.municipioId ?? null,
     nombreMunicipio: row.nombreMunicipio ?? null,
     nombreDepto: row.nombreDepto ?? null,
+    tipoMonedaId: row.tipoMonedaId ?? null,
+    formaPagoId: row.formaPagoId ?? null,
+    cuentaNomina: row.cuentaNomina ?? null,
+    sueldoEmbargable: row.sueldoEmbargable ?? false,
+    sueldoEmbargablePorcentaje: row.sueldoEmbargablePorcentaje ?? null,
+    depreciacionVehicular: row.depreciacionVehicular ?? false,
+    depreciacionMontoAplicar: row.depreciacionMontoAplicar ?? null,
+    depreciacionMontoFijo: row.depreciacionMontoFijo ?? false,
+    depreciacionDolar: row.depreciacionDolar ?? false,
+    descripcionVehiculo: row.descripcionVehiculo ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at ?? null,
@@ -80,6 +91,7 @@ function workerSelectFields() {
     telefono: trabajadores.telefono,
     direccion: trabajadores.direccion,
     saldoVacaciones: trabajadores.saldoVacaciones,
+    salarioBase: trabajadores.salarioBase,
     tallaCamisaId: trabajadores.tallaCamisaId,
     nombreTallaCamisa: tallasCamisa.nombre,
     tallaPantalonId: trabajadores.tallaPantalonId,
@@ -99,6 +111,16 @@ function workerSelectFields() {
     municipioId: trabajadores.municipioId,
     nombreMunicipio: municipios.nombre,
     nombreDepto: deptosNi.nombre,
+    tipoMonedaId: trabajadores.tipoMonedaId,
+    formaPagoId: trabajadores.formaPagoId,
+    cuentaNomina: trabajadores.cuentaNomina,
+    sueldoEmbargable: trabajadores.sueldoEmbargable,
+    sueldoEmbargablePorcentaje: trabajadores.sueldoEmbargablePorcentaje,
+    depreciacionVehicular: trabajadores.depreciacionVehicular,
+    depreciacionMontoAplicar: trabajadores.depreciacionMontoAplicar,
+    depreciacionMontoFijo: trabajadores.depreciacionMontoFijo,
+    depreciacionDolar: trabajadores.depreciacionDolar,
+    descripcionVehiculo: trabajadores.descripcionVehiculo,
     created_at: trabajadores.created_at,
     updated_at: trabajadores.updated_at,
     deleted_at: trabajadores.deleted_at,
@@ -264,6 +286,7 @@ export async function create(data: CreateWorkerDTO): Promise<WorkerResponse> {
     telefono: data.telefono.trim(),
     direccion: data.direccion ?? null,
     saldoVacaciones: String(data.saldoVacaciones ?? "0.00"),
+    salarioBase: String(data.salarioBase ?? "0.00"),
     tallaCamisaId: data.tallaCamisaId,
     tallaPantalonId: data.tallaPantalonId,
     tipoContratoId: data.tipoContratoId,
@@ -273,6 +296,16 @@ export async function create(data: CreateWorkerDTO): Promise<WorkerResponse> {
     activo: data.activo ?? true,
     foto: data.foto ?? null,
     municipioId: data.municipioId ?? null,
+    tipoMonedaId: data.tipoMonedaId ?? null,
+    formaPagoId: data.formaPagoId ?? null,
+    cuentaNomina: data.cuentaNomina ?? null,
+    sueldoEmbargable: data.sueldoEmbargable ?? false,
+    sueldoEmbargablePorcentaje: String(data.sueldoEmbargablePorcentaje ?? ""),
+    depreciacionVehicular: data.depreciacionVehicular ?? false,
+    depreciacionMontoAplicar: data.depreciacionMontoAplicar ?? null,
+    depreciacionMontoFijo: data.depreciacionMontoFijo ?? false,
+    depreciacionDolar: data.depreciacionDolar ?? false,
+    descripcionVehiculo: data.descripcionVehiculo ?? null,
   } as any).$returningId();
 
   return findById(inserted!.id);
@@ -321,6 +354,8 @@ export async function update(
   if (data.direccion !== undefined) updateData["direccion"] = data.direccion;
   if (data.saldoVacaciones !== undefined)
     updateData["saldoVacaciones"] = String(data.saldoVacaciones);
+  if (data.salarioBase !== undefined)
+    updateData["salarioBase"] = String(data.salarioBase);
   if (data.tallaCamisaId !== undefined)
     updateData["tallaCamisaId"] = data.tallaCamisaId;
   if (data.tallaPantalonId !== undefined)
@@ -333,6 +368,16 @@ export async function update(
   if (data.activo !== undefined) updateData["activo"] = data.activo;
   if (data.foto !== undefined) updateData["foto"] = data.foto;
   if (data.municipioId !== undefined) updateData["municipioId"] = data.municipioId;
+  if (data.tipoMonedaId !== undefined) updateData["tipoMonedaId"] = data.tipoMonedaId;
+  if (data.formaPagoId !== undefined) updateData["formaPagoId"] = data.formaPagoId;
+  if (data.cuentaNomina !== undefined) updateData["cuentaNomina"] = data.cuentaNomina;
+  if (data.sueldoEmbargable !== undefined) updateData["sueldoEmbargable"] = data.sueldoEmbargable;
+  if (data.sueldoEmbargablePorcentaje !== undefined) updateData["sueldoEmbargablePorcentaje"] = String(data.sueldoEmbargablePorcentaje);
+  if (data.depreciacionVehicular !== undefined) updateData["depreciacionVehicular"] = data.depreciacionVehicular;
+  if (data.depreciacionMontoAplicar !== undefined) updateData["depreciacionMontoAplicar"] = data.depreciacionMontoAplicar;
+  if (data.depreciacionMontoFijo !== undefined) updateData["depreciacionMontoFijo"] = data.depreciacionMontoFijo;
+  if (data.depreciacionDolar !== undefined) updateData["depreciacionDolar"] = data.depreciacionDolar;
+  if (data.descripcionVehiculo !== undefined) updateData["descripcionVehiculo"] = data.descripcionVehiculo;
 
   if (Object.keys(updateData).length === 0) {
     return existing;

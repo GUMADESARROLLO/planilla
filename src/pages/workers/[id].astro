@@ -23,10 +23,8 @@ import {
   tiposPermisos,
 } from "@db/schemas";
 import { eq, and, isNull } from "drizzle-orm";
-import { ArrowLeft, Pencil, FilePlus } from "@lucide/astro";
+import { ArrowLeft, Pencil, FilePlus, Receipt } from "@lucide/astro";
 import { getPhotoUrl } from "@utils/storage";
-
-export async function getStaticPaths() { return []; }
 
 const idParam = Astro.params.id;
 if (!idParam) return Astro.redirect("/workers");
@@ -116,6 +114,10 @@ const isActive = worker.activo !== false;
           <FilePlus class="w-3.5 h-3.5" />
           Permiso
         </button>
+        <a href={`/workers/${worker.id}/ingresos`} class="dc-btn" style="background:var(--accent);color:#fff;border:none;text-decoration:none;font-size:12px">
+          <Receipt class="w-3.5 h-3.5" />
+          Ingresos y Deducciones
+        </a>
         <a href={`/workers/edit/${worker.id}`} class="dc-btn dc-btn-ghost">
           <Pencil class="w-3.5 h-3.5" />
           Editar

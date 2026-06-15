@@ -39,6 +39,7 @@ export const createWorkerSchema = z.object({
     .union([z.string(), z.number()])
     .optional()
     .default("0.00"),
+  salarioBase: z.union([z.string(), z.number()]).optional().default("0.00"),
   tallaCamisaId: z.number().int().positive(),
   tallaPantalonId: z.number().int().positive(),
   tipoContratoId: z.number().int().positive(),
@@ -48,6 +49,16 @@ export const createWorkerSchema = z.object({
   activo: z.boolean().optional().default(true),
   foto: z.string().nullable().optional(),
   municipioId: z.number().int().positive().optional().nullable(),
+  tipoMonedaId: z.number().int().positive().optional().nullable(),
+  formaPagoId: z.number().int().positive().optional().nullable(),
+  cuentaNomina: z.string().max(100).optional().nullable(),
+  sueldoEmbargable: z.boolean().optional(),
+  sueldoEmbargablePorcentaje: z.union([z.string(), z.number()]).optional().nullable(),
+  depreciacionVehicular: z.boolean().optional(),
+  depreciacionMontoAplicar: z.string().max(50).optional().nullable(),
+  depreciacionMontoFijo: z.boolean().optional(),
+  depreciacionDolar: z.boolean().optional(),
+  descripcionVehiculo: z.string().max(255).optional().nullable(),
 });
 
 export const updateWorkerSchema = z.object({
@@ -90,6 +101,7 @@ export const updateWorkerSchema = z.object({
     .optional(),
   direccion: z.string().nullable().optional(),
   saldoVacaciones: z.union([z.string(), z.number()]).optional(),
+  salarioBase: z.union([z.string(), z.number()]).optional(),
   tallaCamisaId: z.number().int().positive().optional(),
   tallaPantalonId: z.number().int().positive().optional(),
   tipoContratoId: z.number().int().positive().optional(),
@@ -99,6 +111,16 @@ export const updateWorkerSchema = z.object({
   activo: z.boolean().optional(),
   foto: z.string().nullable().optional(),
   municipioId: z.number().int().positive().optional().nullable(),
+  tipoMonedaId: z.number().int().positive().optional().nullable(),
+  formaPagoId: z.number().int().positive().optional().nullable(),
+  cuentaNomina: z.string().max(100).optional().nullable(),
+  sueldoEmbargable: z.boolean().optional(),
+  sueldoEmbargablePorcentaje: z.union([z.string(), z.number()]).optional().nullable(),
+  depreciacionVehicular: z.boolean().optional(),
+  depreciacionMontoAplicar: z.string().max(50).optional().nullable(),
+  depreciacionMontoFijo: z.boolean().optional(),
+  depreciacionDolar: z.boolean().optional(),
+  descripcionVehiculo: z.string().max(255).optional().nullable(),
 });
 
 export const workerFiltersSchema = z.object({

@@ -15,6 +15,8 @@ import {
   deptosNi,
   municipios,
   planillas,
+  tiposMoneda,
+  formasPago,
 } from "@db/schemas";
 import { trabajadoresPlanillas } from "@db/schemas/workers_planillas";
 import { eq, isNull } from "drizzle-orm";
@@ -25,7 +27,7 @@ const idParam = Astro.params.id;
 if (!idParam) return Astro.redirect("/workers");
 const id = Number(idParam);
 
-const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList, horariosList, deptosNiList, municipiosList, planillasList, workerPlanillas] =
+const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList, horariosList, deptosNiList, municipiosList, planillasList, workerPlanillas, tiposMonedaList, formasPagoList] =
   await Promise.all([
     db.select({
       id: trabajadores.id,
@@ -50,6 +52,16 @@ const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList
       generoId: trabajadores.generoId,
       salarioBase: trabajadores.salarioBase,
       municipioId: trabajadores.municipioId,
+      tipoMonedaId: trabajadores.tipoMonedaId,
+      formaPagoId: trabajadores.formaPagoId,
+      cuentaNomina: trabajadores.cuentaNomina,
+      sueldoEmbargable: trabajadores.sueldoEmbargable,
+      sueldoEmbargablePorcentaje: trabajadores.sueldoEmbargablePorcentaje,
+      depreciacionVehicular: trabajadores.depreciacionVehicular,
+      depreciacionMontoAplicar: trabajadores.depreciacionMontoAplicar,
+      depreciacionMontoFijo: trabajadores.depreciacionMontoFijo,
+      depreciacionDolar: trabajadores.depreciacionDolar,
+      descripcionVehiculo: trabajadores.descripcionVehiculo,
       created_at: trabajadores.created_at,
       updated_at: trabajadores.updated_at,
       deleted_at: trabajadores.deleted_at,
@@ -72,13 +84,16 @@ const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList
       .select({ planillaId: trabajadoresPlanillas.planillaId })
       .from(trabajadoresPlanillas)
       .where(eq(trabajadoresPlanillas.trabajadorId, id)),
+    db.select().from(tiposMoneda).where(isNull(tiposMoneda.deleted_at)),
+    db.select().from(formasPago).where(isNull(formasPago.deleted_at)),
   ]);
 
 const workerPlanillaIds = new Set(workerPlanillas.map((wp: any) => wp.planillaId));
 
 if (!workerRow) return Astro.redirect("/workers");
 const fmt = (d: Date | string | null) => d ? new Date(d).toLocaleDateString("en-CA") : "";
-const worker = { ...workerRow, fechaEntrada: fmt(workerRow.fechaEntrada), fechaSalida: fmt(workerRow.fechaSalida) };
+const deptoNiId = municipiosList.find((m: any) => m.id === workerRow.municipioId)?.deptoNiId ?? null;
+const worker = { ...workerRow, deptoNiId, fechaEntrada: fmt(workerRow.fechaEntrada), fechaSalida: fmt(workerRow.fechaSalida) };
 ---
 
 <AppLayout title={`Editar: ${worker.nombre} ${worker.apellidos}`} {currentPath}>
@@ -126,6 +141,8 @@ const worker = { ...workerRow, fechaEntrada: fmt(workerRow.fechaEntrada), fechaS
         horarios={horariosList}
         deptosNi={deptosNiList}
         municipios={municipiosList}
+        tiposMoneda={tiposMonedaList}
+        formasPago={formasPagoList}
         worker={worker}
         mode="edit"
       />
@@ -205,9 +222,15 @@ const worker = { ...workerRow, fechaEntrada: fmt(workerRow.fechaEntrada), fechaS
       }
     }
 
-    const numFields = ["nacionalidadId","tallaCamisaId","tallaPantalonId","tipoContratoId","cargoId","generoId","horarioId","saldoVacaciones","municipioId"];
+    const numFields = ["nacionalidadId","tallaCamisaId","tallaPantalonId","tipoContratoId","cargoId","generoId","horarioId","saldoVacaciones","municipioId","deptoNiId","tipoMonedaId","formaPagoId","sueldoEmbargablePorcentaje"];
     for (const f of numFields) {
-      if (data[f] !== undefined && data[f] !== "") data[f] = Number(data[f]);
+      if (data[f] !== undefined) {
+        if (data[f] === "") {
+          delete data[f];
+        } else {
+          data[f] = Number(data[f]);
+        }
+      }
     }
     if (data.fechaSalida === "") data.fechaSalida = null;
 

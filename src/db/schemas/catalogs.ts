@@ -105,6 +105,11 @@ export const planillas = mysqlTable("planillas", {
     "administrativa",
     "temporal",
   ]).notNull(),
+  unidadNegocioId: int("unidad_negocio_id")
+    .references(() => unidadesNegocio.id),
+  fechaDesde: timestamp("fecha_desde"),
+  fechaHasta: timestamp("fecha_hasta"),
+  codigo: varchar("codigo", { length: 50 }),
   ...auditColumns,
 });
 
@@ -131,6 +136,19 @@ export const roles = mysqlTable("roles", {
   id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   descripcion: text("descripcion"),
+  ...auditColumns,
+});
+
+export const tiposMoneda = mysqlTable("tipos_moneda", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 100 }).notNull(),
+  codigo: varchar("codigo", { length: 10 }),
+  ...auditColumns,
+});
+
+export const formasPago = mysqlTable("formas_pago", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 100 }).notNull(),
   ...auditColumns,
 });
 

@@ -1,5 +1,5 @@
 ---
-import { Menu, Bell, Search, LogOut, User, ChevronDown } from "@lucide/astro";
+import { Menu, LogOut, User, ChevronDown } from "@lucide/astro";
 
 export interface Props {
   pageTitle: string;
@@ -23,30 +23,8 @@ const user = Astro.locals.user;
     <h1 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{pageTitle}</h1>
   </div>
 
-  <!-- Right: Search, notifications, user -->
+  <!-- Right: User dropdown -->
   <div class="flex items-center gap-2">
-    <!-- Search (desktop) -->
-    <button
-      class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-      aria-label="Buscar"
-      type="button"
-    >
-      <Search class="size-4" />
-      <span>Buscar...</span>
-      <kbd class="hidden md:inline-flex px-1.5 py-0.5 text-xs rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400">Ctrl+K</kbd>
-    </button>
-
-    <!-- Notifications -->
-    <button
-      class="relative p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800"
-      aria-label="Notificaciones"
-      type="button"
-    >
-      <Bell class="size-5" />
-      <span class="absolute top-1.5 right-1.5 size-2 rounded-full bg-danger-500 ring-2 ring-white dark:ring-gray-900"></span>
-    </button>
-
-    <!-- User dropdown -->
     <div id="user-dropdown" class="relative">
       <button
         id="user-menu-button"

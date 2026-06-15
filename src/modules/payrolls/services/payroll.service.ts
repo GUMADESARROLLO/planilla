@@ -23,6 +23,10 @@ const createPlanillaSchema = z.object({
     ["quincenal", "mensual", "vehicular", "administrativa", "temporal"],
     { errorMap: () => ({ message: "Tipo de planilla inválido" }) },
   ),
+  unidadNegocioId: z.number().int().positive().nullable().optional(),
+  fechaDesde: z.string().nullable().optional(),
+  fechaHasta: z.string().nullable().optional(),
+  codigo: z.string().max(50).nullable().optional(),
 });
 
 const updatePlanillaSchema = z.object({
@@ -42,6 +46,10 @@ const updatePlanillaSchema = z.object({
     )
     .optional(),
   activo: z.boolean().optional(),
+  unidadNegocioId: z.number().int().positive().nullable().optional(),
+  fechaDesde: z.string().nullable().optional(),
+  fechaHasta: z.string().nullable().optional(),
+  codigo: z.string().max(50).nullable().optional(),
 });
 
 const assignWorkerSchema = z.object({

@@ -13,13 +13,15 @@ import {
   horarios,
   deptosNi,
   municipios,
+  tiposMoneda,
+  formasPago,
 } from "@db/schemas";
 import { isNull } from "drizzle-orm";
 import WorkerForm from "./_form.astro";
 
 const currentPath = "/workers";
 
-const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList, horariosList, deptosNiList, municipiosList] =
+const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList, horariosList, deptosNiList, municipiosList, tiposMonedaList, formasPagoList] =
   await Promise.all([
     db.select().from(tiposContrato).where(isNull(tiposContrato.deleted_at)),
     db.select().from(cargos).where(isNull(cargos.deleted_at)),
@@ -30,6 +32,8 @@ const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCam
     db.select().from(horarios).where(isNull(horarios.deleted_at)),
     db.select().from(deptosNi),
     db.select().from(municipios),
+    db.select().from(tiposMoneda).where(isNull(tiposMoneda.deleted_at)),
+    db.select().from(formasPago).where(isNull(formasPago.deleted_at)),
   ]);
 ---
 
@@ -76,6 +80,8 @@ const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCam
         horarios={horariosList}
         deptosNi={deptosNiList}
         municipios={municipiosList}
+        tiposMoneda={tiposMonedaList}
+        formasPago={formasPagoList}
         mode="create"
       />
     </form>
@@ -123,9 +129,15 @@ const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCam
       }
     }
 
-    const numFields = ["nacionalidadId","tallaCamisaId","tallaPantalonId","tipoContratoId","cargoId","generoId","horarioId","saldoVacaciones","municipioId"];
+    const numFields = ["nacionalidadId","tallaCamisaId","tallaPantalonId","tipoContratoId","cargoId","generoId","horarioId","saldoVacaciones","municipioId","deptoNiId","tipoMonedaId","formaPagoId","sueldoEmbargablePorcentaje"];
     for (const f of numFields) {
-      if (data[f] !== undefined && data[f] !== "") data[f] = Number(data[f]);
+      if (data[f] !== undefined) {
+        if (data[f] === "") {
+          delete data[f];
+        } else {
+          data[f] = Number(data[f]);
+        }
+      }
     }
     if (data.fechaSalida === "") data.fechaSalida = null;
 

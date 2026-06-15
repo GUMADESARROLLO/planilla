@@ -2,6 +2,10 @@ export interface CreatePlanillaDTO {
   nombre: string;
   descripcion?: string;
   tipo: "quincenal" | "mensual" | "vehicular" | "administrativa" | "temporal";
+  unidadNegocioId?: number | null;
+  fechaDesde?: string | null;
+  fechaHasta?: string | null;
+  codigo?: string | null;
 }
 
 export interface UpdatePlanillaDTO {
@@ -9,6 +13,10 @@ export interface UpdatePlanillaDTO {
   descripcion?: string;
   tipo?: "quincenal" | "mensual" | "vehicular" | "administrativa" | "temporal";
   activo?: boolean;
+  unidadNegocioId?: number | null;
+  fechaDesde?: string | null;
+  fechaHasta?: string | null;
+  codigo?: string | null;
 }
 
 export interface PlanillaResponse {
@@ -17,6 +25,10 @@ export interface PlanillaResponse {
   descripcion: string | null;
   tipo: string;
   activo: boolean;
+  unidadNegocioId: number | null;
+  fechaDesde: Date | string | null;
+  fechaHasta: Date | string | null;
+  codigo: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -21,6 +21,7 @@ export interface CreateWorkerDTO {
   telefono: string;
   direccion?: string | null;
   saldoVacaciones?: string | number;
+  salarioBase?: string | number;
   tallaCamisaId: number;
   tallaPantalonId: number;
   tipoContratoId: number;
@@ -30,6 +31,17 @@ export interface CreateWorkerDTO {
   activo?: boolean;
   foto?: string | null;
   municipioId?: number | null;
+  deptoNiId?: number | null;
+  tipoMonedaId?: number | null;
+  formaPagoId?: number | null;
+  cuentaNomina?: string | null;
+  sueldoEmbargable?: boolean;
+  sueldoEmbargablePorcentaje?: string | number | null;
+  depreciacionVehicular?: boolean;
+  depreciacionMontoAplicar?: string | null;
+  depreciacionMontoFijo?: boolean;
+  depreciacionDolar?: boolean;
+  descripcionVehiculo?: string | null;
 }
 
 export interface UpdateWorkerDTO {
@@ -44,6 +56,7 @@ export interface UpdateWorkerDTO {
   telefono?: string;
   direccion?: string | null;
   saldoVacaciones?: string | number;
+  salarioBase?: string | number;
   tallaCamisaId?: number;
   tallaPantalonId?: number;
   tipoContratoId?: number;
@@ -53,6 +66,17 @@ export interface UpdateWorkerDTO {
   activo?: boolean;
   foto?: string | null;
   municipioId?: number | null;
+  deptoNiId?: number | null;
+  tipoMonedaId?: number | null;
+  formaPagoId?: number | null;
+  cuentaNomina?: string | null;
+  sueldoEmbargable?: boolean;
+  sueldoEmbargablePorcentaje?: string | number | null;
+  depreciacionVehicular?: boolean;
+  depreciacionMontoAplicar?: string | null;
+  depreciacionMontoFijo?: boolean;
+  depreciacionDolar?: boolean;
+  descripcionVehiculo?: string | null;
 }
 
 export interface WorkerResponse {
@@ -69,6 +93,7 @@ export interface WorkerResponse {
   telefono: string;
   direccion: string | null;
   saldoVacaciones: string | number;
+  salarioBase: string | number;
   tallaCamisaId: number;
   nombreTallaCamisa?: string;
   tallaPantalonId: number;
@@ -88,6 +113,16 @@ export interface WorkerResponse {
   municipioId: number | null;
   nombreMunicipio?: string;
   nombreDepto?: string;
+  tipoMonedaId: number | null;
+  formaPagoId: number | null;
+  cuentaNomina: string | null;
+  sueldoEmbargable: boolean;
+  sueldoEmbargablePorcentaje: string | null;
+  depreciacionVehicular: boolean;
+  depreciacionMontoAplicar: string | null;
+  depreciacionMontoFijo: boolean;
+  depreciacionDolar: boolean;
+  descripcionVehiculo: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
   deletedAt: Date | string | null;

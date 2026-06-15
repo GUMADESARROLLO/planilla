@@ -4,13 +4,22 @@ import Button from "@components/ui/Button.astro";
 import DataTable from "@components/ui/DataTable.astro";
 import Modal from "@components/ui/Modal.astro";
 import FormField from "@components/ui/FormField.astro";
+import DatePicker from "@components/ui/DatePicker.astro";
 import Badge from "@components/ui/Badge.astro";
 import Alert from "@components/ui/Alert.astro";
 import EmptyState from "@components/ui/EmptyState.astro";
 import ConfirmDialog from "@components/shared/ConfirmDialog.astro";
+import { db } from "@db/index";
+import { unidadesNegocio } from "@db/schemas/catalogs";
+import { isNull } from "drizzle-orm";
 
 const title = "Planillas";
 const currentPath = "/payrolls";
+
+const unidadesList = await db
+  .select({ id: unidadesNegocio.id, nombre: unidadesNegocio.nombre })
+  .from(unidadesNegocio)
+  .where(isNull(unidadesNegocio.deleted_at));
 ---
 
 <AppLayout {title} {currentPath}>
@@ -45,43 +54,49 @@ const currentPath = "/payrolls";
     />
   </div>
 
-  <Modal open={false} title="Nueva Planilla" size="md">
+  <Modal open={false} title="Nueva Planilla" size="lg">
     <form id="payroll-form" slot="body" class="space-y-4" novalidate>
-      <FormField label="Nombre" name="nombre" required>
-        <input
-          id="input-nombre"
-          name="nombre"
-          type="text"
-          required
-          maxlength={255}
-          placeholder="Ej: Planilla General Quincenal"
-          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
-        />
-      </FormField>
-      <FormField label="Tipo" name="tipo" required>
-        <select
-          id="input-tipo"
-          name="tipo"
-          required
-          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
-        >
+      <div class="grid grid-cols-2 gap-4">
+        <FormField label="Nombre" name="nombre" required>
+          <input id="input-nombre" name="nombre" type="text" required maxlength={255} placeholder="Ej: Planilla General Quincenal"
+            class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors" />
+        </FormField>
+        <FormField label="Tipo" name="tipo" required>
+          <select id="input-tipo" name="tipo" required
+            class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+            <option value="">Seleccionar...</option>
+            <option value="quincenal">Quincenal</option>
+            <option value="mensual">Mensual</option>
+            <option value="vehicular">Vehicular</option>
+            <option value="administrativa">Administrativa</option>
+            <option value="temporal">Temporal</option>
+          </select>
+        </FormField>
+      </div>
+      <FormField label="Unidad de Negocio" name="unidadNegocioId">
+        <select id="input-unidad" name="unidadNegocioId"
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
           <option value="">Seleccionar...</option>
-          <option value="quincenal">Quincenal</option>
-          <option value="mensual">Mensual</option>
-          <option value="vehicular">Vehicular</option>
-          <option value="administrativa">Administrativa</option>
-          <option value="temporal">Temporal</option>
+          {unidadesList.map((u) => (
+            <option value={u.id}>{u.nombre}</option>
+          ))}
         </select>
       </FormField>
+      <div class="grid grid-cols-2 gap-4">
+        <FormField label="Desde" name="fechaDesde">
+          <DatePicker id="input-desde" name="fechaDesde" />
+        </FormField>
+        <FormField label="Hasta" name="fechaHasta">
+          <DatePicker id="input-hasta" name="fechaHasta" />
+        </FormField>
+      </div>
+      <FormField label="Código de Planilla" name="codigo">
+        <input id="input-codigo" name="codigo" type="text" readonly placeholder="Se genera automáticamente"
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm cursor-not-allowed" />
+      </FormField>
       <FormField label="Descripción" name="descripcion">
-        <textarea
-          id="input-descripcion"
-          name="descripcion"
-          rows={3}
-          maxlength={1000}
-          placeholder="Descripción opcional"
-          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors resize-none"
-        ></textarea>
+        <textarea id="input-descripcion" name="descripcion" rows={2} maxlength={1000} placeholder="Descripción opcional"
+          class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors resize-none"></textarea>
       </FormField>
     </form>
     <div slot="footer">
@@ -422,10 +437,32 @@ const currentPath = "/payrolls";
   }
 
   // New payroll form
+  function generarCodigo(): string {
+    const desde = (document.getElementById("input-desde") as HTMLInputElement).value;
+    const ahora = desde ? new Date(desde + "T12:00:00") : new Date();
+    const dia = ahora.getDate();
+    const mes = ahora.toLocaleDateString("en-US", { month: "short" });
+    const año = String(ahora.getFullYear()).slice(-2);
+    const quincena = dia <= 15 ? "1Q" : "2Q";
+    return `${quincena}-${mes}-${año}`;
+  }
+
+  document.getElementById("input-tipo")?.addEventListener("change", () => {
+    (document.getElementById("input-codigo") as HTMLInputElement).value = generarCodigo();
+  });
+
+  document.getElementById("input-desde")?.addEventListener("change", () => {
+    (document.getElementById("input-codigo") as HTMLInputElement).value = generarCodigo();
+  });
+
   document.getElementById("btn-new-payroll")?.addEventListener("click", () => {
     editingId = null;
     (document.getElementById("input-nombre") as HTMLInputElement).value = "";
     (document.getElementById("input-tipo") as HTMLSelectElement).value = "";
+    (document.getElementById("input-unidad") as HTMLSelectElement).value = "";
+    (document.getElementById("input-desde") as HTMLInputElement).value = "";
+    (document.getElementById("input-hasta") as HTMLInputElement).value = "";
+    (document.getElementById("input-codigo") as HTMLInputElement).value = "";
     (document.getElementById("input-descripcion") as HTMLTextAreaElement).value = "";
     (window as any).__openModal();
   });
@@ -437,6 +474,10 @@ const currentPath = "/payrolls";
   document.getElementById("btn-form-submit")?.addEventListener("click", async () => {
     const nombre = (document.getElementById("input-nombre") as HTMLInputElement).value.trim();
     const tipo = (document.getElementById("input-tipo") as HTMLSelectElement).value;
+    const unidadNegocioId = (document.getElementById("input-unidad") as HTMLSelectElement).value;
+    const fechaDesde = (document.getElementById("input-desde") as HTMLInputElement).value;
+    const fechaHasta = (document.getElementById("input-hasta") as HTMLInputElement).value;
+    const codigo = (document.getElementById("input-codigo") as HTMLInputElement).value.trim();
     const descripcion = (document.getElementById("input-descripcion") as HTMLTextAreaElement).value.trim();
 
     if (!nombre || !tipo) {
@@ -444,11 +485,17 @@ const currentPath = "/payrolls";
       return;
     }
 
+    const payload: any = { nombre, tipo, descripcion: descripcion || undefined };
+    if (unidadNegocioId) payload.unidadNegocioId = Number(unidadNegocioId);
+    if (fechaDesde) payload.fechaDesde = fechaDesde;
+    if (fechaHasta) payload.fechaHasta = fechaHasta;
+    payload.codigo = codigo || generarCodigo() || null;
+
     try {
       const res = await fetch("/api/payrolls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, tipo, descripcion: descripcion || undefined }),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message || "Error al crear");
