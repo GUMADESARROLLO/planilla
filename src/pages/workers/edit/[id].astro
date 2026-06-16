@@ -88,7 +88,7 @@ const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList
     db.select().from(formasPago).where(isNull(formasPago.deleted_at)),
   ]);
 
-const workerTipoIds = new Set(workerTipos.map((wt: any) => wt.tipoPlanillaId));
+const workerTipoIds = new Set(workerTipos.map((wt: any) => Number(wt.tipo_planilla_id)));
 
 if (!workerRow) return Astro.redirect("/workers");
 const fmt = (d: Date | string | null) => d ? new Date(d).toLocaleDateString("en-CA") : "";
