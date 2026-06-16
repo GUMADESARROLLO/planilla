@@ -15,7 +15,6 @@ export interface DashboardStats {
   pendingPermits: number;
   approvedPermits: number;
   rejectedPermits: number;
-  workersByContract: { nombre: string; count: number }[];
   workersByGender: { nombre: string; count: number }[];
   vacacionesByUnidad: {
     unidadNegocio: string;
@@ -52,7 +51,6 @@ class DashboardService {
       [pendingPermits],
       [approvedPermits],
       [rejectedPermits],
-      workersByContract,
       workersByGender,
       vacacionesByUnidad,
     ] = await Promise.all([
@@ -90,19 +88,6 @@ class DashboardService {
         .select({ value: count() })
         .from(schemas.esquelasPermisos)
         .where(eq(schemas.esquelasPermisos.estado, "rechazada"))
-        .execute(),
-      db
-        .select({
-          nombre: schemas.tiposContrato.nombre,
-          count: count(),
-        })
-        .from(schemas.trabajadores)
-        .innerJoin(
-          schemas.tiposContrato,
-          eq(schemas.trabajadores.tipoContratoId, schemas.tiposContrato.id),
-        )
-        .where(isNull(schemas.trabajadores.deleted_at))
-        .groupBy(schemas.tiposContrato.nombre)
         .execute(),
       db
         .select({
@@ -150,7 +135,6 @@ class DashboardService {
       pendingPermits: Number(pendingPermits?.value ?? 0),
       approvedPermits: Number(approvedPermits?.value ?? 0),
       rejectedPermits: Number(rejectedPermits?.value ?? 0),
-      workersByContract: workersByContract as { nombre: string; count: number }[],
       workersByGender: workersByGender as { nombre: string; count: number }[],
       vacacionesByUnidad: (vacacionesByUnidad as any[]).map((v: any) => ({
         unidadNegocio: v.unidadNegocio,

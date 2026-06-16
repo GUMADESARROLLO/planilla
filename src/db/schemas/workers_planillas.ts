@@ -12,14 +12,13 @@ export const trabajadoresPlanillas = mysqlTable(
     planillaId: int("planilla_id")
       .notNull()
       .references(() => planillas.id),
+    tipoPlanillaId: int("tipo_planilla_id"),
     createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.trabajadorId, table.planillaId] }),
   })
 );
-
-// ---- Relations ----
 
 export const trabajadoresPlanillasRelations = relations(
   trabajadoresPlanillas,
@@ -34,4 +33,3 @@ export const trabajadoresPlanillasRelations = relations(
     }),
   })
 );
-

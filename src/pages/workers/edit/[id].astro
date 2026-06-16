@@ -14,12 +14,12 @@ import {
   horarios,
   deptosNi,
   municipios,
-  planillas,
+  tiposPlanilla,
   tiposMoneda,
   formasPago,
 } from "@db/schemas";
 import { trabajadoresPlanillas } from "@db/schemas/workers_planillas";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import WorkerForm from "../_form.astro";
 
 const currentPath = "/workers";
@@ -27,7 +27,7 @@ const idParam = Astro.params.id;
 if (!idParam) return Astro.redirect("/workers");
 const id = Number(idParam);
 
-const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList, horariosList, deptosNiList, municipiosList, planillasList, workerPlanillas, tiposMonedaList, formasPagoList] =
+const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCamisaList, tallasPantalonList, horariosList, deptosNiList, municipiosList, planillasList, workerTipos, tiposMonedaList, formasPagoList] =
   await Promise.all([
     db.select({
       id: trabajadores.id,
@@ -79,16 +79,16 @@ const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList
     db.select().from(horarios).where(isNull(horarios.deleted_at)),
     db.select().from(deptosNi),
     db.select().from(municipios),
-    db.select().from(planillas).where(isNull(planillas.deleted_at)),
-    db
-      .select({ planillaId: trabajadoresPlanillas.planillaId })
-      .from(trabajadoresPlanillas)
-      .where(eq(trabajadoresPlanillas.trabajadorId, id)),
+    db.select().from(tiposPlanilla).where(isNull(tiposPlanilla.deleted_at)),
+    db.execute(
+      sql`SELECT tipo_planilla_id FROM trabajadores_planillas
+          WHERE trabajador_id = ${id} AND planilla_id IS NULL`
+    ).then(([rows]: any) => rows as { tipoPlanillaId: number }[]),
     db.select().from(tiposMoneda).where(isNull(tiposMoneda.deleted_at)),
     db.select().from(formasPago).where(isNull(formasPago.deleted_at)),
   ]);
 
-const workerPlanillaIds = new Set(workerPlanillas.map((wp: any) => wp.planillaId));
+const workerTipoIds = new Set(workerTipos.map((wt: any) => wt.tipoPlanillaId));
 
 if (!workerRow) return Astro.redirect("/workers");
 const fmt = (d: Date | string | null) => d ? new Date(d).toLocaleDateString("en-CA") : "";
@@ -145,39 +145,26 @@ const worker = { ...workerRow, deptoNiId, fechaEntrada: fmt(workerRow.fechaEntra
         formasPago={formasPagoList}
         worker={worker}
         mode="edit"
-      />
+      >
+        <div slot="planilla" class="wf-fields" style="display:flex;flex-wrap:wrap;gap:10px;padding:16px 22px">
+            {planillasList.length === 0 ? (
+              <p class="text-sm text-gray-500">No hay tipos disponibles</p>
+            ) : (
+              planillasList.map((p: any) => {
+                const checked = workerTipoIds.has(p.id);
+                return (
+                  <label class="ep-planilla-item" data-tipo-id={p.id}>
+                    <input type="checkbox" class="ep-planilla-checkbox" data-tipo-id={p.id} checked={checked} />
+                    <div class="ep-planilla-info">
+                      <span class="ep-planilla-name">{p.nombre}</span>
+                    </div>
+                  </label>
+                );
+              })
+            )}
+          </div>
+      </WorkerForm>
     </form>
-
-    <!-- Planillas Section -->
-    <div class="ep-section">
-      <div class="ep-section-header">
-        <svg class="ep-section-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-        <span class="ep-section-title">Planillas</span>
-      </div>
-      <div class="ep-section-body ep-planillas-grid">
-        {planillasList.length === 0 ? (
-          <p class="text-sm text-gray-500 dark:text-gray-400">No hay planillas disponibles</p>
-        ) : (
-          planillasList.map((p: any) => {
-            const checked = workerPlanillaIds.has(p.id);
-            return (
-              <label class="ep-planilla-item" data-planilla-id={p.id}>
-                <input
-                  type="checkbox"
-                  class="ep-planilla-checkbox"
-                  data-planilla-id={p.id}
-                  checked={checked}
-                />
-                <div class="ep-planilla-info">
-                  <span class="ep-planilla-name">{p.nombre}</span>
-                  <span class="ep-planilla-tipo">{p.tipo}</span>
-                </div>
-              </label>
-            );
-          })
-        )}
-      </div>
-    </div>
   </div>
 </AppLayout>
 
@@ -272,29 +259,29 @@ const worker = { ...workerRow, deptoNiId, fechaEntrada: fmt(workerRow.fechaEntra
     }
   });
 
-  // Planilla toggle
+  // Tipo planilla toggle
   document.querySelectorAll(".ep-planilla-checkbox").forEach((cb) => {
     cb.addEventListener("change", async (e) => {
       const input = e.currentTarget as HTMLInputElement;
-      const planillaId = Number(input.getAttribute("data-planilla-id"));
+      const tipoId = Number(input.getAttribute("data-tipo-id"));
       const label = input.closest(".ep-planilla-item") as HTMLElement;
       const workerIdEl = document.querySelector<HTMLInputElement>("input[name='id']");
-      if (!workerIdEl || !planillaId) return;
+      if (!workerIdEl || !tipoId) return;
       const wid = Number(workerIdEl.value);
 
       label.style.opacity = "0.5";
       input.disabled = true;
 
       try {
-        const res = await fetch(`/api/workers/${wid}/planillas`, {
+        const res = await fetch(`/api/workers/${wid}/tipos-planilla`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ planillaId }),
+          body: JSON.stringify({ tipoPlanillaId: tipoId }),
         });
         const json = await res.json();
         if (!json.success) {
           input.checked = !input.checked;
-          Swal.fire("Error", json.error?.message ?? "Error al actualizar planilla", "error");
+          Swal.fire("Error", json.error?.message ?? "Error al actualizar", "error");
         }
       } catch {
         input.checked = !input.checked;
@@ -378,5 +365,16 @@ const worker = { ...workerRow, deptoNiId, fechaEntrada: fmt(workerRow.fechaEntra
     font-size: 11px;
     color: var(--text-muted, #4d5c7d);
     text-transform: capitalize;
+  }
+  .ep-planilla-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--accent-light, #1a2744);
+    border: 1px solid var(--accent, #3b6fd4);
+    color: #a8c4f0;
   }
 </style>

@@ -143,42 +143,6 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
     <!-- Charts Row / Secondary Stats -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Workers by Contract -->
-      <Card title="Trabajadores por Tipo de Contrato" subtitle="Distribución actual">
-        <div slot="body" class="space-y-3">
-          {stats.workersByContract.length > 0 ? (
-            stats.workersByContract.map((item) => {
-              const pct = stats.totalWorkers > 0
-                ? ((item.count / stats.totalWorkers) * 100).toFixed(1)
-                : "0";
-              return (
-                <div class="flex items-center gap-3">
-                  <span class="text-sm text-gray-700 dark:text-gray-300 w-36 truncate shrink-0">
-                    {item.nombre}
-                  </span>
-                  <div class="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-primary-500 rounded-full transition-all"
-                      style={`width: ${pct}%`}
-                    ></div>
-                  </div>
-                  <span class="text-sm font-medium text-gray-900 dark:text-white w-16 text-right shrink-0">
-                    {item.count}
-                  </span>
-                  <span class="text-xs text-gray-400 dark:text-gray-500 w-12 text-right shrink-0">
-                    {pct}%
-                  </span>
-                </div>
-              );
-            })
-          ) : (
-            <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
-              No hay datos disponibles
-            </p>
-          )}
-        </div>
-      </Card>
-
       <!-- Vacaciones acumuladas por departamento -->
       <Card title="Vacaciones por Departamento" subtitle="Saldo acumulado por unidad de negocio">
         <div slot="body" class="space-y-4">

@@ -112,8 +112,7 @@ const tiposList = await db
       </button>
       <button
         id="btn-form-submit"
-        type="submit"
-        form="payroll-form"
+        type="button"
         class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
       >
         Guardar
@@ -179,8 +178,7 @@ const tiposList = await db
       </button>
       <button
         id="btn-edit-submit"
-        type="submit"
-        form="payroll-edit-form"
+        type="button"
         class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
       >
         Actualizar
@@ -472,7 +470,13 @@ const tiposList = await db
     (window as any).__closeModal();
   });
 
-  document.getElementById("btn-form-submit")?.addEventListener("click", async () => {
+  document.getElementById("btn-form-submit")?.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    const btn = document.getElementById("btn-form-submit") as HTMLButtonElement;
+    btn.disabled = true;
+    btn.classList.add("opacity-60", "cursor-wait");
+    btn.innerHTML = '<span class="inline-block animate-spin size-4 border-2 border-white border-t-transparent rounded-full mr-1.5"></span> Guardando...';
     const nombre = (document.getElementById("input-nombre") as HTMLInputElement).value.trim();
     const tipoPlanillaId = Number((document.getElementById("input-tipo") as HTMLSelectElement).value);
     const unidadNegocioId = (document.getElementById("input-unidad") as HTMLSelectElement).value;
@@ -502,9 +506,18 @@ const tiposList = await db
       if (!json.success) throw new Error(json.error?.message || "Error al crear");
       (window as any).__closeModal();
       showAlert("Planilla creada correctamente", "success");
-      loadPayrolls(currentPage, currentSearch);
+      // Refresh silently without skeleton
+      try {
+        const res = await fetch(`/api/payrolls?page=${currentPage}&limit=10${currentSearch ? `&search=${encodeURIComponent(currentSearch)}` : ""}`);
+        const json = await res.json();
+        renderTable(json.data, json.meta);
+      } catch {};
     } catch (err) {
       showAlert(err instanceof Error ? err.message : "Error al crear", "error");
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove("opacity-60", "cursor-wait");
+      btn.textContent = "Guardar";
     }
   });
 
@@ -513,8 +526,15 @@ const tiposList = await db
     (window as any).__closeModal();
   });
 
-  document.getElementById("btn-edit-submit")?.addEventListener("click", async () => {
+  document.getElementById("btn-edit-submit")?.addEventListener("click", async (e) => {
     if (!editingId) return;
+    e.preventDefault();
+
+    const btn = document.getElementById("btn-edit-submit") as HTMLButtonElement;
+    btn.disabled = true;
+    btn.classList.add("opacity-60", "cursor-wait");
+    btn.innerHTML = '<span class="inline-block animate-spin size-4 border-2 border-white border-t-transparent rounded-full mr-1.5"></span> Guardando...';
+
     const nombre = (document.getElementById("edit-nombre") as HTMLInputElement).value.trim();
     const tipoPlanillaId = Number((document.getElementById("edit-tipo") as HTMLSelectElement).value);
     const descripcion = (document.getElementById("edit-descripcion") as HTMLTextAreaElement).value.trim();
@@ -535,9 +555,17 @@ const tiposList = await db
       if (!json.success) throw new Error(json.error?.message || "Error al actualizar");
       (window as any).__closeModal();
       showAlert("Planilla actualizada correctamente", "success");
-      loadPayrolls(currentPage, currentSearch);
+      try {
+        const res = await fetch(`/api/payrolls?page=${currentPage}&limit=10${currentSearch ? `&search=${encodeURIComponent(currentSearch)}` : ""}`);
+        const json = await res.json();
+        renderTable(json.data, json.meta);
+      } catch {};
     } catch (err) {
       showAlert(err instanceof Error ? err.message : "Error al actualizar", "error");
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove("opacity-60", "cursor-wait");
+      btn.textContent = "Actualizar";
     }
   });
 
@@ -551,7 +579,11 @@ const tiposList = await db
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message || "Error al eliminar");
       showAlert("Planilla eliminada correctamente", "success");
-      loadPayrolls(currentPage, currentSearch);
+      try {
+        const res = await fetch(`/api/payrolls?page=${currentPage}&limit=10${currentSearch ? `&search=${encodeURIComponent(currentSearch)}` : ""}`);
+        const json = await res.json();
+        renderTable(json.data, json.meta);
+      } catch {};
     } catch (err) {
       showAlert(err instanceof Error ? err.message : "Error al eliminar", "error");
     }
