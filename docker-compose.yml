@@ -1,0 +1,43 @@
+services:
+  app:
+    container_name: cn-payroll-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '${PORT:-4321}:4321'
+    environment:
+      HOST: '0.0.0.0'
+      PORT: '4321'
+
+      # Base de Datos MySQL
+      DATABASE_URL: ${DATABASE_URL:-mysql://root:root@localhost:3306/planilla_hr}
+      DB_HOST: ${DB_HOST:-localhost}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_NAME: ${DB_NAME:-planilla_hr}
+      DB_POOL_LIMIT: ${DB_POOL_LIMIT:-10}
+
+      # Better Auth
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:4321}
+
+      # MinIO / AWS S3
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_BUCKET: ${AWS_BUCKET:-}
+      AWS_ENDPOINT: ${AWS_ENDPOINT:-}
+
+      # SQL Server (legacy)
+      DB_SQLSRV_HOST: ${DB_SQLSRV_HOST:-localhost}
+      DB_SQLSRV_PORT: ${DB_SQLSRV_PORT:-1433}
+      DB_SQLSRV_DATABASE: ${DB_SQLSRV_DATABASE:-}
+      DB_SQLSRV_USERNAME: ${DB_SQLSRV_USERNAME:-sa}
+      DB_SQLSRV_PASSWORD: ${DB_SQLSRV_PASSWORD:-}
+
+      # App
+      NODE_ENV: ${NODE_ENV:-production}
+
+    restart: unless-stopped
