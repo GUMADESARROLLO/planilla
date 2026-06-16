@@ -90,12 +90,18 @@ const [tiposContratoList, cargosList, generosList, nacionalidadesList, tallasCam
 
 <script>
   import Swal from "sweetalert2";
-  import $ from "jquery";
-  import "inputmask/dist/jquery.inputmask.js";
+  import IMask from "imask";
 
-  ($ as any)(document).ready(() => {
-    ($ as any)("#field-telefono").inputmask("9999-9999", { placeholder: "0000-0000" });
-    ($ as any)("#field-cedulaIdentidad").inputmask("999-999999-9999A", { placeholder: "000-000000-0000A" });
+  document.addEventListener("DOMContentLoaded", () => {
+    IMask(document.getElementById("field-telefono") as HTMLInputElement, {
+      mask: "0000-0000",
+      placeholderChar: "0",
+    });
+    IMask(document.getElementById("field-cedulaIdentidad") as HTMLInputElement, {
+      mask: "000-000000-0000A",
+      placeholderChar: "0",
+      definitions: { A: /[A-Za-z]/ },
+    });
   });
 
   document.getElementById("btn-submit-worker")?.addEventListener("click", async () => {

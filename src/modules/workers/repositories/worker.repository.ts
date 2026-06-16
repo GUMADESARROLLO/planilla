@@ -28,6 +28,7 @@ import type {
 function mapWorker(row: any): WorkerResponse {
   return {
     id: row.id,
+    orden: row.orden ?? null,
     nombre: row.nombre,
     apellidos: row.apellidos,
     email: row.email,
@@ -80,6 +81,7 @@ function mapWorker(row: any): WorkerResponse {
 function workerSelectFields() {
   return {
     id: trabajadores.id,
+    orden: trabajadores.orden,
     nombre: trabajadores.nombre,
     apellidos: trabajadores.apellidos,
     email: trabajadores.email,

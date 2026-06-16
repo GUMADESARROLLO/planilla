@@ -32,6 +32,7 @@ const auditColumns = {
 
 export const trabajadores = mysqlTable("trabajadores", {
   id: int("id").autoincrement().primaryKey(),
+  orden: int("orden"),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   apellidos: varchar("apellidos", { length: 255 }).notNull(),
   fechaEntrada: date("fecha_entrada").notNull(),

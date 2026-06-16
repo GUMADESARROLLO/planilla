@@ -81,6 +81,7 @@ export interface UpdateWorkerDTO {
 
 export interface WorkerResponse {
   id: number;
+  orden: number | null;
   nombre: string;
   apellidos: string;
   email: string;
