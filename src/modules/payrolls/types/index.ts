@@ -1,7 +1,7 @@
 export interface CreatePlanillaDTO {
   nombre: string;
   descripcion?: string;
-  tipo: "quincenal" | "mensual" | "vehicular" | "administrativa" | "temporal";
+  tipoPlanillaId: number;
   unidadNegocioId?: number | null;
   fechaDesde?: string | null;
   fechaHasta?: string | null;
@@ -11,7 +11,7 @@ export interface CreatePlanillaDTO {
 export interface UpdatePlanillaDTO {
   nombre?: string;
   descripcion?: string;
-  tipo?: "quincenal" | "mensual" | "vehicular" | "administrativa" | "temporal";
+  tipoPlanillaId?: number;
   activo?: boolean;
   unidadNegocioId?: number | null;
   fechaDesde?: string | null;
@@ -23,7 +23,8 @@ export interface PlanillaResponse {
   id: number;
   nombre: string;
   descripcion: string | null;
-  tipo: string;
+  tipoPlanillaId: number;
+  tipo?: string;
   activo: boolean;
   unidadNegocioId: number | null;
   fechaDesde: Date | string | null;

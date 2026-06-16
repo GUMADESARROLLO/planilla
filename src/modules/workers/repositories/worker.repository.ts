@@ -10,6 +10,7 @@ import {
   departamentos,
   unidadesNegocio,
   planillas,
+  tiposPlanilla,
   trabajadoresPlanillas,
   horarios,
   municipios,
@@ -223,11 +224,15 @@ export async function findById(id: number): Promise<WorkerResponse> {
   const planillaRows = await db.select({
     id: planillas.id,
     nombre: planillas.nombre,
-    tipo: planillas.tipo,
+    tipo: tiposPlanilla.nombre,
   })
     .from(trabajadoresPlanillas)
     .innerJoin(planillas, eq(trabajadoresPlanillas.planillaId, planillas.id))
-    .where(eq(trabajadoresPlanillas.trabajadorId, id));
+    .leftJoin(tiposPlanilla, eq(planillas.tipoPlanillaId, tiposPlanilla.id))
+    .where(and(
+      eq(trabajadoresPlanillas.trabajadorId, id),
+      isNull(planillas.deleted_at),
+    ));
 
   return mapWorker({ ...row, planillas: planillaRows });
 }

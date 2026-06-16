@@ -108,7 +108,7 @@ function fmtSal(sal: any): string {
             </thead>
             <tbody id="workers-tbody" class="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
               {workers.map((w: any, i: number) => (
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-search={`${w.nombre} ${w.apellidos} ${w.cargo || ""} ${w.cedulaIdentidad || ""} ${w.numeroInss || ""}`.toLowerCase()}>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer" data-worker-id={w.id} data-planilla-id={payrollId} data-search={`${w.nombre} ${w.apellidos} ${w.cargo || ""} ${w.cedulaIdentidad || ""} ${w.numeroInss || ""}`.toLowerCase()}>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{i + 1}</td>
                   <td class="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">{w.nombre} {w.apellidos}</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{w.cargo || "-"}</td>
@@ -236,6 +236,15 @@ function fmtSal(sal: any): string {
     if (currentPage < totalPages) { currentPage++; render(); }
   });
 
+  // Click row → worker ingresos with planilla context
+  tbody?.addEventListener("click", (e) => {
+    const tr = (e.target as HTMLElement).closest("tr");
+    if (!tr) return;
+    const wid = tr.getAttribute("data-worker-id");
+    const pid = tr.getAttribute("data-planilla-id");
+    if (wid && pid) window.location.href = `/workers/${wid}/ingresos?planillaId=${pid}`;
+  });
+
   render();
 
   // --- Worker search modal (unchanged) ---
@@ -318,3 +327,7 @@ function fmtSal(sal: any): string {
     return div.innerHTML;
   }
 </script>
+
+<style>
+  .cursor-pointer { cursor: pointer; }
+</style>

@@ -9,10 +9,6 @@ import type {
   PlanillaWithWorkers,
   WorkerInfo,
 } from "../types";
-import { db } from "@db/index";
-import { trabajadores } from "@db/schemas/workers";
-import { trabajadoresPlanillas } from "@db/schemas/workers_planillas";
-import { isNull } from "drizzle-orm";
 
 const createPlanillaSchema = z.object({
   nombre: z
@@ -23,10 +19,7 @@ const createPlanillaSchema = z.object({
     .string()
     .max(1000, "La descripción no puede exceder 1000 caracteres")
     .optional(),
-  tipo: z.enum(
-    ["quincenal", "mensual", "vehicular", "administrativa", "temporal"],
-    { errorMap: () => ({ message: "Tipo de planilla inválido" }) },
-  ),
+  tipoPlanillaId: z.number().int().positive(),
   unidadNegocioId: z.number().int().positive().nullable().optional(),
   fechaDesde: z.string().nullable().optional(),
   fechaHasta: z.string().nullable().optional(),
@@ -43,12 +36,7 @@ const updatePlanillaSchema = z.object({
     .string()
     .max(1000, "La descripción no puede exceder 1000 caracteres")
     .optional(),
-  tipo: z
-    .enum(
-      ["quincenal", "mensual", "vehicular", "administrativa", "temporal"],
-      { errorMap: () => ({ message: "Tipo de planilla inválido" }) },
-    )
-    .optional(),
+  tipoPlanillaId: z.number().int().positive().optional(),
   activo: z.boolean().optional(),
   unidadNegocioId: z.number().int().positive().nullable().optional(),
   fechaDesde: z.string().nullable().optional(),
@@ -78,27 +66,7 @@ export async function findById(id: number): Promise<PlanillaWithWorkers> {
 
 export async function create(data: unknown): Promise<PlanillaResponse> {
   const validated = validateSchema(createPlanillaSchema, data);
-  const planilla = await repository.create(validated as CreatePlanillaDTO);
-
-  // Auto-assign all active workers to this planilla
-  try {
-    const workers = await db
-      .select({ id: trabajadores.id })
-      .from(trabajadores)
-      .where(isNull(trabajadores.deleted_at));
-
-    if (workers.length > 0) {
-      const values = workers.map((w) => ({
-        trabajadorId: w.id,
-        planillaId: planilla.id,
-      }));
-      await db.insert(trabajadoresPlanillas).values(values as any);
-    }
-  } catch {
-    // Non-critical: workers can be assigned manually later
-  }
-
-  return planilla;
+  return repository.create(validated as CreatePlanillaDTO);
 }
 
 export async function update(id: number, data: unknown): Promise<PlanillaResponse> {

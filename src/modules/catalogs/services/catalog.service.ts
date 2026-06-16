@@ -17,7 +17,7 @@ export const CATALOG_CONFIG: Record<string, CatalogConfig> = {
   tipos_contrato: { table: schemas.tiposContrato, displayName: "Tipos de Contrato", icon: "FileText", sortOrder: 4 },
   generos: { table: schemas.generos, displayName: "Géneros", icon: "Users", sortOrder: 5 },
   nacionalidades: { table: schemas.nacionalidades, displayName: "Nacionalidades", icon: "Globe", sortOrder: 6 },
-  planillas: { table: schemas.planillas, displayName: "Planillas", icon: "FileSpreadsheet", sortOrder: 7 },
+  tipos_planilla: { table: schemas.tiposPlanilla, displayName: "Tipos de Planilla", icon: "FileSpreadsheet", sortOrder: 7 },
   tallas_camisa: { table: schemas.tallasCamisa, displayName: "Tallas de Camisa", icon: "Shirt", sortOrder: 8 },
   tallas_pantalon: { table: schemas.tallasPantalon, displayName: "Tallas de Pantalón", icon: "Shirt", sortOrder: 9 },
   tipos_permisos: { table: schemas.tiposPermisos, displayName: "Tipos de Permisos", icon: "FileCheck", sortOrder: 10 },

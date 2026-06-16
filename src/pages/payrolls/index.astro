@@ -10,7 +10,7 @@ import Alert from "@components/ui/Alert.astro";
 import EmptyState from "@components/ui/EmptyState.astro";
 import ConfirmDialog from "@components/shared/ConfirmDialog.astro";
 import { db } from "@db/index";
-import { unidadesNegocio } from "@db/schemas/catalogs";
+import { unidadesNegocio, tiposPlanilla } from "@db/schemas/catalogs";
 import { isNull } from "drizzle-orm";
 
 const title = "Planillas";
@@ -20,6 +20,11 @@ const unidadesList = await db
   .select({ id: unidadesNegocio.id, nombre: unidadesNegocio.nombre })
   .from(unidadesNegocio)
   .where(isNull(unidadesNegocio.deleted_at));
+
+const tiposList = await db
+  .select({ id: tiposPlanilla.id, nombre: tiposPlanilla.nombre })
+  .from(tiposPlanilla)
+  .where(isNull(tiposPlanilla.deleted_at));
 ---
 
 <AppLayout {title} {currentPath}>
@@ -61,15 +66,13 @@ const unidadesList = await db
           <input id="input-nombre" name="nombre" type="text" required maxlength={255} placeholder="Ej: Planilla General Quincenal"
             class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors" />
         </FormField>
-        <FormField label="Tipo" name="tipo" required>
-          <select id="input-tipo" name="tipo" required
+        <FormField label="Tipo" name="tipoPlanillaId" required>
+          <select id="input-tipo" name="tipoPlanillaId" required
             class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
             <option value="">Seleccionar...</option>
-            <option value="quincenal">Quincenal</option>
-            <option value="mensual">Mensual</option>
-            <option value="vehicular">Vehicular</option>
-            <option value="administrativa">Administrativa</option>
-            <option value="temporal">Temporal</option>
+            {tiposList.map((t) => (
+              <option value={t.id}>{t.nombre}</option>
+            ))}
           </select>
         </FormField>
       </div>
@@ -131,19 +134,17 @@ const unidadesList = await db
           class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
         />
       </FormField>
-      <FormField label="Tipo" name="tipo" required>
+      <FormField label="Tipo" name="tipoPlanillaId" required>
         <select
           id="edit-tipo"
-          name="tipo"
+          name="tipoPlanillaId"
           required
           class="block w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
         >
           <option value="">Seleccionar...</option>
-          <option value="quincenal">Quincenal</option>
-          <option value="mensual">Mensual</option>
-          <option value="vehicular">Vehicular</option>
-          <option value="administrativa">Administrativa</option>
-          <option value="temporal">Temporal</option>
+          {tiposList.map((t) => (
+            <option value={t.id}>{t.nombre}</option>
+          ))}
         </select>
       </FormField>
       <FormField label="Descripción" name="descripcion">
@@ -427,7 +428,7 @@ const unidadesList = await db
       editingId = planilla.id;
       (document.getElementById("edit-id") as HTMLInputElement).value = planilla.id;
       (document.getElementById("edit-nombre") as HTMLInputElement).value = planilla.nombre;
-      (document.getElementById("edit-tipo") as HTMLSelectElement).value = planilla.tipo;
+      (document.getElementById("edit-tipo") as HTMLSelectElement).value = String(planilla.tipoPlanillaId);
       (document.getElementById("edit-descripcion") as HTMLTextAreaElement).value = planilla.descripcion ?? "";
       (document.getElementById("edit-activo") as HTMLInputElement).checked = planilla.activo;
       (window as any).__openModal();
@@ -473,19 +474,19 @@ const unidadesList = await db
 
   document.getElementById("btn-form-submit")?.addEventListener("click", async () => {
     const nombre = (document.getElementById("input-nombre") as HTMLInputElement).value.trim();
-    const tipo = (document.getElementById("input-tipo") as HTMLSelectElement).value;
+    const tipoPlanillaId = Number((document.getElementById("input-tipo") as HTMLSelectElement).value);
     const unidadNegocioId = (document.getElementById("input-unidad") as HTMLSelectElement).value;
     const fechaDesde = (document.getElementById("input-desde") as HTMLInputElement).value;
     const fechaHasta = (document.getElementById("input-hasta") as HTMLInputElement).value;
     const codigo = (document.getElementById("input-codigo") as HTMLInputElement).value.trim();
     const descripcion = (document.getElementById("input-descripcion") as HTMLTextAreaElement).value.trim();
 
-    if (!nombre || !tipo) {
+    if (!nombre || !tipoPlanillaId) {
       showAlert("Nombre y tipo son requeridos", "error");
       return;
     }
 
-    const payload: any = { nombre, tipo, descripcion: descripcion || undefined };
+    const payload: any = { nombre, tipoPlanillaId, descripcion: descripcion || undefined };
     if (unidadNegocioId) payload.unidadNegocioId = Number(unidadNegocioId);
     if (fechaDesde) payload.fechaDesde = fechaDesde;
     if (fechaHasta) payload.fechaHasta = fechaHasta;
@@ -515,11 +516,11 @@ const unidadesList = await db
   document.getElementById("btn-edit-submit")?.addEventListener("click", async () => {
     if (!editingId) return;
     const nombre = (document.getElementById("edit-nombre") as HTMLInputElement).value.trim();
-    const tipo = (document.getElementById("edit-tipo") as HTMLSelectElement).value;
+    const tipoPlanillaId = Number((document.getElementById("edit-tipo") as HTMLSelectElement).value);
     const descripcion = (document.getElementById("edit-descripcion") as HTMLTextAreaElement).value.trim();
     const activo = (document.getElementById("edit-activo") as HTMLInputElement).checked;
 
-    if (!nombre || !tipo) {
+    if (!nombre || !tipoPlanillaId) {
       showAlert("Nombre y tipo son requeridos", "error");
       return;
     }
@@ -528,7 +529,7 @@ const unidadesList = await db
       const res = await fetch(`/api/payrolls/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, tipo, descripcion: descripcion || undefined, activo }),
+        body: JSON.stringify({ nombre, tipoPlanillaId, descripcion: descripcion || undefined, activo }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message || "Error al actualizar");

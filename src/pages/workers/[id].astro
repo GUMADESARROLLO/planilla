@@ -9,6 +9,7 @@ import {
   trabajadores,
   trabajadoresPlanillas,
   planillas,
+  tiposPlanilla,
   nacionalidades,
   tallasCamisa,
   tallasPantalon,
@@ -64,12 +65,18 @@ const [workerRow] = await db.select({
 
 if (!workerRow) return Astro.redirect("/workers");
 
-const workerPlanillas = await db.select({
-  planilla: { nombre: planillas.nombre, tipo: planillas.tipo },
-})
+const workerPlanillas = await db
+  .select({
+    nombre: planillas.nombre,
+    tipo: tiposPlanilla.nombre,
+  })
   .from(trabajadoresPlanillas)
-  .leftJoin(planillas, eq(trabajadoresPlanillas.planillaId, planillas.id))
-  .where(eq(trabajadoresPlanillas.trabajadorId, id));
+  .innerJoin(planillas, eq(trabajadoresPlanillas.planillaId, planillas.id))
+  .leftJoin(tiposPlanilla, eq(planillas.tipoPlanillaId, tiposPlanilla.id))
+  .where(and(
+    eq(trabajadoresPlanillas.trabajadorId, id),
+    isNull(planillas.deleted_at),
+  ));
 
 const worker = { ...workerRow, planillas: workerPlanillas };
 const currentPath = `/workers/${id}`;
@@ -252,8 +259,8 @@ const isActive = worker.activo !== false;
           <div class="flex flex-wrap gap-2" style="padding:12px 0">
             {worker.planillas.map((tp: any) => (
               <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:500;background:var(--accent-light);border:1px solid var(--accent);color:#a8c4f0">
-                {tp.planilla.nombre}
-                <span style="font-size:11px;color:#8b9abf">({tp.planilla.tipo})</span>
+                {tp.nombre}
+                <span style="font-size:11px;color:#8b9abf">({tp.tipo})</span>
               </span>
             ))}
           </div>

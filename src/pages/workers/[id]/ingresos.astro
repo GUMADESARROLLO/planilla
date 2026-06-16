@@ -62,7 +62,7 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
         <a href={`/workers/${id}`} class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
           Cancelar
         </a>
-        <button class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg shadow-sm hover:opacity-90 active:scale-95 transition-all">
+        <button id="btn-guardar" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg shadow-sm hover:opacity-90 active:scale-95 transition-all">
           <Save class="size-3.5" />
           Guardar
         </button>
@@ -85,6 +85,8 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
     </div>
 
     <!-- Main Grid -->
+    <input id="salario_base_val" type="hidden" value={worker.salarioBase ?? 0} />
+    <input id="page-planilla-id" type="hidden" value="" />
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Ingresos -->
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
@@ -104,20 +106,20 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
           </div>
           <div>
             <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Monto</label>
-            <input type="text" value="C$312.50" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
+            <input id="monto_hrs_extras" type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
           </div>
           <div class="pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
             <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Ing. gravable</label>
-            <input type="text" data-currency value="C$4,812.50" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-bold" />
+            <input id="ing_gravable" type="text" data-currency value="C$0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-bold" />
           </div>
           <div>
             <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Ing. no gravable</label>
-            <input type="text" data-currency value="C$0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+            <input id="ing_no_gravable" type="text" data-currency value="C$0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
           </div>
         </div>
         <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 rounded-lg flex justify-between items-center">
           <span class="text-xs font-bold uppercase tracking-wider text-blue-800 dark:text-blue-300">Total ingresos</span>
-          <span class="text-lg font-bold text-blue-800 dark:text-blue-300 font-mono">C$4,812.50</span>
+          <span id="total_ingresos" class="text-lg font-bold text-blue-800 dark:text-blue-300 font-mono">C$0.00</span>
         </div>
       </div>
 
@@ -133,31 +135,31 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Cant. horas deducir</label>
-              <input type="text" value="0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+              <input id="hrs_deducir" type="text" inputmode="numeric" value="0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
             </div>
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Monto</label>
-              <input type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
+              <input id="monto_hrs_deducir" type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
             </div>
           </div>
           <div>
             <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Deducciones varias</label>
-            <input type="text" data-currency value="C$50.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+            <input id="deduc_varias" type="text" data-currency value="C$0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">INSS</label>
-              <input type="text" value="C$336.88" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-red-500 dark:text-red-400 font-bold cursor-not-allowed" />
+              <input id="inss" type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-red-500 dark:text-red-400 font-bold cursor-not-allowed" />
             </div>
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">IR</label>
-              <input type="text" value="C$412.10" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-red-500 dark:text-red-400 font-bold cursor-not-allowed" />
+              <input id="ir" type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-red-500 dark:text-red-400 font-bold cursor-not-allowed" />
             </div>
           </div>
         </div>
         <div class="mt-auto p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-lg flex justify-between items-center">
           <span class="text-xs font-bold uppercase tracking-wider text-red-800 dark:text-red-300">Total deducciones</span>
-          <span class="text-lg font-bold text-red-800 dark:text-red-300 font-mono">C$798.98</span>
+          <span id="total_deducciones" class="text-lg font-bold text-red-800 dark:text-red-300 font-mono">C$0.00</span>
         </div>
       </div>
 
@@ -173,31 +175,31 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Cant. vac. desc</label>
-              <input type="text" value="0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+              <input id="dias_descansados" type="text" value="0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
             </div>
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Monto</label>
-              <input type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
+              <input id="monto_descansados" type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Días sub. maternidad</label>
-              <input type="text" value="0" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+              <input id="dias_sub_maternidad" type="text" inputmode="numeric" value="0" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
             </div>
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Monto</label>
-              <input type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
+              <input id="monto_sub_maternidad" type="text" value="C$0.00" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Días Subsidio</label>
-              <input type="text" value="0" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+              <input id="dias_subsidio" type="text" inputmode="numeric" value="0" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
             </div>
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Días laborados</label>
-              <input type="text" value="15" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+              <input id="dias_laborados" type="text" value="15" readonly class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white cursor-not-allowed" />
             </div>
           </div>
           <label class="flex items-center gap-2 mt-3 px-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
@@ -207,7 +209,7 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
         </div>
         <div class="mt-auto p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-900 rounded-lg flex justify-between items-center">
           <span class="text-xs font-bold uppercase tracking-wider text-green-800 dark:text-green-300">Salario Ordinario</span>
-          <span class="text-lg font-bold text-green-800 dark:text-green-300 font-mono">C${salBase}</span>
+          <span id="salario_ordinario" class="text-lg font-bold text-green-800 dark:text-green-300 font-mono">C$0.00</span>
         </div>
       </div>
     </div>
@@ -217,7 +219,7 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
       <div class="flex justify-center items-center gap-4">
         <div class="text-center">
           <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Salario Neto</span>
-          <p class="text-3xl font-bold text-white font-mono">C$4,013.52</p>
+          <p id="salario_neto" class="text-3xl font-bold text-white font-mono">C$0.00</p>
         </div>
       </div>
     </div>
@@ -257,56 +259,185 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
 </Modal>
 
 <script>
-  function parseCurrency(raw: string): number {
-    return parseFloat(raw.replace(/[^0-9.]/g, "")) || 0;
+  const salBase = parseFloat(document.getElementById("salario_base_val")?.value || "0");
+  const VALOR_HORA = salBase / 30 / 8;
+  const workerId = Number(window.location.pathname.match(/\/workers\/(\d+)/)?.[1]);
+  const urlParams = new URLSearchParams(window.location.search);
+  const planillaId = Number(urlParams.get("planillaId"));
+
+  if (planillaId) document.getElementById("page-planilla-id").value = String(planillaId);
+
+  function n(v) { return parseFloat(String(v).replace(/[^0-9.-]/g, "")) || 0; }
+
+  function fmt(v) { return "C$" + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
+  function fmtRaw(v) { return v.toFixed(2); }
+
+  function calcIR(rentaGravableQ) {
+    const anual = rentaGravableQ * 24;
+    if (anual <= 100000) return 0;
+    if (anual <= 200000) return (anual - 100000) * 0.15 / 24;
+    if (anual <= 350000) return (15000 + (anual - 200000) * 0.20) / 24;
+    if (anual <= 500000) return (45000 + (anual - 350000) * 0.25) / 24;
+    return (82500 + (anual - 500000) * 0.30) / 24;
   }
 
+  function numericFilter(e) {
+    const allowed = ["Backspace","Delete","Tab","ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","Enter"];
+    if (allowed.includes(e.key) || e.ctrlKey || e.metaKey) return;
+    if (!/[\d.]/.test(e.key)) e.preventDefault();
+  }
+
+  function getValues() {
+    const dd = n(document.getElementById("dias_descansados")?.value);
+    const dl = Math.max(0, 15 - dd);
+    const montoDesc = VALOR_HORA * 8 * dd;
+    const salOrd = VALOR_HORA * 8 * dl;
+    const hrsExt = n(document.getElementById("hrs_ext")?.value);
+    const hrsMonto = hrsExt * VALOR_HORA * 2;
+    const ingGrav = n(document.getElementById("ing_gravable")?.value);
+    const ingNoGrav = n(document.getElementById("ing_no_gravable")?.value);
+    const subMatDias = n(document.getElementById("dias_sub_maternidad")?.value);
+    const subMatMonto = subMatDias * VALOR_HORA * 8;
+    const subEstDias = n(document.getElementById("dias_subsidio")?.value);
+    const subEstMonto = subEstDias * VALOR_HORA * 8;
+    const totalIngreso = salOrd + hrsMonto + ingGrav + ingNoGrav + montoDesc + subMatMonto + subEstMonto;
+
+    const hrsDed = n(document.getElementById("hrs_deducir")?.value);
+    const montoHrsDed = hrsDed * VALOR_HORA;
+    const deducV = n(document.getElementById("deduc_varias")?.value);
+    const TOPE_INSS_Q = 3389.45;
+    const inss = Math.min(totalIngreso * 0.07, TOPE_INSS_Q);
+    const rentaGravableQ = totalIngreso - inss;
+    const ir = calcIR(rentaGravableQ);
+    const totalDed = inss + ir + montoHrsDed + deducV;
+    const neto = Math.max(0, totalIngreso - totalDed);
+
+    return {
+      ingresos: {
+        salarioOrdinario: salOrd,
+        hrsExtras: hrsExt,
+        montoHrsExtras: hrsMonto,
+        ingresoGravable: ingGrav,
+        ingresoNoGravable: ingNoGrav,
+      },
+      subsidios: {
+        diasVacDescanso: dd,
+        montoVacDescanso: montoDesc,
+        diasSubMaternidad: subMatDias,
+        montoSubMaternidad: subMatMonto,
+        diasSubsidio: subEstDias,
+        montoSubEstatal: subEstMonto,
+        diasLaborados: dl,
+      },
+      deducciones: {
+        hrsDeducir: hrsDed,
+        montoHrsDeducir: montoHrsDed,
+        inssLaboral: inss,
+        ir: ir,
+        deducVarias: deducV,
+      },
+      totales: {
+        totalIngreso,
+        totalDeducciones: totalDed,
+        netoPagar: neto,
+      },
+    };
+  }
+
+  function updateUI(v) {
+    document.getElementById("dias_laborados").value = fmtRaw(v.subsidios.diasLaborados);
+    document.getElementById("monto_descansados").value = fmt(v.subsidios.montoVacDescanso);
+    document.getElementById("monto_hrs_extras").value = fmt(v.ingresos.montoHrsExtras);
+    document.getElementById("salario_ordinario").textContent = fmt(v.ingresos.salarioOrdinario);
+    document.getElementById("monto_hrs_deducir").value = fmt(v.deducciones.montoHrsDeducir);
+    document.getElementById("inss").value = fmt(v.deducciones.inssLaboral);
+    document.getElementById("ir").value = fmt(v.deducciones.ir);
+    document.getElementById("total_ingresos").textContent = fmt(v.totales.totalIngreso);
+    document.getElementById("total_deducciones").textContent = fmt(v.totales.totalDeducciones);
+    document.getElementById("salario_neto").textContent = fmt(v.totales.netoPagar);
+  }
+
+  function recalc() { updateUI(getValues()); }
+
+  // Load saved data
+  async function loadSaved() {
+    if (!planillaId) return;
+    try {
+      const res = await fetch(`/api/workers/${workerId}/ingresos?planillaId=${planillaId}`);
+      const json = await res.json();
+      if (!json.success || !json.data) return;
+
+      const d = json.data;
+      if (d.hrsExtras) document.getElementById("hrs_ext").value = d.hrsExtras;
+      if (d.ingresoGravable) document.getElementById("ing_gravable").value = "C$" + Number(d.ingresoGravable).toFixed(2);
+      if (d.ingresoNoGravable) document.getElementById("ing_no_gravable").value = "C$" + Number(d.ingresoNoGravable).toFixed(2);
+      if (d.diasVacDescanso) document.getElementById("dias_descansados").value = d.diasVacDescanso;
+      if (d.diasSubMaternidad) document.getElementById("dias_sub_maternidad").value = d.diasSubMaternidad;
+      if (d.diasSubsidio) document.getElementById("dias_subsidio").value = d.diasSubsidio;
+      if (d.hrsDeducir) document.getElementById("hrs_deducir").value = d.hrsDeducir;
+      if (d.deducVarias) document.getElementById("deduc_varias").value = "C$" + Number(d.deducVarias).toFixed(2);
+      recalc();
+    } catch {}
+  }
+
+  // Save handler
+  document.getElementById("btn-guardar")?.addEventListener("click", async () => {
+    if (!planillaId) { alert("No hay planilla seleccionada"); return; }
+
+    const btn = document.getElementById("btn-guardar");
+    btn.textContent = "Guardando...";
+    btn.disabled = true;
+
+    const v = getValues();
+    const payload = { ...v.ingresos, ...v.subsidios, ...v.deducciones, ...v.totales };
+
+    try {
+      const res = await fetch(`/api/workers/${workerId}/ingresos?planillaId=${planillaId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || "Error");
+      const Toast = (await import("sweetalert2")).default;
+      Toast.fire({ icon: "success", title: "Guardado", timer: 1000, showConfirmButton: false });
+    } catch (err) {
+      const Toast = (await import("sweetalert2")).default;
+      Toast.fire({ icon: "error", title: err.message || "Error al guardar" });
+    } finally {
+      btn.textContent = "Guardar";
+      btn.disabled = false;
+    }
+  });
+
+  // Attach events
+  ["dias_descansados","dias_sub_maternidad","dias_subsidio","hrs_ext","hrs_deducir"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", recalc);
+    el.addEventListener("keydown", numericFilter);
+  });
+
+  ["ing_gravable","ing_no_gravable","deduc_varias"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", recalc);
+  });
+
+  recalc();
+
+  // Currency mask
   document.querySelectorAll("[data-currency]").forEach((el) => {
-    const input = el as HTMLInputElement;
-
-    input.addEventListener("focus", function (this: HTMLInputElement) {
-      this.classList.add("ring-2", "ring-gray-900", "dark:ring-white");
-      const raw = parseCurrency(this.value);
-      this.value = raw > 0 ? raw.toFixed(2) : "";
-    });
-
-    input.addEventListener("blur", function (this: HTMLInputElement) {
-      this.classList.remove("ring-2", "ring-gray-900", "dark:ring-white");
-      const raw = parseCurrency(this.value);
+    el.addEventListener("blur", function () {
+      const raw = n(this.value);
       this.value = raw > 0 ? "C$" + raw.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "C$0.00";
     });
-
-    input.addEventListener("input", function (this: HTMLInputElement) {
-      const raw = this.value.replace(/[^0-9.]/g, "");
-      const parts = raw.split(".");
-      if (parts.length === 0 || parts[0] === undefined) { this.value = ""; return; }
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-      this.value = parts.length > 1 ? parts[0] + "." + parts[1].slice(0, 2) : parts[0];
-    });
-
-    input.addEventListener("keydown", function (this: HTMLInputElement, e: KeyboardEvent) {
-      if (e.key === "Backspace" || e.key === "Delete" || e.key === "Tab" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End") return;
-      if (!/[\d.]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-      }
-    });
   });
 
-  // Regular text inputs  
-  document.querySelectorAll('input[type="text"]:not([data-currency])').forEach((input) => {
-    (input as HTMLInputElement).addEventListener("focus", function (this: HTMLInputElement) {
-      this.classList.add("ring-2", "ring-gray-900", "dark:ring-white");
-    });
-    (input as HTMLInputElement).addEventListener("blur", function (this: HTMLInputElement) {
-      this.classList.remove("ring-2", "ring-gray-900", "dark:ring-white");
-    });
-  });
+  // Load saved data after init
+  loadSaved();
 
-  // Modal buttons
-  document.getElementById("btn-historial")?.addEventListener("click", () => {
-    (window as any).__openModal?.();
-  });
-  document.getElementById("btn-historial-cerrar")?.addEventListener("click", () => {
-    (window as any).__closeModal?.();
-  });
+  // Historial modal
+  document.getElementById("btn-historial")?.addEventListener("click", () => (window).__openModal?.());
+  document.getElementById("btn-historial-cerrar")?.addEventListener("click", () => (window).__closeModal?.());
 </script>

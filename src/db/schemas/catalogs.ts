@@ -5,7 +5,6 @@ import {
   boolean,
   timestamp,
   text,
-  mysqlEnum,
 } from "drizzle-orm/mysql-core";
 import { relations , sql} from "drizzle-orm";
 import { trabajadores } from "./workers";
@@ -94,17 +93,19 @@ export const nacionalidades = mysqlTable("nacionalidades", {
   ...auditColumns,
 });
 
+export const tiposPlanilla = mysqlTable("tipos_planilla", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 50 }).notNull(),
+  ...auditColumns,
+});
+
 export const planillas = mysqlTable("planillas", {
   id: int("id").autoincrement().primaryKey(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
   descripcion: text("descripcion"),
-  tipo: mysqlEnum("tipo", [
-    "quincenal",
-    "mensual",
-    "vehicular",
-    "administrativa",
-    "temporal",
-  ]).notNull(),
+  tipoPlanillaId: int("tipo_planilla_id")
+    .notNull()
+    .references(() => tiposPlanilla.id),
   unidadNegocioId: int("unidad_negocio_id")
     .references(() => unidadesNegocio.id),
   fechaDesde: timestamp("fecha_desde"),
@@ -198,8 +199,16 @@ export const nacionalidadesRelations = relations(
   })
 );
 
-export const planillasRelations = relations(planillas, ({ many }) => ({
+export const planillasRelations = relations(planillas, ({ one, many }) => ({
   trabajadoresPlanillas: many(trabajadoresPlanillas),
+  tipoPlanilla: one(tiposPlanilla, {
+    fields: [planillas.tipoPlanillaId],
+    references: [tiposPlanilla.id],
+  }),
+}));
+
+export const tiposPlanillaRelations = relations(tiposPlanilla, ({ many }) => ({
+  planillas: many(planillas),
 }));
 
 export const tallasCamisaRelations = relations(tallasCamisa, ({ many }) => ({
