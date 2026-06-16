@@ -2,6 +2,7 @@ import { db } from "@db/index";
 import { planillas, cargos, tiposPlanilla } from "@db/schemas/catalogs";
 import { trabajadores } from "@db/schemas/workers";
 import { trabajadoresPlanillas } from "@db/schemas/workers_planillas";
+import { planillaDetalle } from "@db/schemas/planilla_detalle";
 import { eq, like, and, or, desc, sql, count } from "drizzle-orm";
 import type {
   CreatePlanillaDTO,
@@ -155,11 +156,35 @@ export async function findById(id: number): Promise<PlanillaWithWorkers> {
       cuentaNomina: trabajadores.cuentaNomina,
       salarioBase: trabajadores.salarioBase,
       activo: trabajadores.activo,
+      salarioOrdinario: planillaDetalle.salarioOrdinario,
+      hrsExtras: planillaDetalle.hrsExtras,
+      montoHrsExtras: planillaDetalle.montoHrsExtras,
+      ingresoGravable: planillaDetalle.ingresoGravable,
+      ingresoNoGravable: planillaDetalle.ingresoNoGravable,
+      diasVacDescanso: planillaDetalle.diasVacDescanso,
+      montoVacDescanso: planillaDetalle.montoVacDescanso,
+      diasSubMaternidad: planillaDetalle.diasSubMaternidad,
+      montoSubMaternidad: planillaDetalle.montoSubMaternidad,
+      diasSubsidio: planillaDetalle.diasSubsidio,
+      montoSubEstatal: planillaDetalle.montoSubEstatal,
+      diasLaborados: planillaDetalle.diasLaborados,
+      hrsDeducir: planillaDetalle.hrsDeducir,
+      montoHrsDeducir: planillaDetalle.montoHrsDeducir,
+      inssLaboral: planillaDetalle.inssLaboral,
+      ir: planillaDetalle.ir,
+      deducVarias: planillaDetalle.deducVarias,
+      totalIngreso: planillaDetalle.totalIngreso,
+      totalDeducciones: planillaDetalle.totalDeducciones,
+      netoPagar: planillaDetalle.netoPagar,
     })
     .from(trabajadoresPlanillas)
     .innerJoin(trabajadores, eq(trabajadoresPlanillas.trabajadorId, trabajadores.id))
     .innerJoin(cargos, eq(trabajadores.cargoId, cargos.id))
-    .where(eq(trabajadoresPlanillas.planillaId, id));
+    .leftJoin(planillaDetalle, and(
+      eq(planillaDetalle.trabajadorId, trabajadores.id),
+      eq(planillaDetalle.planillaId, id),
+    ))
+    .where(eq(trabajadoresPlanillas.tipoPlanillaId, planilla.tipoPlanillaId));
 
   return {
     ...mapPlanilla(planilla),
@@ -180,7 +205,20 @@ export async function create(data: CreatePlanillaDTO): Promise<PlanillaResponse>
       codigo: data.codigo ?? null,
     } as any);
 
-  return planillaRow(result.insertId, data);
+  const newId = result.insertId;
+
+  try {
+    await db.execute(
+      sql`INSERT INTO planilla_detalle (planilla_id, trabajador_id, dias_laborados)
+          SELECT ${newId}, tp.trabajador_id, 15.00
+          FROM trabajadores_planillas tp
+          WHERE tp.tipo_planilla_id = ${data.tipoPlanillaId}`
+    );
+  } catch (err) {
+    console.error("Error creando planilla_detalle:", err);
+  }
+
+  return planillaRow(newId, data);
 }
 
 export async function update(id: number, data: UpdatePlanillaDTO): Promise<PlanillaResponse> {
@@ -223,30 +261,30 @@ export async function softDelete(id: number): Promise<void> {
 export async function assignWorker(trabajadorId: number, planillaId: number): Promise<void> {
   const [existing] = await db
     .select()
-    .from(trabajadoresPlanillas)
+    .from(planillaDetalle)
     .where(
       and(
-        eq(trabajadoresPlanillas.trabajadorId, trabajadorId),
-        eq(trabajadoresPlanillas.planillaId, planillaId),
+        eq(planillaDetalle.trabajadorId, trabajadorId),
+        eq(planillaDetalle.planillaId, planillaId),
       ),
     )
     .limit(1);
 
   if (existing) return;
 
-  await db.insert(trabajadoresPlanillas).values({
+  await db.insert(planillaDetalle).values({
     trabajadorId,
     planillaId,
-  });
+  } as any);
 }
 
 export async function removeWorker(trabajadorId: number, planillaId: number): Promise<void> {
   await db
-    .delete(trabajadoresPlanillas)
+    .delete(planillaDetalle)
     .where(
       and(
-        eq(trabajadoresPlanillas.trabajadorId, trabajadorId),
-        eq(trabajadoresPlanillas.planillaId, planillaId),
+        eq(planillaDetalle.trabajadorId, trabajadorId),
+        eq(planillaDetalle.planillaId, planillaId),
       ),
     );
 }
@@ -267,10 +305,10 @@ export async function getWorkersByPlanilla(planillaId: number): Promise<WorkerIn
       salarioBase: trabajadores.salarioBase,
       activo: trabajadores.activo,
     })
-    .from(trabajadoresPlanillas)
-    .innerJoin(trabajadores, eq(trabajadoresPlanillas.trabajadorId, trabajadores.id))
+    .from(planillaDetalle)
+    .innerJoin(trabajadores, eq(planillaDetalle.trabajadorId, trabajadores.id))
     .innerJoin(cargos, eq(trabajadores.cargoId, cargos.id))
-    .where(eq(trabajadoresPlanillas.planillaId, planillaId));
+    .where(eq(planillaDetalle.planillaId, planillaId));
 
   return rows as WorkerInfo[];
 }

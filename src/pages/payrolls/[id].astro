@@ -40,10 +40,18 @@ function fmtFecha(d: Date | string | null | undefined): string {
   catch { return "-"; }
 }
 
-function fmtSal(sal: any): string {
+function fmtNum(sal: any): string {
   if (sal === null || sal === undefined || sal === "") return "0.00";
   const n = typeof sal === "string" ? parseFloat(sal) : Number(sal);
-  return isNaN(n) ? "0.00" : n.toFixed(2);
+  if (isNaN(n)) return "0.00";
+  return n.toLocaleString("es-NI", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtMoneda(sal: any): string {
+  if (sal === null || sal === undefined || sal === "") return "C$ 0.00";
+  const n = typeof sal === "string" ? parseFloat(sal) : Number(sal);
+  if (isNaN(n)) return "C$ 0.00";
+  return `C$ ${n.toLocaleString("es-NI", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 ---
 
@@ -116,26 +124,26 @@ function fmtSal(sal: any): string {
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{w.numeroInss || "-"}</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{fmtFecha(w.fechaEntrada)}</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{w.cuentaNomina || "-"}</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtSal(w.salarioBase)}</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
-                  <td class="px-3 py-2 text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap text-right">0.00</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.salarioBase)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtNum(w.diasLaborados)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.salarioOrdinario)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtNum(w.hrsExtras)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.montoHrsExtras)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtNum(w.diasVacDescanso)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.montoVacDescanso)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.ingresoGravable)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.ingresoNoGravable)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtNum(w.diasSubMaternidad)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.montoSubMaternidad)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.montoSubEstatal)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.totalIngreso)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtNum(w.hrsDeducir)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.montoHrsDeducir)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.inssLaboral)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.ir)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.deducVarias)}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">{fmtMoneda(w.totalDeducciones)}</td>
+                  <td class="px-3 py-2 text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap text-right">{fmtMoneda(w.netoPagar)}</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
                   <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap text-right">0.00</td>
                 </tr>

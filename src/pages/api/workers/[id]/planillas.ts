@@ -3,7 +3,7 @@ import { requireAuth } from "@middleware/auth";
 import { successResponse, errorResponse } from "@utils/response";
 import { AppError } from "@utils/errors";
 import { db } from "@db/index";
-import { trabajadoresPlanillas } from "@db/schemas/workers_planillas";
+import { planillaDetalle } from "@db/schemas/planilla_detalle";
 import { eq, and } from "drizzle-orm";
 
 export const POST: APIRoute = async (context) => {
@@ -21,26 +21,26 @@ export const POST: APIRoute = async (context) => {
 
     const [existing] = await db
       .select()
-      .from(trabajadoresPlanillas)
+      .from(planillaDetalle)
       .where(
         and(
-          eq(trabajadoresPlanillas.trabajadorId, trabajadorId),
-          eq(trabajadoresPlanillas.planillaId, planillaId),
+          eq(planillaDetalle.trabajadorId, trabajadorId),
+          eq(planillaDetalle.planillaId, planillaId),
         ),
       )
       .limit(1);
 
     if (existing) {
       await db
-        .delete(trabajadoresPlanillas)
+        .delete(planillaDetalle)
         .where(
           and(
-            eq(trabajadoresPlanillas.trabajadorId, trabajadorId),
-            eq(trabajadoresPlanillas.planillaId, planillaId),
+            eq(planillaDetalle.trabajadorId, trabajadorId),
+            eq(planillaDetalle.planillaId, planillaId),
           ),
         );
     } else {
-      await db.insert(trabajadoresPlanillas).values({ trabajadorId, planillaId });
+      await db.insert(planillaDetalle).values({ trabajadorId, planillaId } as any);
     }
 
     return successResponse({ attached: !existing });

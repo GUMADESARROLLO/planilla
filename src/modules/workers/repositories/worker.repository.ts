@@ -15,6 +15,7 @@ import {
   horarios,
   municipios,
   deptosNi,
+  planillaDetalle,
 } from "@db/schemas";
 import { eq, like, and, isNull, or, sql, desc, type SQL } from "drizzle-orm";
 import { NotFoundError, ValidationError } from "@utils/errors";
@@ -228,11 +229,11 @@ export async function findById(id: number): Promise<WorkerResponse> {
     nombre: planillas.nombre,
     tipo: tiposPlanilla.nombre,
   })
-    .from(trabajadoresPlanillas)
-    .innerJoin(planillas, eq(trabajadoresPlanillas.planillaId, planillas.id))
+    .from(planillaDetalle)
+    .innerJoin(planillas, eq(planillaDetalle.planillaId, planillas.id))
     .leftJoin(tiposPlanilla, eq(planillas.tipoPlanillaId, tiposPlanilla.id))
     .where(and(
-      eq(trabajadoresPlanillas.trabajadorId, id),
+      eq(planillaDetalle.trabajadorId, id),
       isNull(planillas.deleted_at),
     ));
 

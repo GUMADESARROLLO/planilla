@@ -7,7 +7,6 @@ import DatePicker from "@components/ui/DatePicker.astro";
 import { db } from "@db/index";
 import {
   trabajadores,
-  trabajadoresPlanillas,
   planillas,
   tiposPlanilla,
   nacionalidades,
@@ -22,6 +21,7 @@ import {
   municipios,
   deptosNi,
   tiposPermisos,
+  planillaDetalle,
 } from "@db/schemas";
 import { eq, and, isNull } from "drizzle-orm";
 import { ArrowLeft, Pencil, FilePlus, Receipt } from "@lucide/astro";
@@ -70,11 +70,11 @@ const workerPlanillas = await db
     nombre: planillas.nombre,
     tipo: tiposPlanilla.nombre,
   })
-  .from(trabajadoresPlanillas)
-  .innerJoin(planillas, eq(trabajadoresPlanillas.planillaId, planillas.id))
+  .from(planillaDetalle)
+  .innerJoin(planillas, eq(planillaDetalle.planillaId, planillas.id))
   .leftJoin(tiposPlanilla, eq(planillas.tipoPlanillaId, tiposPlanilla.id))
   .where(and(
-    eq(trabajadoresPlanillas.trabajadorId, id),
+    eq(planillaDetalle.trabajadorId, id),
     isNull(planillas.deleted_at),
   ));
 

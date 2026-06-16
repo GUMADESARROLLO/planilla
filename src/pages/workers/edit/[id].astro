@@ -82,7 +82,7 @@ const [workerRow, tiposContratoList, cargosList, generosList, nacionalidadesList
     db.select().from(tiposPlanilla).where(isNull(tiposPlanilla.deleted_at)),
     db.execute(
       sql`SELECT tipo_planilla_id FROM trabajadores_planillas
-          WHERE trabajador_id = ${id} AND planilla_id IS NULL`
+          WHERE trabajador_id = ${id}`
     ).then(([rows]: any) => rows as { tipoPlanillaId: number }[]),
     db.select().from(tiposMoneda).where(isNull(tiposMoneda.deleted_at)),
     db.select().from(formasPago).where(isNull(formasPago.deleted_at)),

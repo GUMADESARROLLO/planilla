@@ -17,12 +17,10 @@ export const POST: APIRoute = async (context) => {
     const tipoPlanillaId = Number(body?.tipoPlanillaId);
     if (!tipoPlanillaId) return errorResponse(new AppError("tipoPlanillaId requerido", 400));
 
-    // Check existing usando raw SQL con la tabla trabajadores_planillas
     const [rows] = await db.execute(
       sql`SELECT id FROM trabajadores_planillas
           WHERE trabajador_id = ${trabajadorId}
             AND tipo_planilla_id = ${tipoPlanillaId}
-            AND planilla_id IS NULL
           LIMIT 1`
     );
 

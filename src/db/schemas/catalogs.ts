@@ -8,7 +8,6 @@ import {
 } from "drizzle-orm/mysql-core";
 import { relations , sql} from "drizzle-orm";
 import { trabajadores } from "./workers";
-import { trabajadoresPlanillas } from "./workers_planillas";
 import { esquelasPermisos } from "./permits";
 
 const auditColumns = {
@@ -199,8 +198,7 @@ export const nacionalidadesRelations = relations(
   })
 );
 
-export const planillasRelations = relations(planillas, ({ one, many }) => ({
-  trabajadoresPlanillas: many(trabajadoresPlanillas),
+export const planillasRelations = relations(planillas, ({ one }) => ({
   tipoPlanilla: one(tiposPlanilla, {
     fields: [planillas.tipoPlanillaId],
     references: [tiposPlanilla.id],
