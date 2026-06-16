@@ -7,3 +7,6 @@ dist/
 Thumbs.db
 public/uploads/workers/*
 !public/uploads/workers/.gitkeep
+cookies.txt
+test-tables.mjs
+10

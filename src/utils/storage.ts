@@ -2,9 +2,9 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } fro
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import sharp from "sharp";
 
-const endpoint = process.env["AWS_ENDPOINT"] ?? "http://192.168.1.15:9100";
-const region = process.env["AWS_DEFAULT_REGION"] ?? "us-east-1";
-const bucket = process.env["AWS_BUCKET"] ?? "gumacorp";
+const endpoint = process.env["AWS_ENDPOINT"] || "";
+const region = process.env["AWS_DEFAULT_REGION"] || "us-east-1";
+const bucket = process.env["AWS_BUCKET"] || "";
 
 const client = new S3Client({
   endpoint,
