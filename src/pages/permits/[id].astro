@@ -354,9 +354,9 @@ const isRechazada = esquela.estado === "rechazada";
   const btnRechazar = document.getElementById("btn-rechazar");
   const errorDiv = document.getElementById("action-error");
 
-  function showError(m: string) { if (errorDiv) { errorDiv.textContent = m; errorDiv.classList.remove("hidden"); } }
+  function showError(m) { if (errorDiv) { errorDiv.textContent = m; errorDiv.classList.remove("hidden"); } }
   function hideError() { if (errorDiv) errorDiv.classList.add("hidden"); }
-  function setLoading(btn: HTMLElement | null, l: boolean) {
+  function setLoading(btn, l) {
     if (!btn) return;
     if (l) { btn.setAttribute("disabled", "true"); btn.innerHTML = '<svg class="animate-spin" style="width:14px;height:14px" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Procesando...'; }
     else btn.removeAttribute("disabled");

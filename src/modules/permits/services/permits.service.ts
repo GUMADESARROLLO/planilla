@@ -42,7 +42,7 @@ export async function create(data: CreateEsquelaDTO): Promise<EsquelaResponse> {
   if (!data.trabajadorId) throw new ValidationError("El trabajador es requerido");
   if (!data.tipoPermisoId) throw new ValidationError("El tipo de permiso es requerido");
   if (!data.ubicacion) throw new ValidationError("La ubicación es requerida");
-  if (!data.cantidadDias || data.cantidadDias < 1)
+  if (!data.cantidadDias || data.cantidadDias <= 0)
     throw new ValidationError("La cantidad de días debe ser mayor a 0");
   if (!data.fechaInicio) throw new ValidationError("La fecha de inicio es requerida");
   if (!data.fechaFin) throw new ValidationError("La fecha de fin es requerida");

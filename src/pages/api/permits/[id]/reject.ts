@@ -10,9 +10,9 @@ const rejectSchema = z.object({
   observaciones: z.string().optional(),
 });
 
-export const POST: APIRoute = async ({ params, request }) => {
+export const POST: APIRoute = async ({ params, request, url }) => {
   try {
-    const session = await requireRole("SUPERVISOR", "ADMIN")({ request } as any);
+    const session = await requireRole("SUPERVISOR", "ADMIN")({ request, url } as any);
 
     const { id } = params;
     if (!id) throw new NotFoundError("ID no proporcionado");
