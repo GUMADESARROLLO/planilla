@@ -2,7 +2,7 @@
 import AppLayout from "@components/layout/AppLayout.astro";
 import Card from "@components/ui/Card.astro";
 import EmptyState from "@components/ui/EmptyState.astro";
-import { ArrowLeft } from "@lucide/astro";
+import { ArrowLeft, Download } from "@lucide/astro";
 import * as payrollService from "@modules/payrolls/services/payroll.service";
 import { requireAuth } from "@middleware/auth";
 
@@ -66,6 +66,10 @@ function fmtMoneda(sal: any): string {
           <input id="worker-filter-input" type="text" placeholder="Buscar por nombre, cargo, cédula..." class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" />
         </div>
       </div>
+      <a href={`/api/payrolls/${payrollId}/export`} download class="dc-btn dc-btn-ghost shrink-0">
+        <Download class="size-4" />
+        Exportar
+      </a>
     </div>
 
     <!-- Workers Table -->
@@ -237,4 +241,18 @@ function fmtMoneda(sal: any): string {
 
 <style>
   .cursor-pointer { cursor: pointer; }
+  .dc-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: background .15s, border-color .15s;
+    border: 1px solid transparent; text-decoration: none;
+    line-height: 1;
+  }
+  .dc-btn svg { width: 14px; height: 14px; }
+  .dc-btn-ghost {
+    background: transparent; border-color: #2d3855;
+    color: #8b9abf;
+  }
+  .dc-btn-ghost:hover { background: #181e2c; color: #e8edf7; }
 </style>

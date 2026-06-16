@@ -1,10 +1,10 @@
 ---
 import AppLayout from "@components/layout/AppLayout.astro";
 import Modal from "@components/ui/Modal.astro";
-import { Save, Plus, Minus, DollarSign, Info, Clock } from "@lucide/astro";
+import { Save, Plus, Minus, DollarSign, Info, Clock, Calendar } from "@lucide/astro";
 import { db } from "@db/index";
-import { trabajadores, cargos, tiposContrato } from "@db/schemas";
-import { eq } from "drizzle-orm";
+import { trabajadores, cargos, tiposContrato, esquelasPermisos, tiposPermisos } from "@db/schemas";
+import { eq, and, leftJoin } from "drizzle-orm";
 
 const idParam = Astro.params.id;
 if (!idParam) return Astro.redirect("/workers");
@@ -44,6 +44,32 @@ for (let i = 5; i >= 0; i--) {
   monthLabels.push(`${month}-${year}`);
 }
 const salBaseNum = Number(worker.salarioBase ?? 0);
+
+const vacacionesAprobadas = await db
+  .select({
+    id: esquelasPermisos.id,
+    cantidadDias: esquelasPermisos.cantidadDias,
+    fechaInicio: esquelasPermisos.fechaInicio,
+    fechaFin: esquelasPermisos.fechaFin,
+    periodoCorrespondiente: esquelasPermisos.periodoCorrespondiente,
+    tipoPermiso: tiposPermisos.nombre,
+  })
+  .from(esquelasPermisos)
+  .leftJoin(tiposPermisos, eq(esquelasPermisos.tipoPermisoId, tiposPermisos.id))
+  .where(
+    and(
+      eq(esquelasPermisos.trabajadorId, id),
+      eq(esquelasPermisos.estado, "aprobada"),
+    ),
+  )
+  .orderBy(esquelasPermisos.fechaInicio);
+
+function fmtVacDate(d: string): string {
+  try { return new Date(d).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }); }
+  catch { return d; }
+}
+
+const totalDiasVacaciones = vacacionesAprobadas.reduce((sum, v) => sum + Number(v.cantidadDias), 0);
 ---
 
 <AppLayout {title} {currentPath}>
@@ -175,7 +201,12 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Cant. vac. desc</label>
-              <input id="dias_descansados" type="text" value="0.00" class="w-full px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+              <div class="flex gap-1">
+                <input id="dias_descansados" type="text" value="0.00" class="flex-1 min-w-0 px-3 py-2 text-sm font-mono text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                <button id="btn-vac-calendar" type="button" title="Seleccionar fecha de vacaciones" class="shrink-0 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-primary-600 hover:border-primary-500 dark:hover:text-primary-400 dark:hover:border-primary-500 transition-colors">
+                  <Calendar class="size-4" />
+                </button>
+              </div>
             </div>
             <div>
               <label class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1 block">Monto</label>
@@ -255,6 +286,42 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
   </div>
   <div slot="footer">
     <button id="btn-historial-cerrar" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cerrar</button>
+  </div>
+</Modal>
+
+<!-- Vacations Modal -->
+<Modal id="modal-vacaciones" title="Vacaciones Aprobadas" size="md">
+  <div slot="body" class="space-y-3">
+    <div class="flex items-center justify-between p-3 rounded-lg bg-primary-50 dark:bg-primary-950 border border-primary-200 dark:border-primary-800">
+      <span class="text-sm font-semibold text-gray-900 dark:text-white">Total días acumulados</span>
+      <span class="text-lg font-bold text-primary-700 dark:text-primary-300">{totalDiasVacaciones.toFixed(2)} día(s)</span>
+    </div>
+    {vacacionesAprobadas.length === 0 ? (
+      <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">No hay vacaciones aprobadas registradas</p>
+    ) : (
+      vacacionesAprobadas.map((v) => (
+        <label class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 bg-white dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all cursor-pointer vac-item" data-vac-id={v.id} data-vac-dias={v.cantidadDias}>
+          <input type="checkbox" class="vac-checkbox mt-1 size-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white">{v.periodoCorrespondiente}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {fmtVacDate(v.fechaInicio)} → {fmtVacDate(v.fechaFin)}
+            </p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="text-sm font-bold text-primary-600 dark:text-primary-400">{v.cantidadDias} día(s)</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">{v.tipoPermiso}</p>
+          </div>
+        </label>
+      ))
+    )}
+  </div>
+  <div slot="footer" class="flex items-center justify-between w-full">
+    <span id="vac-selected-sum" class="text-sm text-gray-500 dark:text-gray-400">0 día(s) seleccionados</span>
+    <div class="flex items-center gap-2">
+      <button id="btn-vac-cerrar" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cerrar</button>
+      <button id="btn-vac-aplicar" type="button" class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">Aplicar</button>
+    </div>
   </div>
 </Modal>
 
@@ -440,4 +507,43 @@ const salBaseNum = Number(worker.salarioBase ?? 0);
   // Historial modal
   document.getElementById("btn-historial")?.addEventListener("click", () => (window).__openModal?.());
   document.getElementById("btn-historial-cerrar")?.addEventListener("click", () => (window).__closeModal?.());
+
+  // Vacaciones modal
+  function openVacModal() {
+    const overlay = document.getElementById("modal-vacaciones-overlay");
+    if (overlay) (overlay as any).__modalOpen?.();
+  }
+  function closeVacModal() {
+    const overlay = document.getElementById("modal-vacaciones-overlay");
+    if (overlay) (overlay as any).__modalClose?.();
+  }
+  function updateVacSum() {
+    let total = 0;
+    document.querySelectorAll(".vac-checkbox:checked").forEach((cb) => {
+      const label = (cb as HTMLElement).closest(".vac-item");
+      const dias = label?.getAttribute("data-vac-dias");
+      if (dias) total += parseFloat(dias);
+    });
+    document.getElementById("vac-selected-sum")!.textContent = total.toFixed(2) + " día(s) seleccionados";
+  }
+  document.getElementById("btn-vac-calendar")?.addEventListener("click", () => {
+    document.querySelectorAll(".vac-checkbox").forEach((cb) => (cb as HTMLInputElement).checked = false);
+    updateVacSum();
+    openVacModal();
+  });
+  document.getElementById("btn-vac-cerrar")?.addEventListener("click", closeVacModal);
+  document.getElementById("btn-vac-aplicar")?.addEventListener("click", () => {
+    let total = 0;
+    document.querySelectorAll(".vac-checkbox:checked").forEach((cb) => {
+      const label = (cb as HTMLElement).closest(".vac-item");
+      const dias = label?.getAttribute("data-vac-dias");
+      if (dias) total += parseFloat(dias);
+    });
+    if (total > 0) document.getElementById("dias_descansados")!.value = total.toFixed(2);
+    closeVacModal();
+    recalc();
+  });
+  document.querySelectorAll(".vac-checkbox").forEach((cb) => {
+    cb.addEventListener("change", updateVacSum);
+  });
 </script>
